@@ -2,10 +2,9 @@
 
 from django.db import models
 from django.contrib.auth.hashers import make_password, check_password
-from django.utils import timezone
 from django.utils.timezone import get_current_timezone
 
-#CRIANDO TABELA PESSOA E SETORES
+#CRIANDO TABELA VISITANTES E SETORES
 class Pessoa(models.Model):
     ESTADOS_CHOICES = [
         ('AC', 'Acre'),
@@ -50,6 +49,14 @@ class Pessoa(models.Model):
     def __str__(self):
      return self.nome_completo
   
+'''class visitas(models.Model):
+    visitante = models.ForeignKey(Visitante, on_delete=models.CASCADE)
+    data_saida = models.DateTimeField(auto_now_add=True)
+    local_saida = models.CharField(max_length=255)
+    
+    def __str__(self):
+        return f'{self.visitante.nome} - {self.local_saida}'''
+    
 class Setor(models.Model):
   nome = models.CharField(max_length=100, unique=True)
   localização = models.CharField(max_length=255)
@@ -59,18 +66,6 @@ class Setor(models.Model):
   def __str__(self):
       return self.nome
 
-class Visita(models.Model):
-    pessoa = models.ForeignKey(Pessoa, on_delete=models.CASCADE, related_name='Visitas') #SE EXCLUIR PESSOA, AS VISITAS TBM SERÃO EXCLUIDAS (CASCADE)
-    data_entrada = models.DateTimeField (auto_now_add=True)
-    setor = models.ForeignKey(Setor, on_delete=models.CASCADE, related_name='Visitas')
-    motivo_visita = models.TextField (blank=True , null=True)
-    etiqueta_emitida = models.BooleanField(default=False)
-    reconhecimento_facial = models.BooleanField(default=False)
-    data_saida = models.DateTimeField(blank=True, null=True) 
-       
-    def __str__(self):
-        return f'Visita de {self.pessoa} ao setor {self.setor} em {self.data_entrada.strftime("%d-%m-%Y às %H:%M:%S")}'
-    
     
 # CRIAÇÃO DOS TIPOS DE USUÁRIOS 
 
@@ -99,7 +94,6 @@ class Usuario(models.Model):
 
 #CRIAÇÃO DA CLASSE DE VEÍCULOS
 
-'''
 class Veiculo(models.Model):
    STATUS_CHOICES = [
       ('ENTRADA', 'Dentro do estacionamento')
@@ -114,4 +108,3 @@ class Veiculo(models.Model):
    
    def __str__(self):
       return f'{self.placa}'
-'''
