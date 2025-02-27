@@ -95,10 +95,16 @@ class Usuario(models.Model):
 #CRIAÇÃO DA CLASSE DE VEÍCULOS
 
 class Veiculo(models.Model):
+   STATUS_CHOICES = [
+      ('ENTRADA', 'Dentro do estacionamento')
+      ('SAIDA', 'Fora do estacionamento')
+   ]
+
    placa = models.CharField(max_length=10, unique=True)
    responsavel = models.CharField(max_length=80)
    horario_entrada = models.DateTimeField(auto_now_add=True)
    horario_saida = models.DateTimeField(blank=True, null=True)
-
+   status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='ENTRADA') 
+   
    def __str__(self):
       return f'{self.placa}'
