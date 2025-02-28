@@ -56,6 +56,11 @@ class Setor(models.Model):
   ramal = models.CharField(max_length=20)
   disponibilidade = models.BooleanField(default=True) #ACEITA ABERTO OU FECHADO, TRUE OR FALSE
   
+  class meta:
+      db_table = 'setores' 
+      verbose_name = 'Setor'
+      verbose_name_plural = 'Setores'   
+        
   def __str__(self):
       return self.nome
 

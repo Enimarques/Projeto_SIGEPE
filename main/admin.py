@@ -13,7 +13,7 @@ class SetorAdmin (admin.ModelAdmin):
 class VisitaAdmin (admin.ModelAdmin):
   list_display = ('pessoa','setor','data_entrada','data_saida')
   list_filter = ('setor',)
-  search_fields = ('pessoa',)
+  search_fields = ('pessoa__nome_completo',)
   
 class UsuarioAdmin(admin.ModelAdmin):
   list_display = ('usuario', 'get_tipo_display')
