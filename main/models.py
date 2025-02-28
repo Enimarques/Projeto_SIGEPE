@@ -99,7 +99,7 @@ class Usuario(models.Model):
 
 #CRIAÇÃO DA CLASSE DE VEÍCULOS
 
-'''
+''' tem que corrigir
 class Veiculo(models.Model):
    STATUS_CHOICES = [
       ('ENTRADA', 'Dentro do estacionamento')

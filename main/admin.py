@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.utils.timezone import now
-from .models import Pessoa , Setor , Visita, Usuario #falta colocar Veiculo
+from .models import Pessoa , Setor , Visita, Usuario #falta colocar Veiculo que ojeff fez
 
 class PessoaAdmin(admin.ModelAdmin):
   list_display = ('nome_completo','CPF','data_nascimento')  #as colunas que vao ser visiveis
