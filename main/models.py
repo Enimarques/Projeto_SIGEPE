@@ -77,7 +77,7 @@ class Visita(models.Model):
         return f'Visita de {self.pessoa} ao setor {self.setor} em {self.data_entrada.strftime("%d-%m-%Y às %H:%M:%S")}'
     
     
-# CRIAÇÃO DOS TIPOS DE USUÁRIOS 
+    # CRIAÇÃO DOS TIPOS DE USUÁRIOS 
 
 class Usuario(models.Model):
     TIPOS_USUARIO = [
@@ -99,24 +99,20 @@ class Usuario(models.Model):
 
     def __str__(self):
         return f"{self.usuario} ({self.get_tipo_display()})"
-    
 
-
-#CRIAÇÃO DA CLASSE DE VEÍCULOS
-
-''' tem que corrigir
 class Veiculo(models.Model):
-   STATUS_CHOICES = [
-      ('ENTRADA', 'Dentro do estacionamento')
-      ('SAIDA', 'Fora do estacionamento')
-   ]
+    STATUS_CHOICES = [
+        ('dentro', 'Dentro'),
+        ('fora', 'Fora'),
+    ]
 
-   placa = models.CharField(max_length=10, unique=True)
-   responsavel = models.CharField(max_length=80)
-   horario_entrada = models.DateTimeField(auto_now_add=True)
-   horario_saida = models.DateTimeField(blank=True, null=True)
-   status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='ENTRADA') 
-   
-   def __str__(self):
-      return f'{self.placa}'
-'''
+    placa = models.CharField(max_length=10, unique=True)
+    responsavel = models.CharField(max_length=100)
+    horario_entrada = models.DateTimeField(default=timezone.now)
+    horario_saida = models.DateTimeField(null=True, blank=True)
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='dentro')
+
+    def __str__(self):
+        return f"{self.placa} - {self.responsavel}"
+
+
