@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Finalizar Visita</title>
+</head>
+<body>
+    <h1>Finalizar Visita</h1>
+    <p>Você está finalizando a visita de {{ visita.pessoa }}.</p>
+    <form method="post">
+        {% csrf_token %}
+        <button type="submit">Finalizar Visita</button>
+    </form>
+</body>
+</html>

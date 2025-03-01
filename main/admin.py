@@ -1,6 +1,8 @@
 from django.contrib import admin
 from django.utils.timezone import now
-from .models import Pessoa , Setor , Visita, Usuario, Veiculo
+from .models import Pessoa , Setor , Visita, Usuario
+from veiculos.models import Veiculo
+
 class PessoaAdmin(admin.ModelAdmin):
   list_display = ('nome_completo','CPF','data_nascimento')  #as colunas que vao ser visiveis
   search_fields = ('nome_completo', 'CPF')        #os campos de pesquisa
@@ -10,7 +12,7 @@ class SetorAdmin (admin.ModelAdmin):
   list_filter = ('nome','disponibilidade')
 
 class VisitaAdmin (admin.ModelAdmin):
-  list_display = ('pessoa','setor','data_entrada','data_saida')
+  list_display = ('pessoa','setor','data_visita','hora_saida')
   list_filter = ('setor',)
   search_fields = ('pessoa__nome_completo',)
   
@@ -23,6 +25,7 @@ class VeiculoAdmin(admin.ModelAdmin):
     list_display = ('placa', 'responsavel', 'horario_entrada', 'horario_saida', 'status')
     list_filter = ('status', 'horario_entrada', 'horario_saida')
     search_fields = ('placa', 'responsavel')
+    readonly_fields = ('horario_entrada', 'status')
 
 
 admin.site.register(Pessoa, PessoaAdmin)

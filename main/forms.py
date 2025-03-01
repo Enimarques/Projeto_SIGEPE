@@ -1,6 +1,7 @@
 from django import forms
 from django.contrib.auth.models import User
 from django.contrib.auth.forms import UserCreationForm
+from .models import Visita
 
 class RegisterForm(UserCreationForm):
     email = forms.EmailField()
@@ -16,5 +17,16 @@ class RegisterForm(UserCreationForm):
         help_texts = {
             'username': None,
         } #pra nao aparecer texto de ajuda
+
+class VisitaForm(forms.ModelForm):
+    class Meta:
+        model = Visita
+        fields = ['pessoa', 'setor', 'motivo_visita']
+        labels = {
+            'pessoa': 'Visitante',
+            'setor': 'Setor',
+            'motivo_visita': 'Motivo da visita',
+        }
         
-        
+
+    

@@ -66,12 +66,12 @@ class Setor(models.Model):
 
 class Visita(models.Model):
     pessoa = models.ForeignKey(Pessoa, on_delete=models.CASCADE, related_name='Visitas') #SE EXCLUIR PESSOA, AS VISITAS TBM SERÃO EXCLUIDAS (CASCADE)
-    data_entrada = models.DateTimeField (auto_now_add=True)
+    data_visita = models.DateTimeField (auto_now_add=True)
     setor = models.ForeignKey(Setor, on_delete=models.CASCADE, related_name='Visitas')
     motivo_visita = models.TextField (blank=True , null=True)
     etiqueta_emitida = models.BooleanField(default=False)
     reconhecimento_facial = models.BooleanField(default=False)
-    data_saida = models.DateTimeField(blank=True, null=True) 
+    hora_saida = models.TimeField(blank=True, null=True) 
        
     def __str__(self):
         return f'Visita de {self.pessoa} ao setor {self.setor} em {self.data_entrada.strftime("%d-%m-%Y às %H:%M:%S")}'
@@ -99,20 +99,3 @@ class Usuario(models.Model):
 
     def __str__(self):
         return f"{self.usuario} ({self.get_tipo_display()})"
-
-class Veiculo(models.Model):
-    STATUS_CHOICES = [
-        ('dentro', 'Dentro'),
-        ('fora', 'Fora'),
-    ]
-
-    placa = models.CharField(max_length=10, unique=True)
-    responsavel = models.CharField(max_length=100)
-    horario_entrada = models.DateTimeField(default=timezone.now)
-    horario_saida = models.DateTimeField(null=True, blank=True)
-    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='dentro')
-
-    def __str__(self):
-        return f"{self.placa} - {self.responsavel}"
-
-
