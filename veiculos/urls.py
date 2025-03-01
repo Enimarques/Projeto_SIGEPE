@@ -1,8 +1,8 @@
-from django.contrib import admin
-from django.urls import path, include
+from django.urls import path
+from . import views
 
 urlpatterns = [
-    #path('admin/', admin.site.urls),
-    #path('', include('main.urls')),
-    #path('veiculos/', include('veiculos.urls')),
-    ]
+    path('entrada_veiculo/', views.registrar_entrada, name='entrada_veiculo'),
+    path('saida_veiculo/<int:veiculo_id>/', views.registrar_saida, name='saida_veiculo'),
+    path('listar_veiculos/', views.listar_veiculos, name='listar_veiculos'),  # Adiciona a view de listagem de veículos
+]

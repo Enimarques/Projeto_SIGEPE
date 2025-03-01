@@ -4,6 +4,8 @@ from .forms import RegisterForm, VisitaForm  #importando o formulario de registr
 from .models import Visita #importando o modelo de visita
 from django.utils import timezone #importando a função de pegar a data e hora atual
 
+def home(request):
+    return render(request, 'home.html')
 
 def register(request):
     if request.method == 'POST': #se o metodo for post (enviar informações)
@@ -34,4 +36,3 @@ def fim_visita(request, visita_id): #LOGICA PARA FINALIZAR VISITAS
         visita.save() #salva a visita
         return redirect('home') #retorna para a home
     return render(request, 'visitas/fim_visita.html', {'visita': visita}) #retorna a pagina de finalização de visita
-    
