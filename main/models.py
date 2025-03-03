@@ -6,7 +6,7 @@ from django.utils import timezone
 from django.utils.timezone import get_current_timezone
 
 #CRIANDO TABELA PESSOA E SETORES
-class Pessoa(models.Model):
+class Visitante(models.Model):
     ESTADOS_CHOICES = [
         ('AC', 'Acre'),
         ('AL', 'Alagoas'),
@@ -65,8 +65,8 @@ class Setor(models.Model):
       return self.nome
 
 class Visita(models.Model):
-    pessoa = models.ForeignKey(Pessoa, on_delete=models.CASCADE, related_name='Visitas') #SE EXCLUIR PESSOA, AS VISITAS TBM SERÃO EXCLUIDAS (CASCADE)
-    data_visita = models.DateTimeField (auto_now_add=True)
+    visitante = models.ForeignKey(Visitante, on_delete=models.CASCADE, related_name='Visitas') #SE EXCLUIR PESSOA, AS VISITAS TBM SERÃO EXCLUIDAS (CASCADE)
+    data_entrada = models.DateTimeField (auto_now_add=True)
     setor = models.ForeignKey(Setor, on_delete=models.CASCADE, related_name='Visitas')
     motivo_visita = models.TextField (blank=True , null=True)
     etiqueta_emitida = models.BooleanField(default=False)
@@ -74,28 +74,5 @@ class Visita(models.Model):
     hora_saida = models.TimeField(blank=True, null=True) 
        
     def __str__(self):
-        return f'Visita de {self.pessoa} ao setor {self.setor} em {self.data_entrada.strftime("%d-%m-%Y às %H:%M:%S")}'
+        return f'Visita de {self.visitante} ao setor {self.setor} em {self.data_entrada.strftime("%d-%m-%Y às %H:%M:%S")}'
     
-    
-    # CRIAÇÃO DOS TIPOS DE USUÁRIOS 
-
-class Usuario(models.Model):
-    TIPOS_USUARIO = [
-        ('ADMIN', 'Administrador'),
-        ('RECEP', 'Recepcionista'),
-    ]
-    
-    usuario = models.CharField(max_length=50, unique=True)  # Nome de login
-    senha = models.CharField(max_length=255)  # Senha criptografada
-    tipo = models.CharField(max_length=10, choices=TIPOS_USUARIO, default='RECEP')
-
-    def set_senha(self, senha_plana):
-        """Criptografa e define a senha."""
-        self.senha = make_password(senha_plana)
-
-    def verificar_senha(self, senha_plana):
-        """Verifica se a senha está correta."""
-        return check_password(senha_plana, self.senha)
-
-    def __str__(self):
-        return f"{self.usuario} ({self.get_tipo_display()})"

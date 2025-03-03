@@ -21,9 +21,9 @@ class RegisterForm(UserCreationForm):
 class VisitaForm(forms.ModelForm):
     class Meta:
         model = Visita
-        fields = ['pessoa', 'setor', 'motivo_visita']
+        fields = ['visitante', 'setor', 'motivo_visita']
         labels = {
-            'pessoa': 'Visitante',
+            'visitante': 'Visitante',
             'setor': 'Setor',
             'motivo_visita': 'Motivo da visita',
         }

@@ -24,15 +24,18 @@ def registrar_visita(request):
         form = VisitaForm(request.POST) #cria um formulario com os dados do post
         if form.is_valid():
           form.save() #salva o formulario
+          messages.success(request, 'Visita registrada com sucesso!')
           return redirect('home')
     else:
         form = VisitaForm() #se não for post, cria um formulario vazio
     return render(request, 'visitas/registrar_visita.html', {'form': form}) #retorna o formulario na tela
 
 def fim_visita(request, visita_id): #LOGICA PARA FINALIZAR VISITAS
-    visita = Visita.objects.get(id=visita_id) #pega a visita pelo id
+    visita = get_objects_or_404(visita, id=visita_id) #pega a visita pelo id
     if request.method == 'POST': #se o metodo for post (enviar informações)
         visita.data_saida = timezone.now() #pega a data e hora atual
         visita.save() #salva a visita
+        messages.success(request, f'Visita de {visita.visitante} finalizada com sucesso!')  # Mensagem de sucesso
+
         return redirect('home') #retorna para a home
     return render(request, 'visitas/fim_visita.html', {'visita': visita}) #retorna a pagina de finalização de visita
