@@ -27,6 +27,16 @@ class VeiculoAdmin(admin.ModelAdmin):
     search_fields = ('placa', 'responsavel')
     readonly_fields = ('horario_entrada', 'status')
 
+class MovimentacaoVeiculoAdmin(admin.ModelAdmin):
+    list_display = ('veiculo', 'horario_entrada', 'horario_saida')    
+    list_filter = ('horario_entrada', 'horario_saida')
+    search_fields = ('veiculo__placa', 'veiculo__responsavel')
+    readonly_fields = ('horario_entrada',)
+    def save_model(self, request, obj, form, change):
+        if change:
+            obj.horario_saida = now()
+        super().save_model(request, obj, form, change)
+
 
 admin.site.register(Pessoa, PessoaAdmin)
 admin.site.register(Setor, SetorAdmin)
