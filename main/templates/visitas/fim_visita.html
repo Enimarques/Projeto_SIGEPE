@@ -5,10 +5,11 @@
 </head>
 <body>
     <h1>Finalizar Visita</h1>
-    <p>Você está finalizando a visita de {{ visita.pessoa }}.</p>
     <form method="post">
         {% csrf_token %}
+        {{ form.as_p }} <!-- Renderiza o formulário -->
         <button type="submit">Finalizar Visita</button>
     </form>
+    <a href="{% url 'home' %}">Voltar à Página Inicial</a>
 </body>
 </html>

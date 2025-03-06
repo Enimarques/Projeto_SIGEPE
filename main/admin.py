@@ -12,7 +12,7 @@ class SetorAdmin (admin.ModelAdmin):
   list_filter = ('nome','disponibilidade')
 
 class VisitaAdmin (admin.ModelAdmin):
-  list_display = ('visitante','setor','data_entrada','hora_saida')
+  list_display = ('visitante','setor','data_entrada','data_saida')
   list_filter = ('setor',)
   search_fields = ('pessoa__nome_completo',)
 

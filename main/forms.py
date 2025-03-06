@@ -1,23 +1,25 @@
 from django import forms
-from django.contrib.auth.models import User
-from django.contrib.auth.forms import UserCreationForm
-from .models import Visita
+from .models import Visita, Visitante
 
-class RegisterForm(UserCreationForm):
-    email = forms.EmailField()
-
+class RegisterForm(forms.ModelForm):#cria um formulario de registro
     class Meta:
-        model = User
-        fields = ['username', 'email', 'password1', 'password2']
+        model = Visitante
+        fields = ['nome_completo', 'nome_social', 'data_nascimento', 'CPF', 'telefone', 'email', 'estado', 'cidade', 'foto'] #campos do formulario
         labels = {
-            'username': 'Nome de usuário',
-            'password1': 'Senha',
-            'password2': 'Confirme sua senha',
+            'nome_completo': 'Nome completo',
+            'nome_social': 'Nome social',
+            'data_nascimento': 'Data de nascimento',
+            'CPF': 'CPF',
+            'telefone': 'Telefone',
+            'email': 'E-mail',
+            'estado': 'Estado',
+            'cidade': 'Cidade',
+            'foto': 'Foto',
         }   #muda o nome dos campos pra portugues
-        help_texts = {
-            'username': None,
-        } #pra nao aparecer texto de ajuda
-
+        '''widgets = {
+            'data_nascimento': forms.DateInput(attrs={'type': 'date'}), #muda o tipo do campo para data
+        }'''
+        
 class VisitaForm(forms.ModelForm):
     class Meta:
         model = Visita
@@ -28,5 +30,12 @@ class VisitaForm(forms.ModelForm):
             'motivo_visita': 'Motivo da visita',
         }
         
+class FimVisitaForm(forms.Form):
+    visita = forms.ModelChoiceField(queryset=Visita.objects.filter(data_saida__isnull=True), label='Selecionar visita')
+    empty_label = 'Selecione uma visita'
+    widgets = forms.Select(attrs={'class': 'form-control'}) #adiciona uma classe ao campo de seleção
+    
+    
+    
 
     

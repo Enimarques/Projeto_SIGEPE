@@ -44,7 +44,7 @@ class Visitante(models.Model):
     email = models.CharField(max_length=80, null=True , blank=True)
     estado = models.CharField(max_length=2, choices=ESTADOS_CHOICES, null=True, blank=True)
     cidade = models.CharField(max_length=20, null=True, blank=True)
-    foto = models.ImageField(upload_to='fotos_visitante/')
+    foto = models.ImageField(upload_to='fotos_visitante/', null=True, blank=True)
     data_registro = models.DateTimeField(auto_now_add=True)  #REGISTRA A DATA DE REGISTRO DO USUARIO
     
     def __str__(self):
@@ -71,7 +71,7 @@ class Visita(models.Model):
     motivo_visita = models.TextField (blank=True , null=True)
     etiqueta_emitida = models.BooleanField(default=False)
     reconhecimento_facial = models.BooleanField(default=False)
-    hora_saida = models.TimeField(blank=True, null=True) 
+    data_saida = models.DateTimeField(blank=True, null=True) 
        
     def __str__(self):
         return f'Visita de {self.visitante} ao setor {self.setor} em {self.data_entrada.strftime("%d-%m-%Y às %H:%M:%S")}'

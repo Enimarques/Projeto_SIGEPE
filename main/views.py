@@ -1,22 +1,24 @@
 from django.shortcuts import render, redirect #importando funções de renderização e redirecionamento
 from django.contrib.auth import login, authenticate #importando funções de autenticação
-from .forms import RegisterForm, VisitaForm  #importando o formulario de registro
-from .models import Visita #importando o modelo de visita
+from .forms import RegisterForm, VisitaForm, FimVisitaForm  #importando o formulario de registro
+from .models import Visita #importando o modelo de 
 from django.utils import timezone #importando a função de pegar a data e hora atual
+from django.contrib import messages #importando a função de mensagens
+from django.shortcuts import get_object_or_404 #importando a função de pegar um objeto 
 
 def home(request):
     return render(request, 'home.html')
 
-def register(request):
+def cadastrar_visitante(request):
     if request.method == 'POST': #se o metodo for post (enviar informações)
-        form = RegisterForm(request.POST) #cria um formulario com os dados do post
+        form = RegisterForm(request.POST, request.FILES) #cria um formulario com os dados do post
         if form.is_valid():
-          user = form.save() #salva o formulario
-          login(request, user) #faz o login do usuario automaticamente mas não é necessário
+          form.save() #salva o formulario
+          messages.success(request, 'Visitante registrado com sucesso!')
           return redirect('home')
     else:
         form = RegisterForm() #se não for post, cria um formulario vazio
-    return render(request, 'registro/registro.html', {'form': form}) #retorna o formulario na tela
+    return render(request, 'registro/cadastrar_visitante.html', {'form': form}) #retorna o formulario na tela
 
 
 def registrar_visita(request):
@@ -30,12 +32,15 @@ def registrar_visita(request):
         form = VisitaForm() #se não for post, cria um formulario vazio
     return render(request, 'visitas/registrar_visita.html', {'form': form}) #retorna o formulario na tela
 
-def fim_visita(request, visita_id): #LOGICA PARA FINALIZAR VISITAS
-    visita = get_objects_or_404(visita, id=visita_id) #pega a visita pelo id
+def fim_visita(request): #LOGICA PARA FINALIZAR VISITAS
     if request.method == 'POST': #se o metodo for post (enviar informações)
-        visita.data_saida = timezone.now() #pega a data e hora atual
-        visita.save() #salva a visita
-        messages.success(request, f'Visita de {visita.visitante} finalizada com sucesso!')  # Mensagem de sucesso
-
-        return redirect('home') #retorna para a home
-    return render(request, 'visitas/fim_visita.html', {'visita': visita}) #retorna a pagina de finalização de visita
+        form = FimVisitaForm(request.POST) #cria um formulario com os dados do post
+        if form.is_valid():
+          visita = form.cleaned_data['visita']
+          visita.data_saida = timezone.now() #pega a data e hora atual pra registrar saida
+          visita.save() #salva a visita
+          messages.success(request, f'Visita de {visita.visitante} finalizada com sucesso!')
+          return redirect('home')
+    else:
+        form = FimVisitaForm()
+    return render(request, 'visitas/fim_visita.html', {'form': form}) #retorna a pagina de finalização de visita
