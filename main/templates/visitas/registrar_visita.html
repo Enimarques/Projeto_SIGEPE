@@ -8,6 +8,7 @@
     <form method="post">
         {% csrf_token %}
         {{ form.as_p }}
+        <button type="submit" name="buscar">Buscar</button>
         <button type="submit">Registrar Visita</button>
     </form>
 </body>

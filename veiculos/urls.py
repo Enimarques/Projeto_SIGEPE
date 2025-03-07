@@ -1,8 +1,9 @@
 from django.urls import path
+from django.contrib.auth import views as auth_views
 from . import views
 
 urlpatterns = [
-    path('entrada_veiculo/', views.registrar_entrada, name='entrada_veiculo'),
-    path('saida_veiculo/<int:veiculo_id>/', views.registrar_saida, name='saida_veiculo'),
-    path('listar_veiculos/', views.listar_veiculos, name='listar_veiculos'),  # Adiciona a view de listagem de veículos
+    # path('login/estac/', auth_views.LoginView.as_view(template_name='login_estac.html'), name='login_estac'),
+    # path('logout/estac/', auth_views.LogoutView.as_view(next_page='login_estac'), name='logout-estac'),
+    # path('home/estac/', views.home_estac, name='home_estac),
 ]

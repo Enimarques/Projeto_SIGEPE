@@ -8,13 +8,11 @@
 </head>
 
 <body>
-    <h1>Bem-vindo à Página Inicial</h1>
+    <h1>Bem-vindo ao SIGEPE - Sistema de Gerenciamento de Pessoas</h1>
     <ul>
-        <li><a href="{% url 'entrada_veiculo' %}">Registrar Entrada de Veículo</a></li>
-        <li><a href="{% url 'saida_veiculo' veiculo_id=1 %}">Registrar Saída de Veículo</a></li> <!-- Substitua 1 por um ID válido -->
-        <li><a href="{% url 'cadastrar_visitante' %}">Cadastrar Visitante</a></li>
-        <li><a href="{% url 'registrar_visita' %}">Registrar Visita</a></li>
-        <li><a href="{% url 'fim_visita'%}">Finalizar Visita</a></li>
+        <li><a href="{% url 'recepcao' %}">Recepção-SIGEPE</a></li>
+        <li><a href="{% url 'estacionamento' %}">Estacionamento-SIGEPE</a></li>
+        <li><a href="/admin/"> Gestão-SIGEPE </a> </li>
     </ul>
 </body>
 

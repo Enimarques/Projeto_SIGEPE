@@ -21,11 +21,15 @@ class RegisterForm(forms.ModelForm):#cria um formulario de registro
         }'''
         
 class VisitaForm(forms.ModelForm):
+    cpf = forms.CharField(max_length=14, label='CPF') #cria um campo de cpf
+    nome_visitante = forms.CharField(label='Nome do Visitante', max_length=100, required=False, widget=forms.TextInput(attrs={'readonly': 'readonly'}))    
+    
     class Meta:
         model = Visita
-        fields = ['visitante', 'setor', 'motivo_visita']
+        fields = ['cpf', 'nome_visitante','setor', 'motivo_visita']
         labels = {
-            'visitante': 'Visitante',
+            'cpf': 'CPF do Visitante',
+            'nome_visitante': 'Nome do Visitante',
             'setor': 'Setor',
             'motivo_visita': 'Motivo da visita',
         }

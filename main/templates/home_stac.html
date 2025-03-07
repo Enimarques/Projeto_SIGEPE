@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Estacionamento</title>
+</head>
+<body>
+  <h1>Estacionamento-SIGEPE</h1>
+  <ul>
+    <li><a href="{% url 'entrada_veiculo' %}">Registrar Entrada de Veículo</a></li>
+    <li><a href="{% url 'saida_veiculo' veiculo_id=1 %}">Registrar Saída de Veículo</a></li> <!-- Substitua 1 por um ID válido -->
+  </ul>
+</body>
+</html>
