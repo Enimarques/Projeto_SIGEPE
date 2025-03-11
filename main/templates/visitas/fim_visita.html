@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Finalizar Visita</title>
+</head>
+<body>
+    <h1>Finalizar Visita</h1>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }} <!-- Renderiza o formulário -->
+        <button type="submit">Finalizar Visita</button>
+    </form>
+    <a href="{% url 'home' %}">Voltar à Página Inicial</a>
+</body>
+</html>

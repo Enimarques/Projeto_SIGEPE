@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'veiculos/css/status.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-danger text-white">
+                    <h4 class="mb-0">Registrar Saída de Veículo</h4>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        {% if form.errors %}
+                        <div class="alert alert-danger">
+                            <strong>Por favor, corrija os seguintes erros:</strong>
+                            {{ form.errors }}
+                        </div>
+                        {% endif %}
+
+                        <div class="form-group mb-3">
+                            <label for="{{ form.placa.id_for_label }}" class="form-label">Veículo:</label>
+                            {{ form.placa }}
+                            {% if form.placa.help_text %}
+                            <small class="form-text text-muted">{{ form.placa.help_text }}</small>
+                            {% endif %}
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label for="{{ form.horario_saida.id_for_label }}" class="form-label">Horário de Saída:</label>
+                            {{ form.horario_saida }}
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label for="{{ form.observacoes.id_for_label }}" class="form-label">Observações:</label>
+                            {{ form.observacoes }}
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-danger">
+                                <i class="fas fa-sign-out-alt"></i> Registrar Saída
+                            </button>
+                            <a href="{% url 'veiculos:lista_veiculos' %}" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left"></i> Voltar
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+    // Atualiza o horário atual automaticamente
+    document.addEventListener('DOMContentLoaded', function() {
+        var now = new Date();
+        var datetime = now.toISOString().slice(0,16);
+        document.querySelector('input[type="datetime-local"]').value = datetime;
+    });
+</script>
+{% endblock %}
+{% endblock %}

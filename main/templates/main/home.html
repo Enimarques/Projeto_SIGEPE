@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-12 mb-4">
+            <h1 class="display-4 text-center">Bem-vindo ao SIGEPE</h1>
+            <p class="lead text-center">Sistema de Gestão de Pessoas e Veículos</p>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0"><i class="fas fa-users"></i> Visitantes</h4>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-3">
+                        <a href="{% url 'main:cadastrar_visitante' %}" class="btn btn-outline-primary">
+                            <i class="fas fa-user-plus"></i> Cadastrar Visitante
+                        </a>
+                        <a href="{% url 'main:registrar_visita' %}" class="btn btn-outline-success">
+                            <i class="fas fa-sign-in-alt"></i> Registrar Visita
+                        </a>
+                        <a href="{% url 'main:fim_visita' %}" class="btn btn-outline-danger">
+                            <i class="fas fa-sign-out-alt"></i> Finalizar Visita
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header bg-success text-white">
+                    <h4 class="mb-0"><i class="fas fa-car"></i> Veículos</h4>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-3">
+                        <a href="{% url 'veiculos:lista_veiculos' %}" class="btn btn-outline-success">
+                            <i class="fas fa-list"></i> Lista de Veículos
+                        </a>
+                        <a href="{% url 'veiculos:entrada_veiculo' %}" class="btn btn-outline-primary">
+                            <i class="fas fa-sign-in-alt"></i> Registrar Entrada
+                        </a>
+                        <a href="{% url 'veiculos:saida_veiculo' %}" class="btn btn-outline-danger">
+                            <i class="fas fa-sign-out-alt"></i> Registrar Saída
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
