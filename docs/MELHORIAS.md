@@ -82,6 +82,16 @@
   - Status (automático)
 - Observações (colapsável)
 
+### Acesso Administrativo (12/03/2025)
+- Credenciais de Acesso:
+  - Usuário: admin
+  - Senha: admin123
+  - URL: http://localhost:8000/admin
+- Observações:
+  - Recomenda-se alterar a senha após o primeiro acesso
+  - Acesso restrito apenas para administradores do sistema
+  - Interface administrativa completa do Django
+
 ## Sistema de Visitantes
 
 ### Melhorias no Cadastro (10/03/2025)

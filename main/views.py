@@ -1,16 +1,35 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth import views as auth_views
 from .models import Visitante, Visita, Setor
+from veiculos.models import Veiculo
 from .forms import RegisterForm, VisitaForm, FimVisitaForm
 from django.utils import timezone
+from datetime import datetime
 
-@login_required
 def home(request):
-    return render(request, 'main/home.html')
+    if not request.user.is_authenticated:
+        return redirect('main:login')
+        
+    # Estatísticas de visitas
+    hoje = timezone.now().date()
+    visitas_hoje = Visita.objects.filter(data_visita__date=hoje).count()
+    total_visitantes = Visitante.objects.count()
+    
+    # Estatísticas de veículos
+    veiculos_hoje = Veiculo.objects.filter(horario_entrada__date=hoje).count()
 
-@login_required
+    context = {
+        'visitas_hoje': visitas_hoje,
+        'total_visitantes': total_visitantes,
+        'veiculos_hoje': veiculos_hoje,
+    }
+    return render(request, 'main/home.html', context)
+
 def cadastrar_visitante(request):
+    if not request.user.is_authenticated:
+        return redirect('main:login')
+        
     if request.method == 'POST':
         form = RegisterForm(request.POST, request.FILES)
         if form.is_valid():
@@ -24,13 +43,17 @@ def cadastrar_visitante(request):
     
     return render(request, 'main/cadastrar_visitante.html', {'form': form})
 
-@login_required
 def lista_visitantes(request):
+    if not request.user.is_authenticated:
+        return redirect('main:login')
+        
     visitantes = Visitante.objects.all().order_by('nome_completo')
     return render(request, 'main/lista_visitantes.html', {'visitantes': visitantes})
 
-@login_required
 def cadastrar_visita(request):
+    if not request.user.is_authenticated:
+        return redirect('main:login')
+        
     if request.method == 'POST':
         form = VisitaForm(request.POST)
         if form.is_valid():
@@ -46,8 +69,10 @@ def cadastrar_visita(request):
     
     return render(request, 'main/cadastrar_visita.html', {'form': form})
 
-@login_required
 def lista_visitas(request):
+    if not request.user.is_authenticated:
+        return redirect('main:login')
+        
     visitas = Visita.objects.all().order_by('-data_visita')
     visitas_em_andamento = visitas.filter(horario_saida__isnull=True)
     visitas_finalizadas = visitas.filter(horario_saida__isnull=False)
@@ -60,8 +85,10 @@ def lista_visitas(request):
     }
     return render(request, 'main/lista_visitas.html', context)
 
-@login_required
 def registrar_saida(request, visita_id):
+    if not request.user.is_authenticated:
+        return redirect('main:login')
+        
     visita = get_object_or_404(Visita, id=visita_id)
     if not visita.horario_saida:
         visita.registrar_saida()
@@ -70,8 +97,10 @@ def registrar_saida(request, visita_id):
         messages.warning(request, 'Esta visita já possui registro de saída.')
     return redirect('main:lista_visitas')
 
-@login_required
 def recepcao(request):
+    if not request.user.is_authenticated:
+        return redirect('main:login')
+        
     visitas_em_andamento = Visita.objects.filter(horario_saida__isnull=True).order_by('-data_visita')
     context = {
         'visitas_em_andamento': visitas_em_andamento,

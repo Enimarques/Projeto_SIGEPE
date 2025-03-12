@@ -1,0 +1,119 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Recepção - SIGEPE{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row align-items-center mb-4">
+        <div class="col-md-8">
+            <h1 class="display-5 mb-0">Recepção</h1>
+            <p class="lead text-muted">Controle de visitas em andamento</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{% url 'main:cadastrar_visita' %}" class="btn btn-primary">
+                <i class="fas fa-plus-circle me-2"></i>Nova Visita
+            </a>
+        </div>
+    </div>
+
+    <!-- Estatísticas Rápidas -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-auto">
+                            <i class="fas fa-users fa-3x"></i>
+                        </div>
+                        <div class="col">
+                            <h5 class="card-title mb-0">Visitas em Andamento</h5>
+                            <h2 class="mb-0">{{ total_em_andamento }}</h2>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lista de Visitas em Andamento -->
+    <div class="card">
+        <div class="card-header bg-white">
+            <div class="d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Visitas em Andamento</h5>
+                <div class="btn-group">
+                    <a href="{% url 'main:lista_visitas' %}" class="btn btn-outline-primary btn-sm">
+                        <i class="fas fa-list me-1"></i>Ver Todas
+                    </a>
+                </div>
+            </div>
+        </div>
+        <div class="card-body p-0">
+            {% if visitas_em_andamento %}
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th>Visitante</th>
+                            <th>Setor</th>
+                            <th>Entrada</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for visita in visitas_em_andamento %}
+                        <tr>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <i class="fas fa-user-circle fa-2x me-2 text-muted"></i>
+                                    <div>
+                                        <div class="fw-bold">{{ visita.nome_visitante }}</div>
+                                        <small class="text-muted">{{ visita.documento }}</small>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="badge bg-info">{{ visita.setor }}</span>
+                            </td>
+                            <td>
+                                <div>{{ visita.data_visita|date:"d/m/Y" }}</div>
+                                <small class="text-muted">{{ visita.data_visita|time:"H:i" }}</small>
+                            </td>
+                            <td>
+                                <form method="post" action="{% url 'main:registrar_saida' visita.id %}" class="d-inline">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-outline-success btn-sm">
+                                        <i class="fas fa-sign-out-alt me-1"></i>Registrar Saída
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center py-5">
+                <i class="fas fa-clipboard-check fa-3x text-muted mb-3"></i>
+                <h5 class="text-muted">Nenhuma visita em andamento</h5>
+                <p class="mb-0">Todas as visitas foram finalizadas</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .badge {
+        padding: 0.5em 1em;
+    }
+    .table > :not(caption) > * > * {
+        padding: 1rem;
+    }
+    .btn-outline-success:hover {
+        transform: translateY(-2px);
+    }
+</style>
+{% endblock %}

@@ -1,0 +1,209 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Lista de Visitantes - SIGEPE{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row align-items-center mb-4">
+        <div class="col-md-8">
+            <h1 class="display-5 mb-0">Visitantes</h1>
+            <p class="lead text-muted">Lista completa de visitantes cadastrados</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{% url 'main:cadastrar_visitante' %}" class="btn btn-primary">
+                <i class="fas fa-user-plus me-2"></i>Novo Visitante
+            </a>
+        </div>
+    </div>
+
+    <!-- Lista de Visitantes -->
+    <div class="card">
+        <div class="card-header bg-white">
+            <div class="d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Visitantes Cadastrados</h5>
+                <div class="input-group" style="max-width: 300px;">
+                    <span class="input-group-text">
+                        <i class="fas fa-search"></i>
+                    </span>
+                    <input type="text" id="searchInput" class="form-control" placeholder="Buscar visitante...">
+                </div>
+            </div>
+        </div>
+        <div class="card-body p-0">
+            {% if visitantes %}
+            <div class="table-responsive">
+                <table class="table table-hover mb-0" id="visitantesTable">
+                    <thead>
+                        <tr>
+                            <th>Nome</th>
+                            <th>Documento</th>
+                            <th>Telefone</th>
+                            <th>Empresa</th>
+                            <th>Última Visita</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for visitante in visitantes %}
+                        <tr>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    {% if visitante.foto %}
+                                    <img src="{{ visitante.foto.url }}" alt="{{ visitante.nome_completo }}" class="rounded-circle me-2" style="width: 40px; height: 40px; object-fit: cover;">
+                                    {% else %}
+                                    <i class="fas fa-user-circle fa-2x me-2 text-muted"></i>
+                                    {% endif %}
+                                    <div>
+                                        <div class="fw-bold">{{ visitante.nome_completo }}</div>
+                                        <small class="text-muted">ID: {{ visitante.id }}</small>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <i class="fas fa-id-card me-2 text-muted"></i>
+                                    {{ visitante.documento }}
+                                </div>
+                            </td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <i class="fas fa-phone me-2 text-muted"></i>
+                                    {{ visitante.telefone }}
+                                </div>
+                            </td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <i class="fas fa-building me-2 text-muted"></i>
+                                    {{ visitante.empresa }}
+                                </div>
+                            </td>
+                            <td>
+                                {% if visitante.ultima_visita %}
+                                <div>{{ visitante.ultima_visita.data_visita|date:"d/m/Y" }}</div>
+                                <small class="text-muted">{{ visitante.ultima_visita.data_visita|time:"H:i" }}</small>
+                                {% else %}
+                                <span class="text-muted">Sem visitas</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="btn-group">
+                                    <a href="{% url 'main:cadastrar_visita' %}?visitante={{ visitante.id }}" class="btn btn-outline-primary btn-sm">
+                                        <i class="fas fa-clipboard-list me-1"></i>Nova Visita
+                                    </a>
+                                    <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#visitanteModal{{ visitante.id }}">
+                                        <i class="fas fa-info-circle me-1"></i>Detalhes
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+
+                        <!-- Modal de Detalhes -->
+                        <div class="modal fade" id="visitanteModal{{ visitante.id }}" tabindex="-1">
+                            <div class="modal-dialog modal-lg">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title">Detalhes do Visitante</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <div class="row">
+                                            <div class="col-md-4 text-center mb-3">
+                                                {% if visitante.foto %}
+                                                <img src="{{ visitante.foto.url }}" alt="{{ visitante.nome_completo }}" class="rounded-circle mb-3" style="width: 150px; height: 150px; object-fit: cover;">
+                                                {% else %}
+                                                <i class="fas fa-user-circle fa-6x mb-3 text-muted"></i>
+                                                {% endif %}
+                                                <h5>{{ visitante.nome_completo }}</h5>
+                                                <p class="text-muted">{{ visitante.empresa }}</p>
+                                            </div>
+                                            <div class="col-md-8">
+                                                <div class="row g-3">
+                                                    <div class="col-md-6">
+                                                        <label class="form-label text-muted">Documento</label>
+                                                        <p class="mb-3">{{ visitante.documento }}</p>
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <label class="form-label text-muted">Telefone</label>
+                                                        <p class="mb-3">{{ visitante.telefone }}</p>
+                                                    </div>
+                                                    <div class="col-12">
+                                                        <label class="form-label text-muted">Email</label>
+                                                        <p class="mb-3">{{ visitante.email }}</p>
+                                                    </div>
+                                                    <div class="col-12">
+                                                        <label class="form-label text-muted">Observações</label>
+                                                        <p class="mb-0">{{ visitante.observacoes|default:"Nenhuma observação" }}</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                                        <a href="{% url 'main:cadastrar_visita' %}?visitante={{ visitante.id }}" class="btn btn-primary">
+                                            <i class="fas fa-clipboard-list me-1"></i>Nova Visita
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center py-5">
+                <i class="fas fa-users fa-3x text-muted mb-3"></i>
+                <h5 class="text-muted">Nenhum visitante cadastrado</h5>
+                <p class="mb-3">Comece cadastrando um novo visitante</p>
+                <a href="{% url 'main:cadastrar_visitante' %}" class="btn btn-primary">
+                    <i class="fas fa-user-plus me-2"></i>Novo Visitante
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('searchInput');
+    const table = document.getElementById('visitantesTable');
+    const rows = table.getElementsByTagName('tr');
+
+    searchInput.addEventListener('keyup', function(e) {
+        const term = e.target.value.toLowerCase();
+        
+        for(let i = 1; i < rows.length; i++) {
+            const row = rows[i];
+            const text = row.textContent.toLowerCase();
+            row.style.display = text.includes(term) ? '' : 'none';
+        }
+    });
+});
+</script>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .table > :not(caption) > * > * {
+        padding: 1rem;
+    }
+    .btn-group .btn {
+        transition: all 0.3s ease;
+    }
+    .btn-group .btn:hover {
+        transform: translateY(-2px);
+    }
+    .modal-content {
+        border: none;
+        border-radius: 10px;
+    }
+    .modal-header {
+        border-radius: 10px 10px 0 0;
+    }
+</style>
+{% endblock %}
