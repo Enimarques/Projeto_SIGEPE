@@ -1,0 +1,80 @@
+/* Status indicators */
+.status-presente {
+    background-color: rgba(40, 167, 69, 0.1) !important;
+    border-left: 4px solid #28a745 !important;
+    animation: pulse-green 2s infinite;
+    padding: 8px;
+}
+
+.status-saida {
+    background-color: rgba(220, 53, 69, 0.1) !important;
+    border-left: 4px solid #dc3545 !important;
+    animation: pulse-red 2s infinite;
+    padding: 8px;
+}
+
+.status-sem-visita {
+    background-color: rgba(108, 117, 125, 0.1) !important;
+    border-left: 4px solid #6c757d !important;
+    padding: 8px;
+}
+
+/* Pulse animation for present vehicles */
+@keyframes pulse-green {
+    0% {
+        box-shadow: 0 0 0 0 rgba(40, 167, 69, 0.4);
+    }
+    70% {
+        box-shadow: 0 0 0 10px rgba(40, 167, 69, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(40, 167, 69, 0);
+    }
+}
+
+/* Pulse animation for vehicles that left */
+@keyframes pulse-red {
+    0% {
+        box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.4);
+    }
+    70% {
+        box-shadow: 0 0 0 10px rgba(220, 53, 69, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(220, 53, 69, 0);
+    }
+}
+
+/* Vehicle color indicators */
+.cor-amarela { background-color: rgba(255, 193, 7, 0.1) !important; }
+.cor-azul { background-color: rgba(0, 123, 255, 0.1) !important; }
+.cor-bege { background-color: rgba(250, 235, 215, 0.1) !important; }
+.cor-branca { background-color: rgba(248, 249, 250, 0.1) !important; }
+.cor-cinza { background-color: rgba(108, 117, 125, 0.1) !important; }
+.cor-dourada { background-color: rgba(218, 165, 32, 0.1) !important; }
+.cor-grena { background-color: rgba(128, 0, 0, 0.1) !important; }
+.cor-laranja { background-color: rgba(253, 126, 20, 0.1) !important; }
+.cor-marrom { background-color: rgba(165, 42, 42, 0.1) !important; }
+.cor-prata { background-color: rgba(192, 192, 192, 0.1) !important; }
+.cor-preta { background-color: rgba(52, 58, 64, 0.1) !important; }
+.cor-rosa { background-color: rgba(232, 62, 140, 0.1) !important; }
+.cor-roxa { background-color: rgba(111, 66, 193, 0.1) !important; }
+.cor-verde { background-color: rgba(40, 167, 69, 0.1) !important; }
+.cor-vermelha { background-color: rgba(220, 53, 69, 0.1) !important; }
+.cor-fantasia { background-color: rgba(23, 162, 184, 0.1) !important; }
+
+/* Row hover effect */
+tr:hover td {
+    background-color: rgba(0, 0, 0, 0.05) !important;
+    transition: background-color 0.3s ease;
+}
+
+/* Responsive table */
+@media (max-width: 767px) {
+    .table-responsive {
+        margin-bottom: 15px;
+        overflow-y: hidden;
+        -ms-overflow-style: -ms-autohiding-scrollbar;
+        border: 1px solid #ddd;
+    }
+}
