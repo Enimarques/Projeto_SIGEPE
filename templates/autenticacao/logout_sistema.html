@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Logout - URUTAU{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-6 text-center">
+            <div class="card shadow-sm mt-5">
+                <div class="card-body p-5">
+                    <img src="{% static 'img/logo.png' %}" alt="URUTAU" class="mb-4" style="max-width: 200px;">
+                    <h2 class="display-6 mb-3">Sessão Encerrada</h2>
+                    <p class="lead text-muted mb-4">Você saiu do sistema URUTAU com sucesso.</p>
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'autenticacao:login_sistema' %}" class="btn btn-primary btn-lg">
+                            <i class="fas fa-sign-in-alt me-2"></i>Fazer Login
+                        </a>
+                        <a href="{% url 'main:home_sistema' %}" class="btn btn-outline-secondary">
+                            <i class="fas fa-home me-2"></i>Página Inicial
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

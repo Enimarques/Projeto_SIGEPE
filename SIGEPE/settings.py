@@ -9,6 +9,10 @@ from django.utils.translation import gettext_lazy as _
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+# Adiciona a pasta apps ao Python path
+import sys
+sys.path.insert(0, str(BASE_DIR / 'apps'))
+
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'django-insecure-&#33ll&))(8!w+g_-qil#t#_@j02+b6r!ca!l8pfms4mqxk6(^'
 
@@ -27,8 +31,10 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'widget_tweaks',
-    'main',
-    'veiculos',
+    # Apps locais
+    'apps.main.apps.MainConfig',
+    'apps.veiculos.apps.VeiculosConfig',
+    'apps.autenticacao.apps.AutenticacaoConfig',
 ]
 
 MIDDLEWARE = [
@@ -48,7 +54,7 @@ TEMPLATES = [
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
         'DIRS': [
             os.path.join(BASE_DIR, 'templates'),
-            os.path.join(BASE_DIR, 'main', 'templates'),
+            os.path.join(BASE_DIR, 'apps/main/templates'),
         ],
         'APP_DIRS': True,
         'OPTIONS': {
@@ -126,10 +132,11 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# Login/Logout URLs
-LOGIN_URL = 'main:login'
-LOGIN_REDIRECT_URL = 'main:home'
-LOGOUT_REDIRECT_URL = 'main:login'
+# Admin settings
+ADMIN_URL = 'admin/'
+LOGIN_URL = 'autenticacao:login_sistema'
+LOGIN_REDIRECT_URL = 'main:home_sistema'
+LOGOUT_REDIRECT_URL = 'autenticacao:login_sistema'
 
 # Session settings
 SESSION_COOKIE_AGE = 86400  # 24 hours in seconds
