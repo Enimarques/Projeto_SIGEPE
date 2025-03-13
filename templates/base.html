@@ -9,233 +9,120 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Font Awesome -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    {% load widget_tweaks %}
-    
-    <style>
-        :root {
-            --primary-color: #0D6EFD;
-            --secondary-color: #34495e;
-            --accent-color: #3498db;
-            --success-color: #2ecc71;
-            --warning-color: #f1c40f;
-            --danger-color: #e74c3c;
-            --light-color: #ecf0f1;
-            --dark-color: #2c3e50;
-        }
-        
-        body {
-            background-color: var(--light-color);
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-
-        .navbar {
-            background-color: var(--primary-color) !important;
-            box-shadow: 0 2px 4px rgba(0,0,0,.1);
-            padding: 1rem 0;
-        }
-
-        .navbar-brand {
-            font-weight: bold;
-            color: white !important;
-            font-size: 1.5rem;
-        }
-
-        .nav-link {
-            color: rgba(255,255,255,0.8) !important;
-            transition: all 0.3s ease;
-            padding: 0.5rem 1rem !important;
-            border-radius: 5px;
-            margin: 0 0.2rem;
-        }
-
-        .nav-link:hover {
-            color: white !important;
-            background-color: var(--secondary-color);
-        }
-
-        .main-content {
-            flex: 1;
-            padding: 2rem 0;
-        }
-
-        .card {
-            border: none;
-            border-radius: 10px;
-            box-shadow: 0 4px 6px rgba(0,0,0,.1);
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-            margin-bottom: 1.5rem;
-        }
-
-        .card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 6px 12px rgba(0,0,0,.15);
-        }
-
-        .card-header {
-            border-radius: 10px 10px 0 0 !important;
-            padding: 1rem;
-        }
-
-        .list-group-item {
-            border: none;
-            padding: 1rem;
-            margin-bottom: 0.5rem;
-            border-radius: 5px !important;
-            transition: all 0.3s ease;
-        }
-
-        .list-group-item:hover {
-            background-color: var(--light-color);
-            transform: translateX(5px);
-        }
-
-        .btn {
-            border-radius: 5px;
-            padding: 0.5rem 1.5rem;
-            font-weight: 500;
-            transition: all 0.3s ease;
-        }
-
-        .btn-primary {
-            background-color: var(--accent-color);
-            border-color: var(--accent-color);
-        }
-
-        .btn-primary:hover {
-            background-color: #2980b9;
-            border-color: #2980b9;
-            transform: translateY(-2px);
-        }
-
-        .alert {
-            border-radius: 10px;
-            border: none;
-            margin-bottom: 1rem;
-            padding: 1rem;
-        }
-
-        footer {
-            background-color: var(--primary-color);
-            color: white;
-            padding: 1.5rem 0;
-            margin-top: auto;
-        }
-
-        .stats-card {
-            background-color: white;
-            border-radius: 10px;
-            padding: 1.5rem;
-            text-align: center;
-            height: 100%;
-        }
-
-        .stats-card h3 {
-            font-size: 2.5rem;
-            font-weight: bold;
-            color: var(--accent-color);
-            margin-bottom: 0.5rem;
-        }
-
-        .stats-card p {
-            color: var(--secondary-color);
-            font-size: 1.1rem;
-            margin: 0;
-        }
-
-        .navbar-toggler {
-            border-color: rgba(255,255,255,0.5);
-        }
-
-        .navbar-toggler-icon {
-            background-image: url("data:image/svg+xml,%3csvg viewBox='0 0 30 30' xmlns='http://www.w3.org/2000/svg'%3e%3cpath stroke='rgba(255, 255, 255, 0.5)' stroke-width='2' stroke-linecap='round' stroke-miterlimit='10' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
-        }
-    </style>
+    <!-- Custom CSS -->
+    {% load static %}
+    <link href="{% static 'css/style.css' %}" rel="stylesheet">
     {% block extra_css %}{% endblock %}
 </head>
 <body>
     <!-- Navbar -->
-    <nav class="navbar navbar-expand-lg">
-        <div class="container">
-            <a class="navbar-brand" href="{% url 'main:home_sistema' %}">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="{% url 'home' %}">
                 <i class="fas fa-building me-2"></i>URUTAU
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav me-auto">
-                    {% if user.is_authenticated %}
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'main:status_visita' %}">
-                            <i class="fas fa-desktop me-1"></i> Status Visita
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'main:lista_visitantes' %}">
-                            <i class="fas fa-users me-1"></i> Visitantes
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'veiculos:lista_veiculos' %}">
-                            <i class="fas fa-car me-1"></i> Veículos
-                        </a>
-                    </li>
-                    {% endif %}
-                </ul>
                 <ul class="navbar-nav">
-                    {% if user.is_authenticated %}
+                    <!-- Recepção -->
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-clipboard-list"></i> Recepção
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li>
+                                <a class="dropdown-item" href="{% url 'recepcao:cadastro_visitantes' %}">
+                                    <i class="fas fa-user-plus"></i> Cadastrar Visitante
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="{% url 'recepcao:registro_visitas' %}">
+                                    <i class="fas fa-clipboard-check"></i> Registrar Visita
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="{% url 'recepcao:lista_visitantes' %}">
+                                    <i class="fas fa-users"></i> Lista de Visitantes
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="{% url 'recepcao:historico_visitas' %}">
+                                    <i class="fas fa-history"></i> Histórico de Visitas
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+                    
+                    <!-- Veículos -->
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-car"></i> Veículos
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li>
+                                <a class="dropdown-item" href="{% url 'veiculos:registro_entrada' %}">
+                                    <i class="fas fa-sign-in-alt"></i> Registrar Entrada
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="{% url 'veiculos:registro_saida' %}">
+                                    <i class="fas fa-sign-out-alt"></i> Registrar Saída
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="{% url 'veiculos:lista_veiculos' %}">
+                                    <i class="fas fa-list"></i> Lista de Veículos
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+                    
+                    <!-- Gabinetes -->
                     <li class="nav-item">
-                        <a class="nav-link" href="{% url 'admin:index' %}">
-                            <i class="fas fa-cog me-1"></i> Administração
+                        <a class="nav-link" href="{% url 'gabinetes:home_gabinetes' %}">
+                            <i class="fas fa-door-open"></i> Gabinetes
                         </a>
                     </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'autenticacao:logout_sistema' %}">
-                            <i class="fas fa-sign-out-alt me-1"></i> Sair
+                </ul>
+                
+                <!-- Menu do Usuário -->
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-user"></i> {{ request.user.username }}
                         </a>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li>
+                                <a class="dropdown-item" href="{% url 'autenticacao:logout_sistema' %}">
+                                    <i class="fas fa-sign-out-alt"></i> Sair
+                                </a>
+                            </li>
+                        </ul>
                     </li>
-                    {% else %}
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'autenticacao:login_sistema' %}">
-                            <i class="fas fa-sign-in-alt me-1"></i> Login
-                        </a>
-                    </li>
-                    {% endif %}
                 </ul>
             </div>
         </div>
     </nav>
 
     <!-- Main Content -->
-    <main class="main-content">
-        <div class="container">
-            {% if messages %}
-                {% for message in messages %}
-                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-                        {{ message }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                    </div>
-                {% endfor %}
-            {% endif %}
-            {% block content %}{% endblock %}
+    <main class="container-fluid py-4">
+        {% if messages %}
+        <div class="messages">
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            {% endfor %}
         </div>
+        {% endif %}
+
+        {% block content %}{% endblock %}
     </main>
 
-    <!-- Footer -->
-    <footer>
-        <div class="container">
-            <div class="row">
-                <div class="col-md-12 text-center">
-                    <p class="mb-0">&copy; 2025 URUTAU - Sistema de Gestão de Pessoas. Todos os direitos reservados.</p>
-                </div>
-            </div>
-        </div>
-    </footer>
-
-    <!-- Bootstrap Bundle with Popper -->
+    <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     {% block extra_js %}{% endblock %}
 </body>

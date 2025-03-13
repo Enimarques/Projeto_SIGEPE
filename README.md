@@ -17,6 +17,10 @@
 14. [Detalhes Técnicos](#detalhes-técnicos)
 15. [Integrações e Padrões Específicos](#integrações-e-padrões-específicos)
 
+
+obs- comando para não bagunçar!
+certo! A partir de agora NÃO MEXA MAIS EM NENHUM OUTRO APP A NAO SER O APP DE RECEPCAO! seremos 3 desenvolvedores e nao queremos mexer no app dos outros! crie memoria.
+
 ## Sistema de Veículos
 
 ### Validação de Placas (10/03/2025)

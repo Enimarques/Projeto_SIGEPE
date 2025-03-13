@@ -31,10 +31,12 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'widget_tweaks',
-    # Apps locais
+    # Apps do projeto
     'apps.main.apps.MainConfig',
-    'apps.veiculos.apps.VeiculosConfig',
     'apps.autenticacao.apps.AutenticacaoConfig',
+    'apps.recepcao.apps.RecepcaoConfig',
+    'apps.veiculos.apps.VeiculosConfig',
+    'apps.gabinetes.apps.GabinetesConfig',
 ]
 
 MIDDLEWARE = [
@@ -54,7 +56,6 @@ TEMPLATES = [
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
         'DIRS': [
             os.path.join(BASE_DIR, 'templates'),
-            os.path.join(BASE_DIR, 'apps/main/templates'),
         ],
         'APP_DIRS': True,
         'OPTIONS': {
@@ -115,8 +116,6 @@ DATE_FORMAT = "d/m/Y"
 DATETIME_FORMAT = 'd/m/Y H:i:s'
 
 # Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/5.1/howto/static-files/
-
 STATIC_URL = '/static/'
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'static'),
@@ -135,7 +134,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # Admin settings
 ADMIN_URL = 'admin/'
 LOGIN_URL = 'autenticacao:login_sistema'
-LOGIN_REDIRECT_URL = 'main:home_sistema'
+LOGIN_REDIRECT_URL = 'recepcao:home_sistema'
 LOGOUT_REDIRECT_URL = 'autenticacao:login_sistema'
 
 # Session settings

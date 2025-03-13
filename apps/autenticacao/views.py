@@ -1,32 +1,31 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
-from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.decorators import login_required
+from .forms import LoginForm
 
 # Create your views here.
 
 def login_sistema(request):
     if request.user.is_authenticated:
-        return redirect('main:home_sistema')
+        return redirect('recepcao:home_sistema')
         
     if request.method == 'POST':
-        form = AuthenticationForm(request, data=request.POST)
+        form = LoginForm(request.POST)
         if form.is_valid():
-            username = form.cleaned_data.get('username')
-            password = form.cleaned_data.get('password')
-            user = authenticate(username=username, password=password)
+            username = form.cleaned_data['username']
+            password = form.cleaned_data['password']
+            user = authenticate(request, username=username, password=password)
+            
             if user is not None:
                 login(request, user)
-                messages.success(request, f'Bem-vindo(a) ao URUTAU, {user.username}!')
-                next_url = request.GET.get('next', 'main:home_sistema')
+                next_url = request.GET.get('next', 'recepcao:home_sistema')
+                messages.success(request, f'Bem-vindo, {user.first_name}!')
                 return redirect(next_url)
             else:
                 messages.error(request, 'Usuário ou senha inválidos.')
-        else:
-            messages.error(request, 'Por favor, corrija os erros abaixo.')
     else:
-        form = AuthenticationForm()
+        form = LoginForm()
     
     return render(request, 'autenticacao/login_sistema.html', {
         'form': form,
@@ -37,4 +36,4 @@ def login_sistema(request):
 def logout_sistema(request):
     logout(request)
     messages.success(request, 'Você saiu do sistema com sucesso!')
-    return redirect('autenticacao:login_sistema')
+    return redirect('recepcao:login_sistema')

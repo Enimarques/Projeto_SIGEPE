@@ -1,0 +1,132 @@
+{% extends 'base.html' %}
+
+{% block title %}Detalhes do Visitante - URUTAU{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h2 class="text-primary">
+                <i class="fas fa-user me-2"></i>Detalhes do Visitante
+            </h2>
+            <p class="lead text-muted">Informações completas e histórico de visitas</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{% url 'recepcao:lista_visitantes' %}" class="btn btn-outline-primary me-2">
+                <i class="fas fa-arrow-left me-2"></i>Voltar
+            </a>
+            <a href="{% url 'recepcao:registro_visitas' %}?visitante={{ visitante.id }}" class="btn btn-primary">
+                <i class="fas fa-plus-circle me-2"></i>Nova Visita
+            </a>
+        </div>
+    </div>
+
+    <!-- Informações do Visitante -->
+    <div class="row">
+        <div class="col-md-4 mb-4">
+            <div class="card">
+                <div class="card-body text-center">
+                    {% if visitante.foto %}
+                    <img src="{{ visitante.foto.url }}" alt="Foto" class="rounded-circle mb-3" style="width: 150px; height: 150px; object-fit: cover;">
+                    {% else %}
+                    <i class="fas fa-user-circle fa-6x text-secondary mb-3"></i>
+                    {% endif %}
+                    <h4>{{ visitante.nome_completo }}</h4>
+                    {% if visitante.nome_social %}
+                    <p class="text-muted">{{ visitante.nome_social }}</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        <div class="col-md-8 mb-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title mb-4">Dados Pessoais</h5>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <p class="mb-1"><strong>CPF:</strong></p>
+                            <p>{{ visitante.CPF }}</p>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <p class="mb-1"><strong>Data de Nascimento:</strong></p>
+                            <p>{{ visitante.data_nascimento|date:"d/m/Y" }}</p>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <p class="mb-1"><strong>Telefone:</strong></p>
+                            <p>{{ visitante.telefone }}</p>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <p class="mb-1"><strong>E-mail:</strong></p>
+                            <p>{{ visitante.email|default:"-" }}</p>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <p class="mb-1"><strong>Cidade:</strong></p>
+                            <p>{{ visitante.cidade }}</p>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <p class="mb-1"><strong>Bairro:</strong></p>
+                            <p>{{ visitante.get_bairro_display }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Histórico de Visitas -->
+    <div class="card">
+        <div class="card-body">
+            <h5 class="card-title mb-4">Histórico de Visitas</h5>
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Data</th>
+                            <th>Hora</th>
+                            <th>Objetivo</th>
+                            <th>Saída</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for visita in visitante.visitas.all %}
+                        <tr>
+                            <td>{{ visita.data_entrada|date:"d/m/Y" }}</td>
+                            <td>{{ visita.data_entrada|time:"H:i" }}</td>
+                            <td>{{ visita.get_objetivo_display|default:"-" }}</td>
+                            <td>
+                                {% if visita.data_saida %}
+                                {{ visita.data_saida|date:"d/m/Y" }} {{ visita.data_saida|time:"H:i" }}
+                                {% else %}
+                                -
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if visita.status == 'em_andamento' %}
+                                <span class="badge bg-success">Em Andamento</span>
+                                {% elif visita.status == 'finalizada' %}
+                                <span class="badge bg-secondary">Finalizada</span>
+                                {% elif visita.status == 'cancelada' %}
+                                <span class="badge bg-danger">Cancelada</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="text-center py-4">
+                                <i class="fas fa-history fa-3x text-muted mb-3"></i>
+                                <h5 class="text-muted">Nenhuma visita registrada</h5>
+                                <p class="mb-3">Registre uma nova visita para este visitante</p>
+                                <a href="{% url 'recepcao:registro_visitas' %}?visitante={{ visitante.id }}" class="btn btn-primary">
+                                    <i class="fas fa-plus-circle me-2"></i>Registrar Nova Visita
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

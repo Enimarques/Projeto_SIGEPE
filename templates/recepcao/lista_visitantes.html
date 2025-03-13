@@ -1,0 +1,141 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Lista de Visitantes - URUTAU{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row align-items-center mb-4">
+        <div class="col-md-8">
+            <h1 class="display-5 mb-0">Visitantes</h1>
+            <p class="lead text-muted">Lista completa de visitantes cadastrados</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{% url 'recepcao:cadastro_visitantes' %}" class="btn btn-primary">
+                <i class="fas fa-plus-circle me-2"></i>Novo Visitante
+            </a>
+        </div>
+    </div>
+
+    <!-- Lista de Visitantes -->
+    <div class="card">
+        <div class="card-header bg-white">
+            <div class="d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Visitantes Cadastrados</h5>
+                <div class="input-group" style="max-width: 300px;">
+                    <span class="input-group-text">
+                        <i class="fas fa-search"></i>
+                    </span>
+                    <input type="text" id="searchInput" class="form-control" placeholder="Buscar visitante...">
+                </div>
+            </div>
+        </div>
+        <div class="card-body p-0">
+            {% if visitantes %}
+            <div class="table-responsive">
+                <table class="table table-hover mb-0" id="visitantesTable">
+                    <thead>
+                        <tr>
+                            <th>Nome</th>
+                            <th>Documento</th>
+                            <th>Telefone</th>
+                            <th>Empresa</th>
+                            <th>Última Visita</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for visitante in visitantes %}
+                        <tr>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    {% if visitante.foto %}
+                                    <img src="{{ visitante.foto.url }}" alt="{{ visitante.nome_completo }}" class="rounded-circle me-2" style="width: 40px; height: 40px; object-fit: cover;">
+                                    {% else %}
+                                    <i class="fas fa-user-circle fa-2x me-2 text-muted"></i>
+                                    {% endif %}
+                                    <div>
+                                        <div class="fw-bold">
+                                            <a href="{% url 'recepcao:detalhes_visitante' pk=visitante.id %}" class="text-decoration-none">
+                                                {{ visitante.nome_completo }}
+                                            </a>
+                                        </div>
+                                        <small class="text-muted">ID: {{ visitante.id }}</small>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <i class="fas fa-id-card me-2 text-muted"></i>
+                                    {{ visitante.documento }}
+                                </div>
+                            </td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <i class="fas fa-phone me-2 text-muted"></i>
+                                    {{ visitante.telefone }}
+                                </div>
+                            </td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <i class="fas fa-building me-2 text-muted"></i>
+                                    {{ visitante.empresa }}
+                                </div>
+                            </td>
+                            <td>
+                                {% if visitante.ultima_visita %}
+                                <div>{{ visitante.ultima_visita.data_visita|date:"d/m/Y" }}</div>
+                                <small class="text-muted">{{ visitante.ultima_visita.data_visita|time:"H:i" }}</small>
+                                {% else %}
+                                <span class="text-muted">Sem visitas</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="btn-group">
+                                    <a href="{% url 'recepcao:registro_visitas' %}?visitante={{ visitante.id }}" class="btn btn-outline-success btn-sm">
+                                        <i class="fas fa-clipboard-list me-1"></i>Nova Visita
+                                    </a>
+                                    <a href="{% url 'recepcao:detalhes_visitante' visitante.id %}" class="btn btn-outline-primary btn-sm">
+                                        <i class="fas fa-info-circle me-1"></i>Detalhes
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center py-5">
+                <i class="fas fa-users fa-3x text-muted mb-3"></i>
+                <h5 class="text-muted">Nenhum visitante cadastrado</h5>
+                <p class="text-muted mb-0">Cadastre um novo visitante usando o botão "Novo Visitante"</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const searchInput = document.getElementById('searchInput');
+        const table = document.getElementById('visitantesTable');
+        
+        if (searchInput && table) {
+            searchInput.addEventListener('keyup', function() {
+                const searchText = this.value.toLowerCase();
+                const rows = table.getElementsByTagName('tr');
+                
+                Array.from(rows).forEach(function(row, index) {
+                    if (index === 0) return; // Skip header row
+                    
+                    const text = row.textContent.toLowerCase();
+                    row.style.display = text.includes(searchText) ? '' : 'none';
+                });
+            });
+        }
+    });
+</script>
+{% endblock %}

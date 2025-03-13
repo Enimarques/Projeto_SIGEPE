@@ -1,0 +1,221 @@
+{% extends 'base.html' %}
+
+{% block title %}Histórico de Visitas - URUTAU{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- Cabeçalho -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h2 class="text-primary">
+                <i class="fas fa-history me-2"></i>Histórico de Visitas
+            </h2>
+            <p class="lead text-muted">Registro completo de todas as visitas</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{% url 'recepcao:registro_visitas' %}" class="btn btn-primary">
+                <i class="fas fa-plus-circle me-2"></i>Nova Visita
+            </a>
+        </div>
+    </div>
+
+    <!-- Cards de Estatísticas -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <h6 class="card-title">Total de Visitas</h6>
+                    <h2 class="mb-0">{{ total_visitas }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <h6 class="card-title">Em Andamento</h6>
+                    <h2 class="mb-0">{{ visitas_em_andamento }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-secondary text-white">
+                <div class="card-body">
+                    <h6 class="card-title">Finalizadas</h6>
+                    <h2 class="mb-0">{{ visitas_finalizadas }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-danger text-white">
+                <div class="card-body">
+                    <h6 class="card-title">Canceladas</h6>
+                    <h2 class="mb-0">{{ visitas_canceladas }}</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <!-- Busca -->
+                <div class="col-md-4">
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="fas fa-search"></i></span>
+                        <input type="text" name="busca" class="form-control" placeholder="Buscar por nome..." value="{{ busca|default:'' }}">
+                    </div>
+                </div>
+                
+                <!-- Status -->
+                <div class="col-md-3">
+                    <select name="status" class="form-select">
+                        <option value="">Status</option>
+                        <option value="em_andamento" {% if status_filtro == 'em_andamento' %}selected{% endif %}>Em Andamento</option>
+                        <option value="finalizada" {% if status_filtro == 'finalizada' %}selected{% endif %}>Finalizada</option>
+                        <option value="cancelada" {% if status_filtro == 'cancelada' %}selected{% endif %}>Cancelada</option>
+                    </select>
+                </div>
+                
+                <!-- Período -->
+                <div class="col-md-3">
+                    <select name="periodo" class="form-select">
+                        <option value="">Período</option>
+                        <option value="hoje" {% if periodo_filtro == 'hoje' %}selected{% endif %}>Hoje</option>
+                        <option value="semana" {% if periodo_filtro == 'semana' %}selected{% endif %}>Esta Semana</option>
+                        <option value="mes" {% if periodo_filtro == 'mes' %}selected{% endif %}>Este Mês</option>
+                    </select>
+                </div>
+                
+                <!-- Botões -->
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-filter me-2"></i>Filtrar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Lista de Visitas -->
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Visitante</th>
+                            <th>Setor</th>
+                            <th>Objetivo</th>
+                            <th>Entrada</th>
+                            <th>Saída</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for visita in page_obj %}
+                        <tr>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    {% if visita.visitante.foto %}
+                                    <img src="{{ visita.visitante.foto.url }}" alt="Foto" class="rounded-circle me-2" style="width: 40px; height: 40px; object-fit: cover;">
+                                    {% else %}
+                                    <i class="fas fa-user-circle fa-2x text-secondary me-2"></i>
+                                    {% endif %}
+                                    <div>
+                                        <strong>{{ visita.visitante.nome_completo }}</strong>
+                                        {% if visita.visitante.nome_social %}
+                                        <br>
+                                        <small class="text-muted">{{ visita.visitante.nome_social }}</small>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </td>
+                            <td>{{ visita.visitante.setor|default:"-" }}</td>
+                            <td>{{ visita.visitante.get_objetivo_visita_display|default:"-" }}</td>
+                            <td>
+                                {{ visita.data_entrada|date:"d/m/Y" }}<br>
+                                <small class="text-muted">{{ visita.data_entrada|time:"H:i" }}</small>
+                            </td>
+                            <td>
+                                {% if visita.data_saida %}
+                                {{ visita.data_saida|date:"d/m/Y" }}<br>
+                                <small class="text-muted">{{ visita.data_saida|time:"H:i" }}</small>
+                                {% else %}
+                                -
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if visita.status == 'em_andamento' %}
+                                <span class="badge bg-success">Em Andamento</span>
+                                {% elif visita.status == 'finalizada' %}
+                                <span class="badge bg-secondary">Finalizada</span>
+                                {% elif visita.status == 'cancelada' %}
+                                <span class="badge bg-danger">Cancelada</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center py-4">
+                                <i class="fas fa-history fa-3x text-muted mb-3"></i>
+                                <h5 class="text-muted">Nenhuma visita encontrada</h5>
+                                <p class="mb-3">Tente outros filtros ou registre uma nova visita</p>
+                                <a href="{% url 'recepcao:registro_visitas' %}" class="btn btn-primary">
+                                    <i class="fas fa-plus-circle me-2"></i>Registrar Nova Visita
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Paginação -->
+            {% if page_obj.paginator.num_pages > 1 %}
+            <nav aria-label="Navegação de páginas" class="mt-4">
+                <ul class="pagination justify-content-center">
+                    {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page=1{% if busca %}&busca={{ busca }}{% endif %}{% if status_filtro %}&status={{ status_filtro }}{% endif %}{% if periodo_filtro %}&periodo={{ periodo_filtro }}{% endif %}">
+                            <i class="fas fa-angle-double-left"></i>
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if busca %}&busca={{ busca }}{% endif %}{% if status_filtro %}&status={{ status_filtro }}{% endif %}{% if periodo_filtro %}&periodo={{ periodo_filtro }}{% endif %}">
+                            <i class="fas fa-angle-left"></i>
+                        </a>
+                    </li>
+                    {% endif %}
+
+                    {% for num in page_obj.paginator.page_range %}
+                    {% if page_obj.number == num %}
+                    <li class="page-item active">
+                        <span class="page-link">{{ num }}</span>
+                    </li>
+                    {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ num }}{% if busca %}&busca={{ busca }}{% endif %}{% if status_filtro %}&status={{ status_filtro }}{% endif %}{% if periodo_filtro %}&periodo={{ periodo_filtro }}{% endif %}">{{ num }}</a>
+                    </li>
+                    {% endif %}
+                    {% endfor %}
+
+                    {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if busca %}&busca={{ busca }}{% endif %}{% if status_filtro %}&status={{ status_filtro }}{% endif %}{% if periodo_filtro %}&periodo={{ periodo_filtro }}{% endif %}">
+                            <i class="fas fa-angle-right"></i>
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if busca %}&busca={{ busca }}{% endif %}{% if status_filtro %}&status={{ status_filtro }}{% endif %}{% if periodo_filtro %}&periodo={{ periodo_filtro }}{% endif %}">
+                            <i class="fas fa-angle-double-right"></i>
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

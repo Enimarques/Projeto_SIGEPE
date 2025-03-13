@@ -1,0 +1,124 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}URUTAU - Gabinetes{% endblock %}
+
+{% block extra_css %}
+<link href="https://cdn.jsdelivr.net/npm/chart.js@4.3.0/dist/chart.min.css" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Título da Página -->
+    <div class="row mb-4">
+        <div class="col">
+            <h2 class="display-6">
+                <i class="fas fa-building me-2"></i>Dashboard dos Gabinetes
+            </h2>
+        </div>
+    </div>
+
+    <!-- Cards de Estatísticas -->
+    <div class="row mb-4">
+        <!-- Visitas Hoje -->
+        <div class="col-md-3">
+            <div class="stats-card">
+                <i class="fas fa-users fa-2x mb-3 text-primary"></i>
+                <h3>{{ visitas_hoje }}</h3>
+                <p>Visitas Hoje</p>
+            </div>
+        </div>
+        
+        <!-- Visitas em Andamento -->
+        <div class="col-md-3">
+            <div class="stats-card">
+                <i class="fas fa-clock fa-2x mb-3 text-warning"></i>
+                <h3>{{ visitas_andamento }}</h3>
+                <p>Visitas em Andamento</p>
+            </div>
+        </div>
+        
+        <!-- Total de Visitas -->
+        <div class="col-md-3">
+            <div class="stats-card">
+                <i class="fas fa-clipboard-list fa-2x mb-3 text-success"></i>
+                <h3>{{ total_visitas }}</h3>
+                <p>Total de Visitas</p>
+            </div>
+        </div>
+        
+        <!-- Visitas do Mês -->
+        <div class="col-md-3">
+            <div class="stats-card">
+                <i class="fas fa-calendar fa-2x mb-3 text-info"></i>
+                <h3>{{ visitas_mes }}</h3>
+                <p>Visitas do Mês</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Gráfico de Visitas -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-chart-line me-2"></i>Histórico de Visitas
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="visitasChart" height="100"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.3.0/dist/chart.umd.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const ctx = document.getElementById('visitasChart').getContext('2d');
+    const chartLabels = JSON.parse('{{ labels|safe }}');
+    const chartValues = JSON.parse('{{ values|safe }}');
+    
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: chartLabels,
+            datasets: [{
+                label: 'Visitas por Dia',
+                data: chartValues,
+                borderColor: '#0D6EFD',
+                backgroundColor: 'rgba(13, 110, 253, 0.1)',
+                borderWidth: 2,
+                fill: true,
+                tension: 0.4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'top'
+                },
+                title: {
+                    display: true,
+                    text: 'Visitas nos Últimos 7 Dias'
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        stepSize: 1
+                    }
+                }
+            }
+        }
+    });
+});
+</script>
+{% endblock %}
