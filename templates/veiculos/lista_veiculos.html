@@ -1,0 +1,196 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Lista de Veículos - URUTAU{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row align-items-center mb-4">
+        <div class="col-md-8">
+            <h1 class="display-5 mb-0">Veículos</h1>
+            <p class="lead text-muted">Controle de entrada e saída de veículos</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{% url 'veiculos:registro_entrada' %}" class="btn btn-primary">
+                <i class="fas fa-car me-2"></i>Nova Entrada
+            </a>
+        </div>
+    </div>
+
+    <!-- Lista de Veículos -->
+    <div class="card">
+        <div class="card-header bg-white">
+            <div class="d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Veículos no Pátio</h5>
+                <div class="input-group" style="max-width: 300px;">
+                    <span class="input-group-text">
+                        <i class="fas fa-search"></i>
+                    </span>
+                    <input type="text" id="searchInput" class="form-control" placeholder="Buscar veículo...">
+                </div>
+            </div>
+        </div>
+        <div class="card-body p-0">
+            {% if veiculos_em_patio %}
+            <div class="table-responsive">
+                <table class="table table-hover mb-0" id="veiculosTable">
+                    <thead>
+                        <tr>
+                            <th>Placa</th>
+                            <th>Modelo</th>
+                            <th>Motorista</th>
+                            <th>Entrada</th>
+                            <th>Status</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for veiculo in veiculos_em_patio %}
+                        <tr>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <i class="fas fa-car fa-lg me-2 text-muted"></i>
+                                    <div>
+                                        <div class="fw-bold">
+                                            <a href="{% url 'veiculos:detalhes_veiculo' placa=veiculo.placa %}" class="text-decoration-none">
+                                                {{ veiculo.placa }}
+                                            </a>
+                                        </div>
+                                        <small class="text-muted">{{ veiculo.tipo_veiculo }}</small>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div>
+                                        <div>{{ veiculo.modelo }}</div>
+                                        <small class="text-muted">{{ veiculo.cor }}</small>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>{{ veiculo.motorista }}</td>
+                            <td>
+                                <div>{{ veiculo.horario_entrada|date:"d/m/Y" }}</div>
+                                <small class="text-muted">{{ veiculo.horario_entrada|time:"H:i" }}</small>
+                            </td>
+                            <td>
+                                {% if veiculo.status == 'presente' %}
+                                <span class="badge bg-success">No Pátio</span>
+                                {% else %}
+                                <span class="badge bg-secondary">Saiu</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="btn-group">
+                                    <a href="{% url 'veiculos:registro_saida' %}?placa={{ veiculo.placa }}" class="btn btn-outline-primary btn-sm">
+                                        <i class="fas fa-sign-out-alt me-1"></i>Registrar Saída
+                                    </a>
+                                    <a href="{% url 'veiculos:detalhes_veiculo' placa=veiculo.placa %}" class="btn btn-outline-secondary btn-sm">
+                                        <i class="fas fa-info-circle me-1"></i>Detalhes
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center py-5">
+                <i class="fas fa-car fa-3x text-muted mb-3"></i>
+                <h5 class="text-muted">Nenhum veículo no pátio</h5>
+                <p class="mb-3">Registre a entrada de um novo veículo</p>
+                <a href="{% url 'veiculos:registro_entrada' %}" class="btn btn-primary">
+                    <i class="fas fa-car me-2"></i>Nova Entrada
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Veículos que Saíram -->
+    {% if veiculos_saida %}
+    <div class="card mt-4">
+        <div class="card-header bg-white">
+            <h5 class="mb-0">Histórico de Saídas</h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th>Placa</th>
+                            <th>Modelo</th>
+                            <th>Entrada</th>
+                            <th>Saída</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for veiculo in veiculos_saida %}
+                        <tr>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <i class="fas fa-car fa-lg me-2 text-muted"></i>
+                                    <div>
+                                        <div class="fw-bold">
+                                            <a href="{% url 'veiculos:detalhes_veiculo' placa=veiculo.placa %}" class="text-decoration-none">
+                                                {{ veiculo.placa }}
+                                            </a>
+                                        </div>
+                                        <small class="text-muted">{{ veiculo.tipo_veiculo }}</small>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <div>{{ veiculo.modelo }}</div>
+                                <small class="text-muted">{{ veiculo.cor }}</small>
+                            </td>
+                            <td>
+                                <div>{{ veiculo.horario_entrada|date:"d/m/Y" }}</div>
+                                <small class="text-muted">{{ veiculo.horario_entrada|time:"H:i" }}</small>
+                            </td>
+                            <td>
+                                <div>{{ veiculo.horario_saida|date:"d/m/Y" }}</div>
+                                <small class="text-muted">{{ veiculo.horario_saida|time:"H:i" }}</small>
+                            </td>
+                            <td>
+                                <a href="{% url 'veiculos:detalhes_veiculo' placa=veiculo.placa %}" class="btn btn-outline-secondary btn-sm">
+                                    <i class="fas fa-info-circle me-1"></i>Detalhes
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('searchInput');
+    const table = document.getElementById('veiculosTable');
+    const rows = table.getElementsByTagName('tr');
+
+    searchInput.addEventListener('keyup', function() {
+        const searchTerm = this.value.toLowerCase();
+        
+        for (let i = 1; i < rows.length; i++) {
+            const row = rows[i];
+            const text = row.textContent.toLowerCase();
+            
+            if (text.includes(searchTerm)) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        }
+    });
+});
+</script>
+{% endblock %}

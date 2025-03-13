@@ -1,0 +1,125 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2 class="text-primary">
+                <i class="fas fa-tachometer-alt me-2"></i>Dashboard
+            </h2>
+            <p class="text-muted">Bem-vindo ao URUTAU - Sistema de Gestão de Pessoas</p>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Visitas Hoje -->
+        <div class="col-md-6 col-lg-3 mb-4">
+            <div class="card border-primary h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0 me-3">
+                            <i class="fas fa-calendar-day fa-2x text-primary"></i>
+                        </div>
+                        <div>
+                            <h6 class="card-title text-muted mb-0">Visitas Hoje</h6>
+                            <h2 class="mt-2 mb-0">{{ visitas_hoje }}</h2>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Visitas em Andamento -->
+        <div class="col-md-6 col-lg-3 mb-4">
+            <div class="card border-success h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0 me-3">
+                            <i class="fas fa-clock fa-2x text-success"></i>
+                        </div>
+                        <div>
+                            <h6 class="card-title text-muted mb-0">Visitas em Andamento</h6>
+                            <h2 class="mt-2 mb-0">{{ visitas_em_andamento }}</h2>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Total de Visitantes -->
+        <div class="col-md-6 col-lg-3 mb-4">
+            <div class="card border-info h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0 me-3">
+                            <i class="fas fa-users fa-2x text-info"></i>
+                        </div>
+                        <div>
+                            <h6 class="card-title text-muted mb-0">Visitantes Cadastrados</h6>
+                            <h2 class="mt-2 mb-0">{{ total_visitantes }}</h2>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Veículos Presentes -->
+        <div class="col-md-6 col-lg-3 mb-4">
+            <div class="card border-warning h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0 me-3">
+                            <i class="fas fa-car fa-2x text-warning"></i>
+                        </div>
+                        <div>
+                            <h6 class="card-title text-muted mb-0">Veículos no Estacionamento</h6>
+                            <h2 class="mt-2 mb-0">{{ veiculos_presentes }}</h2>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Ações Rápidas -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <h4 class="text-primary mb-4">
+                <i class="fas fa-bolt me-2"></i>Ações Rápidas
+            </h4>
+        </div>
+        <div class="col-md-6 col-lg-3 mb-4">
+            <a href="{% url 'main:registro_visitas' %}" class="card h-100 text-decoration-none">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0 me-3">
+                            <i class="fas fa-clipboard-list fa-2x text-primary"></i>
+                        </div>
+                        <div>
+                            <h6 class="card-title mb-0">Registrar Visita</h6>
+                            <p class="card-text text-muted small mb-0">Nova visita</p>
+                        </div>
+                    </div>
+                </div>
+            </a>
+        </div>
+        <div class="col-md-6 col-lg-3 mb-4">
+            <a href="{% url 'veiculos:registro_entrada' %}" class="card h-100 text-decoration-none">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0 me-3">
+                            <i class="fas fa-car-side fa-2x text-success"></i>
+                        </div>
+                        <div>
+                            <h6 class="card-title mb-0">Registrar Veículo</h6>
+                            <p class="card-text text-muted small mb-0">Entrada de veículo</p>
+                        </div>
+                    </div>
+                </div>
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
