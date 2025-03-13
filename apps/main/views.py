@@ -71,6 +71,17 @@ def lista_visitantes(request):
     return render(request, 'main/visitantes/lista_visitantes.html', {'visitantes': visitantes})
 
 @login_required(login_url='autenticacao:login_sistema')
+def detalhes_visitante(request, pk):
+    visitante = get_object_or_404(Visitante, pk=pk)
+    visitas = Visita.objects.filter(visitante=visitante).order_by('-data_entrada')
+    
+    context = {
+        'visitante': visitante,
+        'visitas': visitas,
+    }
+    return render(request, 'main/visitantes/detalhes_visitante.html', context)
+
+@login_required(login_url='autenticacao:login_sistema')
 def registro_visitas(request):
     if request.method == 'POST':
         form = VisitaForm(request.POST)

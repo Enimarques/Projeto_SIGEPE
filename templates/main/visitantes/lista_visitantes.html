@@ -55,7 +55,11 @@
                                     <i class="fas fa-user-circle fa-2x me-2 text-muted"></i>
                                     {% endif %}
                                     <div>
-                                        <div class="fw-bold">{{ visitante.nome_completo }}</div>
+                                        <div class="fw-bold">
+                                            <a href="{% url 'main:detalhes_visitante' pk=visitante.id %}" class="text-decoration-none">
+                                                {{ visitante.nome_completo }}
+                                            </a>
+                                        </div>
                                         <small class="text-muted">ID: {{ visitante.id }}</small>
                                     </div>
                                 </div>
@@ -91,63 +95,12 @@
                                     <a href="{% url 'main:registro_visitas' %}?visitante={{ visitante.id }}" class="btn btn-outline-primary btn-sm">
                                         <i class="fas fa-clipboard-list me-1"></i>Nova Visita
                                     </a>
-                                    <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#visitanteModal{{ visitante.id }}">
+                                    <a href="{% url 'main:detalhes_visitante' pk=visitante.id %}" class="btn btn-outline-secondary btn-sm">
                                         <i class="fas fa-info-circle me-1"></i>Detalhes
-                                    </button>
+                                    </a>
                                 </div>
                             </td>
                         </tr>
-
-                        <!-- Modal de Detalhes -->
-                        <div class="modal fade" id="visitanteModal{{ visitante.id }}" tabindex="-1">
-                            <div class="modal-dialog modal-lg">
-                                <div class="modal-content">
-                                    <div class="modal-header">
-                                        <h5 class="modal-title">Detalhes do Visitante</h5>
-                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                                    </div>
-                                    <div class="modal-body">
-                                        <div class="row">
-                                            <div class="col-md-4 text-center mb-3">
-                                                {% if visitante.foto %}
-                                                <img src="{{ visitante.foto.url }}" alt="{{ visitante.nome_completo }}" class="rounded-circle mb-3" style="width: 150px; height: 150px; object-fit: cover;">
-                                                {% else %}
-                                                <i class="fas fa-user-circle fa-6x mb-3 text-muted"></i>
-                                                {% endif %}
-                                                <h5>{{ visitante.nome_completo }}</h5>
-                                                <p class="text-muted">{{ visitante.empresa }}</p>
-                                            </div>
-                                            <div class="col-md-8">
-                                                <div class="row g-3">
-                                                    <div class="col-md-6">
-                                                        <label class="form-label text-muted">Documento</label>
-                                                        <p class="mb-3">{{ visitante.documento }}</p>
-                                                    </div>
-                                                    <div class="col-md-6">
-                                                        <label class="form-label text-muted">Telefone</label>
-                                                        <p class="mb-3">{{ visitante.telefone }}</p>
-                                                    </div>
-                                                    <div class="col-12">
-                                                        <label class="form-label text-muted">Email</label>
-                                                        <p class="mb-3">{{ visitante.email }}</p>
-                                                    </div>
-                                                    <div class="col-12">
-                                                        <label class="form-label text-muted">Observações</label>
-                                                        <p class="mb-0">{{ visitante.observacoes|default:"Nenhuma observação" }}</p>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="modal-footer">
-                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
-                                        <a href="{% url 'main:registro_visitas' %}?visitante={{ visitante.id }}" class="btn btn-primary">
-                                            <i class="fas fa-clipboard-list me-1"></i>Nova Visita
-                                        </a>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
                         {% endfor %}
                     </tbody>
                 </table>
@@ -156,34 +109,32 @@
             <div class="text-center py-5">
                 <i class="fas fa-users fa-3x text-muted mb-3"></i>
                 <h5 class="text-muted">Nenhum visitante cadastrado</h5>
-                <p class="mb-3">Comece cadastrando um novo visitante</p>
-                <a href="{% url 'main:cadastro_visitantes' %}" class="btn btn-primary">
-                    <i class="fas fa-user-plus me-2"></i>Novo Visitante
-                </a>
+                <p class="text-muted mb-0">Cadastre um novo visitante usando o botão "Novo Visitante"</p>
             </div>
             {% endif %}
         </div>
     </div>
 </div>
-{% endblock %}
 
 {% block extra_js %}
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    const searchInput = document.getElementById('searchInput');
-    const table = document.getElementById('visitantesTable');
-    const rows = table.getElementsByTagName('tr');
-
-    searchInput.addEventListener('keyup', function() {
-        const searchTerm = this.value.toLowerCase();
+    document.addEventListener('DOMContentLoaded', function() {
+        const searchInput = document.getElementById('searchInput');
+        const table = document.getElementById('visitantesTable');
         
-        Array.from(rows).forEach(function(row, index) {
-            if (index === 0) return; // Skip header row
-            
-            const text = row.textContent.toLowerCase();
-            row.style.display = text.includes(searchTerm) ? '' : 'none';
-        });
+        if (searchInput && table) {
+            searchInput.addEventListener('keyup', function() {
+                const searchText = this.value.toLowerCase();
+                const rows = table.getElementsByTagName('tr');
+                
+                Array.from(rows).forEach(function(row, index) {
+                    if (index === 0) return; // Skip header row
+                    
+                    const text = row.textContent.toLowerCase();
+                    row.style.display = text.includes(searchText) ? '' : 'none';
+                });
+            });
+        }
     });
-});
 </script>
 {% endblock %}

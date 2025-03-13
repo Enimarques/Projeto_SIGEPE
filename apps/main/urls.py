@@ -11,6 +11,7 @@ urlpatterns = [
     # Visitantes
     path('visitantes/cadastro/', views.cadastro_visitantes, name='cadastro_visitantes'),
     path('visitantes/lista/', views.lista_visitantes, name='lista_visitantes'),
+    path('visitantes/<int:pk>/', views.detalhes_visitante, name='detalhes_visitante'),
     
     # Visitas
     path('visitantes/visitas/registro/', views.registro_visitas, name='registro_visitas'),

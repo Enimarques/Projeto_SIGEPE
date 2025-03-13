@@ -56,7 +56,7 @@
             </div>
         </div>
         <div class="card-body p-0">
-            {% if veiculos %}
+            {% if veiculos_em_patio %}
             <div class="table-responsive">
                 <table class="table table-hover mb-0" id="veiculosTable">
                     <thead>
@@ -70,13 +70,17 @@
                         </tr>
                     </thead>
                     <tbody>
-                        {% for veiculo in veiculos %}
+                        {% for veiculo in veiculos_em_patio %}
                         <tr>
                             <td>
                                 <div class="d-flex align-items-center">
                                     <i class="fas fa-car fa-lg me-2 text-muted"></i>
                                     <div>
-                                        <div class="fw-bold">{{ veiculo.placa }}</div>
+                                        <div class="fw-bold">
+                                            <a href="{% url 'veiculos:detalhes_veiculo' placa=veiculo.placa %}" class="text-decoration-none">
+                                                {{ veiculo.placa }}
+                                            </a>
+                                        </div>
                                         <small class="text-muted">{{ veiculo.tipo_veiculo }}</small>
                                     </div>
                                 </div>
@@ -91,77 +95,29 @@
                             </td>
                             <td>{{ veiculo.motorista }}</td>
                             <td>
-                                <div>{{ veiculo.data_entrada|date:"d/m/Y" }}</div>
-                                <small class="text-muted">{{ veiculo.data_entrada|time:"H:i" }}</small>
+                                <div>{{ veiculo.horario_entrada|date:"d/m/Y" }}</div>
+                                <small class="text-muted">{{ veiculo.horario_entrada|time:"H:i" }}</small>
                             </td>
                             <td>
-                                {% if veiculo.status == 'no_patio' %}
+                                {% if veiculo.status == 'presente' %}
                                 <span class="badge bg-success">No Pátio</span>
-                                {% elif veiculo.status == 'saiu' %}
+                                {% else %}
                                 <span class="badge bg-secondary">Saiu</span>
                                 {% endif %}
                             </td>
                             <td>
                                 <div class="btn-group">
-                                    {% if veiculo.status == 'no_patio' %}
+                                    {% if veiculo.status == 'presente' %}
                                     <a href="{% url 'veiculos:registro_saida' %}?placa={{ veiculo.placa }}" class="btn btn-outline-primary btn-sm">
                                         <i class="fas fa-sign-out-alt me-1"></i>Registrar Saída
                                     </a>
                                     {% endif %}
-                                    <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#veiculoModal{{ veiculo.id }}">
+                                    <a href="{% url 'veiculos:detalhes_veiculo' placa=veiculo.placa %}" class="btn btn-outline-secondary btn-sm">
                                         <i class="fas fa-info-circle me-1"></i>Detalhes
-                                    </button>
+                                    </a>
                                 </div>
                             </td>
                         </tr>
-
-                        <!-- Modal de Detalhes -->
-                        <div class="modal fade" id="veiculoModal{{ veiculo.id }}" tabindex="-1">
-                            <div class="modal-dialog modal-lg">
-                                <div class="modal-content">
-                                    <div class="modal-header">
-                                        <h5 class="modal-title">Detalhes do Veículo</h5>
-                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                                    </div>
-                                    <div class="modal-body">
-                                        <div class="row">
-                                            <div class="col-md-6">
-                                                <h6 class="text-muted mb-3">Informações do Veículo</h6>
-                                                <p><strong>Placa:</strong> {{ veiculo.placa }}</p>
-                                                <p><strong>Modelo:</strong> {{ veiculo.modelo }}</p>
-                                                <p><strong>Cor:</strong> {{ veiculo.cor }}</p>
-                                                <p><strong>Tipo:</strong> {{ veiculo.tipo_veiculo }}</p>
-                                                <p><strong>Motorista:</strong> {{ veiculo.motorista }}</p>
-                                            </div>
-                                            <div class="col-md-6">
-                                                <h6 class="text-muted mb-3">Informações de Entrada/Saída</h6>
-                                                <p><strong>Data Entrada:</strong> {{ veiculo.data_entrada|date:"d/m/Y H:i" }}</p>
-                                                {% if veiculo.data_saida %}
-                                                <p><strong>Data Saída:</strong> {{ veiculo.data_saida|date:"d/m/Y H:i" }}</p>
-                                                {% endif %}
-                                                <p><strong>Status:</strong> {{ veiculo.get_status_display }}</p>
-                                            </div>
-                                        </div>
-                                        <div class="mt-3">
-                                            <h6 class="text-muted mb-2">Observações</h6>
-                                            <p class="mb-0">{{ veiculo.observacoes|default:"Nenhuma observação" }}</p>
-                                            {% if veiculo.observacoes_saida %}
-                                            <h6 class="text-muted mb-2 mt-3">Observações de Saída</h6>
-                                            <p class="mb-0">{{ veiculo.observacoes_saida }}</p>
-                                            {% endif %}
-                                        </div>
-                                    </div>
-                                    <div class="modal-footer">
-                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
-                                        {% if veiculo.status == 'no_patio' %}
-                                        <a href="{% url 'veiculos:registro_saida' %}?placa={{ veiculo.placa }}" class="btn btn-primary">
-                                            <i class="fas fa-sign-out-alt me-1"></i>Registrar Saída
-                                        </a>
-                                        {% endif %}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
                         {% endfor %}
                     </tbody>
                 </table>
@@ -170,48 +126,33 @@
             <div class="text-center py-5">
                 <i class="fas fa-car fa-3x text-muted mb-3"></i>
                 <h5 class="text-muted">Nenhum veículo no pátio</h5>
-                <p class="mb-3">Registre a entrada de um novo veículo</p>
-                <a href="{% url 'veiculos:registro_entrada' %}" class="btn btn-primary">
-                    <i class="fas fa-car me-2"></i>Nova Entrada
-                </a>
+                <p class="text-muted mb-0">Registre a entrada de um veículo usando o botão "Nova Entrada"</p>
             </div>
             {% endif %}
         </div>
     </div>
 </div>
-{% endblock %}
 
 {% block extra_js %}
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    const searchInput = document.getElementById('searchInput');
-    const table = document.getElementById('veiculosTable');
-    const rows = table.getElementsByTagName('tr');
-
-    searchInput.addEventListener('keyup', function() {
-        const searchTerm = this.value.toLowerCase();
+    document.addEventListener('DOMContentLoaded', function() {
+        const searchInput = document.getElementById('searchInput');
+        const table = document.getElementById('veiculosTable');
         
-        Array.from(rows).forEach(function(row, index) {
-            if (index === 0) return; // Skip header row
-            
-            const text = row.textContent.toLowerCase();
-            row.style.display = text.includes(searchTerm) ? '' : 'none';
-        });
-    });
-
-    // Máscara para placa no filtro
-    const placaInput = document.getElementById('placa');
-    placaInput.addEventListener('input', function(e) {
-        let value = e.target.value.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
-        if (value.length <= 7) {
-            if (value.length <= 3) {
-                value = value;
-            } else {
-                value = `${value.slice(0,3)}-${value.slice(3)}`;
-            }
-            e.target.value = value;
+        if (searchInput && table) {
+            searchInput.addEventListener('keyup', function() {
+                const searchText = this.value.toLowerCase();
+                const rows = table.getElementsByTagName('tr');
+                
+                Array.from(rows).forEach(function(row, index) {
+                    if (index === 0) return; // Skip header row
+                    
+                    const text = row.textContent.toLowerCase();
+                    row.style.display = text.includes(searchText) ? '' : 'none';
+                });
+            });
         }
     });
-});
 </script>
+{% endblock %}
 {% endblock %}

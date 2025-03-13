@@ -205,6 +205,73 @@
 - Ícones intuitivos para status
 - Cores semânticas para feedback
 
+<<<<<<< HEAD
+=======
+## Melhorias Recentes
+
+### Aprimoramentos nos Templates (12/03/2025)
+
+#### Template de Lista de Veículos (lista_veiculos.html)
+- Adicionados links clicáveis nas placas dos veículos
+- Substituído o modal por uma página dedicada de detalhes
+- Melhorada a estilização e organização dos botões
+- Adicionados links adequados para a página de detalhes do veículo
+- Implementada busca em tempo real de veículos
+- Separação clara entre veículos presentes e histórico de saídas
+
+#### Template de Detalhes do Veículo (detalhes_veiculo.html)
+- Corrigidos erros de lint no CSS
+- Adicionadas classes de cores predefinidas para os veículos
+- Melhorado o design dos cartões e tabelas
+- Aprimorados os efeitos de hover nos botões
+- Adicionada navegação adequada de volta para a lista
+- Layout responsivo e adaptável
+
+#### Template de Lista de Visitantes (lista_visitantes.html)
+- Adicionados links clicáveis nos nomes dos visitantes
+- Substituído o modal por uma página dedicada de detalhes
+- Melhorada a estilização e organização dos botões
+- Adicionados links adequados para a página de detalhes do visitante
+- Interface mais limpa e organizada
+- Melhor visualização do status das visitas
+
+#### Novo Template de Detalhes do Visitante (detalhes_visitante.html)
+- Exibição detalhada das informações do visitante
+- Inclusão de foto do visitante com ícone de fallback
+- Histórico de visitas com links para os veículos correspondentes
+- Estilização consistente com a página de detalhes do veículo
+- Adicionada navegação adequada de volta para a lista
+- Informações organizadas em seções lógicas
+
+### Padrões de Design e Cores
+
+#### Esquema de Cores do Sistema
+- Primária: #0D6EFD (Azul) - Elementos principais e ações
+- Secundária: #34495e (Cinza Escuro) - Elementos de suporte
+- Destaque: #3498db (Azul Claro) - Interações e links
+- Sucesso: #2ecc71 (Verde) - Confirmações e status positivos
+- Alerta: #f1c40f (Amarelo) - Avisos e alertas
+- Perigo: #e74c3c (Vermelho) - Erros e ações destrutivas
+- Claro: #ecf0f1 (Cinza Claro) - Fundos e elementos neutros
+- Escuro: #2c3e50 (Azul Escuro) - Textos e elementos de contraste
+
+#### Padrões de Design Aplicados
+- Cards com sombras e efeitos de hover
+- Bordas arredondadas (border-radius: 10px)
+- Ícones Font Awesome em botões e navegação
+- Sistema de grid responsivo baseado em Bootstrap
+- Estilização consistente de formulários com grupos de input e ícones
+- Transições animadas para elementos interativos
+
+#### Melhorias na Experiência do Usuário
+- Navegação intuitiva entre listas e detalhes
+- Feedback visual claro para ações do usuário
+- Busca em tempo real para filtrar registros
+- Organização lógica das informações
+- Consistência visual em todas as páginas
+- Adaptação responsiva para diferentes dispositivos
+
+>>>>>>> 468a77d5b445b83345052c22e5a500a0725a6e11
 ## Detalhes Técnicos (12/03/2025)
 
 ### Stack Tecnológico
