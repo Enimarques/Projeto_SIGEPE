@@ -209,8 +209,6 @@ certo! A partir de agora NÃO MEXA MAIS EM NENHUM OUTRO APP A NAO SER O APP DE R
 - Ícones intuitivos para status
 - Cores semânticas para feedback
 
-<<<<<<< HEAD
-=======
 ## Melhorias Recentes
 
 ### Aprimoramentos nos Templates (12/03/2025)
@@ -275,7 +273,36 @@ certo! A partir de agora NÃO MEXA MAIS EM NENHUM OUTRO APP A NAO SER O APP DE R
 - Consistência visual em todas as páginas
 - Adaptação responsiva para diferentes dispositivos
 
->>>>>>> 468a77d5b445b83345052c22e5a500a0725a6e11
+### Organização do Projeto (13/03/2025)
+- Estrutura de templates padronizada:
+  - Templates base em `/templates/base.html`
+  - Templates de autenticação em `/templates/autenticacao/`
+  - Templates de visitantes em `/templates/main/visitantes/`
+  - Templates de recepção em `/templates/main/recepcao/`
+
+- Estrutura de arquivos estáticos organizada:
+  - CSS e JS específicos por app
+  - Recursos compartilhados em `/static/shared/`
+  - Imagens centralizadas em `/static/img/`
+
+### Sistema de Mídia (13/03/2025)
+- Reorganização do armazenamento de fotos:
+  - Todas as fotos de visitantes consolidadas em `/media/visitantes/`
+  - Remoção de diretórios legados não utilizados
+  - Migração aplicada para novo caminho de upload
+
+### Sistema de Autenticação (13/03/2025)
+- Views personalizadas para login/logout
+- Templates modernizados e responsivos
+- Proteção de rotas com `@login_required`
+- Mensagens de feedback aprimoradas
+
+### Padronização de Nomenclatura (13/03/2025)
+- Mantida nomenclatura "Setor/Setores" em todo o sistema
+- Consistência nos nomes dos templates
+- Padronização dos sufixos (_visitantes, _visitas, _sistema)
+- Manutenção da organização por funcionalidade
+
 ## Detalhes Técnicos (12/03/2025)
 
 ### Stack Tecnológico
@@ -523,4 +550,4 @@ certo! A partir de agora NÃO MEXA MAIS EM NENHUM OUTRO APP A NAO SER O APP DE R
 
 ---
 > Este documento será atualizado conforme novas melhorias forem implementadas no projeto.
-> Última atualização: 12/03/2025
+> Última atualização: 13/03/2025
