@@ -303,6 +303,13 @@ certo! A partir de agora NÃO MEXA MAIS EM NENHUM OUTRO APP A NAO SER O APP DE R
 - Padronização dos sufixos (_visitantes, _visitas, _sistema)
 - Manutenção da organização por funcionalidade
 
+### Melhorias Recentes
+
+- **Melhorias no Layout**: O layout da aplicação foi aprimorado para incluir uma coluna lateral com gráficos estatísticos dinâmicos.
+- **Adição de Gráficos**: Gráficos do tipo doughnut foram integrados para exibir dados estatísticos dos gabinetes e departamentos.
+- **Novos Cards**: Cards foram adicionados à interface para melhor visualização das estatísticas.
+- **Atualização de Mensagens**: Mensagens de boas-vindas e descrições foram atualizadas para refletir melhor a funcionalidade do sistema.
+
 ## Detalhes Técnicos (12/03/2025)
 
 ### Stack Tecnológico
