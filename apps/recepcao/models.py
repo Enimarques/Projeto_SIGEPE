@@ -9,7 +9,7 @@ from datetime import datetime, time
 
 class Setor(models.Model):
     TIPO_CHOICES = [
-        ('gabinete_vereador', 'Gabinete de Vereador'),
+        ('gabinete_vereador', 'Gabinete'),
         ('departamento', 'Departamento')
     ]
     
@@ -162,11 +162,6 @@ class Visita(models.Model):
         ('outros', 'Outros')
     ]
 
-    SETOR_CHOICES = [
-        ('gabinete_vereador', 'Gabinete de Vereador'),
-        ('departamento', 'Departamento')
-    ]
-
     LOCALIZACAO_CHOICES = [
         ('terreo', 'Térreo'),
         ('plenario', 'Plenário'),
@@ -179,11 +174,10 @@ class Visita(models.Model):
         on_delete=models.PROTECT,
         verbose_name='Visitante'
     )
-    setor = models.CharField(
-        'Setor',
-        max_length=20,
-        choices=SETOR_CHOICES,
-        default='departamento'
+    setor = models.ForeignKey(
+        Setor,
+        on_delete=models.PROTECT,
+        verbose_name='Setor'
     )
     localizacao = models.CharField(
         'Localização',
@@ -225,7 +219,7 @@ class Visita(models.Model):
             })
 
     def __str__(self):
-        return f'{self.visitante} - {self.get_setor_display()}'
+        return f'{self.visitante} - {self.setor}'
 
     class Meta:
         verbose_name = 'Visita'

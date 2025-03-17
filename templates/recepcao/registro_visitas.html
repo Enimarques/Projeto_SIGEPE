@@ -5,24 +5,33 @@
 
 {% block extra_css %}
 <style>
-    .objetivo-info {
-        display: none;
-        margin-top: 10px;
-        padding: 10px;
-        border-left: 3px solid #007bff;
-        background-color: #f8f9fa;
-    }
-
     .form-group {
-        margin-bottom: 1rem;
+        margin-bottom: 1.5rem;
     }
-
     .invalid-feedback {
         display: block;
     }
-
-    #outros-group {
+    .visitante-info {
         display: none;
+        padding: 15px;
+        margin-top: 10px;
+        border-radius: 5px;
+        background-color: #f8f9fa;
+        border-left: 4px solid #28a745;
+    }
+    .visitante-info.error {
+        border-left-color: #dc3545;
+    }
+    .visitante-info h5 {
+        margin-bottom: 10px;
+        color: #495057;
+    }
+    .visitante-info p {
+        margin-bottom: 5px;
+        color: #6c757d;
+    }
+    .visitante-info p strong {
+        color: #495057;
     }
 </style>
 {% endblock %}
@@ -31,11 +40,31 @@
 <div class="container mt-4">
     <div class="row justify-content-center">
         <div class="col-md-8">
-            <div class="card">
+            <div class="card shadow">
                 <div class="card-header bg-primary text-white">
-                    <h4 class="mb-0"><i class="fas fa-user-plus"></i> Registro de Visita</h4>
+                    <h4 class="mb-0"><i class="fas fa-clipboard-list"></i> Registro de Visita</h4>
                 </div>
                 <div class="card-body">
+                    {% if visitante_pre_selecionado %}
+                    <!-- Dados do Visitante -->
+                    <div class="alert alert-info mb-4">
+                        <div class="d-flex align-items-center">
+                            {% if visitante_pre_selecionado.foto %}
+                            <img src="{{ visitante_pre_selecionado.foto.url }}" alt="{{ visitante_pre_selecionado.nome_completo }}" class="rounded-circle me-3" style="width: 50px; height: 50px; object-fit: cover;">
+                            {% else %}
+                            <i class="fas fa-user-circle fa-3x me-3 text-muted"></i>
+                            {% endif %}
+                            <div>
+                                <h5 class="mb-1">{{ visitante_pre_selecionado.nome_completo }}</h5>
+                                <p class="mb-0">
+                                    <span class="me-3"><i class="fas fa-id-card me-1"></i>{{ visitante_pre_selecionado.CPF }}</span>
+                                    <span><i class="fas fa-phone me-1"></i>{{ visitante_pre_selecionado.telefone }}</span>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
                     <form method="post" id="visita-form">
                         {% csrf_token %}
                         
@@ -46,52 +75,65 @@
                         </div>
                         {% endif %}
 
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label for="{{ form.visitante.id_for_label }}" class="form-label">Visitante:</label>
-                                    {{ form.visitante }}
-                                    {% if form.nome_visitante.errors %}
-                                    <div class="invalid-feedback">
-                                        {{ form.nome_visitante.errors }}
-                                    </div>
-                                    {% endif %}
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="form-group">
+                        {% if not visitante_pre_selecionado %}
+                        <!-- Campo CPF (apenas se não tiver visitante pré-selecionado) -->
+                        <div class="form-group mb-3">
+                            <label for="cpf-input" class="form-label">CPF do Visitante:</label>
+                            {{ form.cpf }}
+                            <div id="visitante-info" class="mt-2"></div>
+                        </div>
+                        {% else %}
+                        <!-- Campo CPF oculto para visitante pré-selecionado -->
+                        {{ form.cpf.as_hidden }}
+                        {% endif %}
 
+                        <div class="form-group mb-3">
+                            <label class="form-label">Tipo de Setor:</label>
+                            <div class="btn-group-vertical w-100" role="group">
+                                {% for value, text in form.tipo_setor.field.choices %}
+                                <div class="form-check">
+                                    <input type="radio" name="tipo_setor" 
+                                           value="{{ value }}" 
+                                           class="form-check-input" 
+                                           id="tipo-{{ value }}"
+                                           {% if form.tipo_setor.value == value %}checked{% endif %}>
+                                    <label class="form-check-label" for="tipo-{{ value }}">{{ text }}</label>
                                 </div>
+                                {% endfor %}
                             </div>
                         </div>
 
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="form-group">
-
-                                </div>
+                        <!-- Setor -->
+                        <div class="form-group mb-3">
+                            <label for="{{ form.setor.id_for_label }}" class="form-label">Setor:</label>
+                            <select name="setor" id="{{ form.setor.id_for_label }}" class="form-select">
+                                <option value="">Selecione um setor</option>
+                                {% for setor in form.setor.field.queryset %}
+                                <option value="{{ setor.id }}">{{ setor.nome }} ({{ setor.localizacao }})</option>
+                                {% endfor %}
+                            </select>
+                            {% if form.setor.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.setor.errors }}
                             </div>
-                            <div class="col-md-6">
-                                <div class="form-group">
-
-                                </div>
-                            </div>
+                            {% endif %}
                         </div>
 
-                        <div class="form-group">
-
-                            <div id="objetivo-info" class="objetivo-info">
-                                <p class="mb-0"></p>
+                        <div class="form-group mb-3">
+                            <label for="{{ form.objetivo.id_for_label }}" class="form-label">Objetivo da Visita:</label>
+                            {{ form.objetivo }}
+                            {% if form.objetivo.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.objetivo.errors }}
                             </div>
+                            {% endif %}
                         </div>
 
-
-
-                        <div class="form-group">
+                        <div class="form-group mb-3">
                             <label for="{{ form.observacoes.id_for_label }}" class="form-label">Observações:</label>
                             {{ form.observacoes }}
                             {% if form.observacoes.errors %}
-                            <div class="invalid-feedback">
+                            <div class="invalid-feedback d-block">
                                 {{ form.observacoes.errors }}
                             </div>
                             {% endif %}
@@ -101,12 +143,18 @@
                             <button type="submit" class="btn btn-primary">
                                 <i class="fas fa-save"></i> Registrar Visita
                             </button>
-                            <a href="{% url 'recepcao:status_visita' %}" class="btn btn-outline-secondary">
-                                <i class="fas fa-arrow-left me-2"></i>Voltar
-                            </a>
-                            <a href="{% url 'recepcao:cadastro_visitantes' %}" class="btn btn-outline-primary">
-                                <i class="fas fa-user-plus me-2"></i>Cadastrar Novo Visitante
-                            </a>
+                            <div class="row g-2">
+                                <div class="col-6">
+                                    <a href="{% url 'recepcao:home_recepcao' %}" class="btn btn-outline-secondary w-100">
+                                        <i class="fas fa-arrow-left me-2"></i>Voltar
+                                    </a>
+                                </div>
+                                <div class="col-6">
+                                    <a href="{% url 'recepcao:cadastro_visitantes' %}" class="btn btn-outline-primary w-100">
+                                        <i class="fas fa-user-plus me-2"></i>Cadastrar Visitante
+                                    </a>
+                                </div>
+                            </div>
                         </div>
                     </form>
                 </div>
@@ -114,14 +162,121 @@
         </div>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const cpfInput = document.getElementById('cpf-input');
+    const visitanteInfo = document.getElementById('visitante-info');
+    const tipoSetorRadios = document.getElementsByName('tipo_setor');
+    const setorSelect = document.getElementById('id_setor');
+
+    // Função para buscar visitante por CPF
+    cpfInput.addEventListener('blur', function() {
+        const cpf = this.value;
+        if (cpf) {
+            fetch(`/recepcao/buscar-visitante/?cpf=${cpf}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        visitanteInfo.innerHTML = `
+                            <div class="alert alert-success">
+                                <strong>Visitante:</strong> ${data.visitante.nome_completo}<br>
+                                <strong>Telefone:</strong> ${data.visitante.telefone}
+                            </div>`;
+                    } else {
+                        visitanteInfo.innerHTML = `
+                            <div class="alert alert-warning">
+                                Visitante não encontrado. Por favor, cadastre um novo visitante.
+                            </div>`;
+                    }
+                });
+        }
+    });
+
+    // Função para atualizar lista de setores
+    function atualizarSetores(tipo) {
+        fetch(`/recepcao/buscar-setores/?tipo=${tipo}`)
+            .then(response => response.json())
+            .then(data => {
+                setorSelect.innerHTML = '<option value="">Selecione um setor</option>';
+                data.setores.forEach(setor => {
+                    const option = new Option(setor.nome, setor.id);
+                    setorSelect.add(option);
+                });
+            });
+    }
+
+    // Atualizar setores quando o tipo é alterado
+    tipoSetorRadios.forEach(radio => {
+        radio.addEventListener('change', function() {
+            atualizarSetores(this.value);
+        });
+    });
+
+    // Carregar setores iniciais
+    const tipoInicial = Array.from(tipoSetorRadios).find(radio => radio.checked)?.value || 'departamento';
+    atualizarSetores(tipoInicial);
+});
+</script>
 {% endblock %}
 
 {% block extra_js %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    const cpfInput = document.getElementById('cpf-input');
+    const visitanteInfo = document.getElementById('visitante-info');
+    let typingTimer;
 
+    // Função para formatar CPF
+    function formatCPF(cpf) {
+        cpf = cpf.replace(/\D/g, '');
+        return cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
+    }
 
+    // Formata o CPF enquanto digita
+    cpfInput.addEventListener('input', function(e) {
+        let value = e.target.value.replace(/\D/g, '');
+        if (value.length <= 11) {
+            e.target.value = formatCPF(value);
+        }
+    });
 
+    // Busca informações do visitante quando o CPF é digitado
+    cpfInput.addEventListener('input', function() {
+        clearTimeout(typingTimer);
+        typingTimer = setTimeout(() => {
+            const cpf = this.value;
+            if (cpf.length === 14) { // CPF completo (com formatação)
+                fetch(`/recepcao/buscar-visitante/?cpf=${cpf}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            visitanteInfo.innerHTML = `
+                                <h5><i class="fas fa-user"></i> Informações do Visitante</h5>
+                                <p><strong>Nome:</strong> ${data.visitante.nome_completo}</p>
+                                <p><strong>Telefone:</strong> ${data.visitante.telefone}</p>
+                            `;
+                            visitanteInfo.classList.remove('error');
+                            visitanteInfo.style.display = 'block';
+                        } else {
+                            visitanteInfo.innerHTML = `
+                                <h5><i class="fas fa-exclamation-triangle"></i> Visitante não encontrado</h5>
+                                <p>Nenhum visitante encontrado com este CPF.</p>
+                                <p>Por favor, cadastre o visitante primeiro.</p>
+                            `;
+                            visitanteInfo.classList.add('error');
+                            visitanteInfo.style.display = 'block';
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Erro:', error);
+                        visitanteInfo.style.display = 'none';
+                    });
+            } else {
+                visitanteInfo.style.display = 'none';
+            }
+        }, 500);
+    });
 });
 </script>
 {% endblock %}

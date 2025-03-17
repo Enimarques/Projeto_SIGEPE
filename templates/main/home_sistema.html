@@ -1,0 +1,144 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1 class="mb-4">Bem-vindos ao URUTAU</h1>
+    <h3 class="text-muted">Sistema de Gestão de Entrada e Saida de Pessoas da Câmara Municipal de Parauapebas</h3>
+    <br>
+    
+    <!-- Dashboard -->
+    <div class="row mb-5">
+        <!-- Visitas em Andamento -->
+        <div class="col-md-3 mb-4">
+            <div class="card border-primary h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0 me-3">
+                            <i class="fas fa-users fa-2x text-primary"></i>
+                        </div>
+                        <div>
+                            <h6 class="card-title text-muted mb-0">Visitas em Andamento</h6>
+                            <h2 class="mt-2 mb-0">{{ visitas_em_andamento }}</h2>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Total de Visitantes -->
+        <div class="col-md-3 mb-4">
+            <div class="card border-success h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0 me-3">
+                            <i class="fas fa-address-card fa-2x text-success"></i>
+                        </div>
+                        <div>
+                            <h6 class="card-title text-muted mb-0">Visitantes Cadastrados</h6>
+                            <h2 class="mt-2 mb-0">{{ total_visitantes }}</h2>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Veículos no Estacionamento -->
+        <div class="col-md-3 mb-4">
+            <div class="card border-warning h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0 me-3">
+                            <i class="fas fa-car fa-2x text-warning"></i>
+                        </div>
+                        <div>
+                            <h6 class="card-title text-muted mb-0">Veículos no Estacionamento</h6>
+                            <h2 class="mt-2 mb-0">{{ veiculos_no_estacionamento }}</h2>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Total de Veículos -->
+        <div class="col-md-3 mb-4">
+            <div class="card border-info h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0 me-3">
+                            <i class="fas fa-database fa-2x text-info"></i>
+                        </div>
+                        <div>
+                            <h6 class="card-title text-muted mb-0">Veículos Cadastrados</h6>
+                            <h2 class="mt-2 mb-0">{{ total_veiculos }}</h2>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Cards dos Módulos -->
+    <div class="row">
+        <!-- Recepção -->
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-clipboard-list fa-3x mb-3 text-primary"></i>
+                    <h5 class="card-title">Recepção</h5>
+                    <p class="card-text">Gerencie visitantes, registre visitas e acompanhe o fluxo de pessoas.</p>
+                    {% if user.is_authenticated %}
+                    <a href="{% url 'recepcao:home_recepcao' %}" class="btn btn-primary">
+                        <i class="fas fa-arrow-right"></i> Acessar
+                    </a>
+                    {% else %}
+                    <a href="{% url 'autenticacao:login_sistema' %}?next={% url 'recepcao:home_recepcao' %}" class="btn btn-primary">
+                        <i class="fas fa-arrow-right"></i> Acessar
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Veículos -->
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-car fa-3x mb-3 text-success"></i>
+                    <h5 class="card-title">Veículos</h5>
+                    <p class="card-text">Controle a entrada e saída de veículos no estacionamento.</p>
+                    {% if user.is_authenticated %}
+                    <a href="{% url 'veiculos:home_veiculos' %}" class="btn btn-success">
+                        <i class="fas fa-arrow-right"></i> Acessar
+                    </a>
+                    {% else %}
+                    <a href="{% url 'autenticacao:login_sistema' %}?next={% url 'veiculos:home_veiculos' %}" class="btn btn-success">
+                        <i class="fas fa-arrow-right"></i> Acessar
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Gabinetes -->
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-door-open fa-3x mb-3 text-info"></i>
+                    <h5 class="card-title">Gabinetes</h5>
+                    <p class="card-text">Gerencie o acesso e as atividades dos gabinetes.</p>
+                    {% if user.is_authenticated %}
+                    <a href="{% url 'gabinetes:home_gabinetes' %}" class="btn btn-info">
+                        <i class="fas fa-arrow-right"></i> Acessar
+                    </a>
+                    {% else %}
+                    <a href="{% url 'autenticacao:login_sistema' %}?next={% url 'gabinetes:home_gabinetes' %}" class="btn btn-info">
+                        <i class="fas fa-arrow-right"></i> Acessar
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
