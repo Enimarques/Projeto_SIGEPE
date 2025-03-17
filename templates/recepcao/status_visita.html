@@ -118,8 +118,8 @@
                     <label for="setor" class="form-label">Setor</label>
                     <select class="form-select" id="setor" name="setor">
                         <option value="">Todos</option>
-                        {% for key, value in setores.items %}
-                        <option value="{{ key }}" {% if key == setor_filtro %}selected{% endif %}>{{ value }}</option>
+                        {% for setor in setores %}
+                        <option value="{{ setor.id }}" {% if setor.id == setor_filtro %}selected{% endif %}>{{ setor.nome }}</option>
                         {% endfor %}
                     </select>
                 </div>
@@ -171,23 +171,8 @@
                     <tbody>
                         {% for visita in visitas %}
                         <tr>
-                            <td>
-                                <div class="d-flex align-items-center">
-                                    {% if visita.visitante.foto %}
-                                    <img src="{{ visita.visitante.foto.url }}" alt="Foto" class="rounded-circle me-2" style="width: 40px; height: 40px; object-fit: cover;">
-                                    {% else %}
-                                    <i class="fas fa-user-circle fa-2x text-secondary me-2"></i>
-                                    {% endif %}
-                                    <div>
-                                        <strong>{{ visita.visitante.nome_completo }}</strong>
-                                        {% if visita.visitante.nome_social %}
-                                        <br>
-                                        <small class="text-muted">{{ visita.visitante.nome_social }}</small>
-                                        {% endif %}
-                                    </div>
-                                </div>
-                            </td>
-                            <td>{{ visita.get_setor_display }}</td>
+                            <td>{{ visita.visitante.nome_completo }}</td>
+                            <td>{{ visita.setor.nome }}</td>
                             <td>{{ visita.get_localizacao_display }}</td>
                             <td>{{ visita.get_objetivo_display|default:"-" }}</td>
                             <td>
@@ -195,12 +180,17 @@
                                 <small class="text-muted">{{ visita.data_entrada|time:"H:i" }}</small>
                             </td>
                             <td>
-                                <form method="post" action="{% url 'recepcao:finalizar_visita' visita.id %}" class="d-inline">
-                                    {% csrf_token %}
-                                    <button type="submit" class="btn btn-outline-success btn-sm">
-                                        <i class="fas fa-sign-out-alt me-1"></i>Finalizar Visita
-                                    </button>
-                                </form>
+                                <div class="btn-group">
+                                    <form method="post" action="{% url 'recepcao:finalizar_visita' visita.id %}">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-outline-success btn-sm me-2">
+                                            <i class="fas fa-sign-out-alt me-1"></i>Finalizar Visita
+                                        </button>
+                                    </form>
+                                    <a href="{% url 'recepcao:gerar_etiqueta' visita.id %}" class="btn btn-outline-primary btn-sm">
+                                        <i class="fas fa-tag me-1"></i>Gerar Etiqueta
+                                    </a>
+                                </div>
                             </td>
                         </tr>
                         {% endfor %}

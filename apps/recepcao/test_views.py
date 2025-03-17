@@ -7,7 +7,7 @@ from main.models import Visita
 class RegistrarVisitaViewTests(TestCase):
   def setUp(self):
     self.client = Client()
-    self.url = reverse('registrar_visita')
+    self.url = reverse('main:registrar_visita')
 
   def test_registrar_visita_get(self):
     response = self.client.get(self.url)
@@ -22,7 +22,7 @@ class RegistrarVisitaViewTests(TestCase):
     }
     response = self.client.post(self.url, data)
     self.assertEqual(response.status_code, 302)
-    self.assertRedirects(response, reverse('home'))
+    self.assertRedirects(response, reverse('main:home_sistema'))
     self.assertTrue(Visita.objects.filter(campo1='valor1').exists())  # substitua pelos campos reais do modelo Visita
 
     messages = list(get_messages(response.wsgi_request))

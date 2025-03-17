@@ -1,5 +1,5 @@
 from django import forms
-from .models import Visita, Visitante
+from .models import Visita, Visitante, Setor
 from django.core.validators import RegexValidator
 
 class VisitanteForm(forms.ModelForm):
@@ -97,22 +97,90 @@ class VisitanteForm(forms.ModelForm):
         return cleaned_data
 
 class VisitaForm(forms.ModelForm):
+    cpf = forms.CharField(
+        max_length=14,
+        validators=[VisitanteForm.cpf_validator],
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': '000.000.000-00',
+            'id': 'cpf-input'
+        })
+    )
+    
+    tipo_setor = forms.ChoiceField(
+        choices=[('departamento', 'Departamento'), ('gabinete_vereador', 'Gabinete')],
+        widget=forms.RadioSelect(attrs={
+            'class': 'form-check-input',
+            'id': 'tipo-setor'
+        }),
+        initial='departamento',
+        required=True
+    )
+    
     class Meta:
         model = Visita
-        fields = ['visitante', 'observacoes']
+        fields = ['cpf', 'setor', 'objetivo', 'observacoes']
         widgets = {
-            'visitante': forms.Select(attrs={
-                'class': 'form-control'
+            'setor': forms.Select(attrs={
+                'class': 'form-control',
+                'required': True
+            }),
+            'objetivo': forms.Select(attrs={
+                'class': 'form-control',
+                'required': True
             }),
             'observacoes': forms.Textarea(attrs={
                 'class': 'form-control',
                 'rows': 3,
-                'placeholder': 'Observações adicionais'
+                'placeholder': 'Observações adicionais (opcional)'
             })
         }
 
-    def clean_visitante(self):
-        visitante = self.cleaned_data.get('visitante')
-        if not visitante:
-            raise forms.ValidationError('Por favor, selecione um visitante.')
-        return visitante
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        tipo = self.data.get('tipo_setor', 'departamento')
+        self.fields['setor'].queryset = Setor.objects.filter(
+            tipo=tipo
+        ).order_by('nome')
+        self.fields['objetivo'].initial = 'outros'
+        
+        # Configurando widgets com classes Bootstrap
+        self.fields['setor'].widget.attrs.update({
+            'class': 'form-control',
+            'required': True
+        })
+        self.fields['objetivo'].widget.attrs.update({
+            'class': 'form-control',
+            'required': True
+        })
+
+    def clean_cpf(self):
+        cpf = self.cleaned_data.get('cpf')
+        if not cpf:
+            raise forms.ValidationError('Por favor, informe o CPF do visitante.')
+        
+        # Verifica se existe um visitante com este CPF
+        try:
+            visitante = Visitante.objects.get(CPF=cpf)
+            self.visitante = visitante
+        except Visitante.DoesNotExist:
+            raise forms.ValidationError('CPF não encontrado. Por favor, cadastre o visitante primeiro.')
+        
+        return cpf
+
+    def clean(self):
+        cleaned_data = super().clean()
+        tipo_setor = cleaned_data.get('tipo_setor')
+        setor = cleaned_data.get('setor')
+        
+        if setor and tipo_setor and setor.tipo != tipo_setor:
+            self.add_error('setor', 'O setor selecionado não corresponde ao tipo escolhido.')
+        
+        return cleaned_data
+
+    def save(self, commit=True):
+        instance = super().save(commit=False)
+        instance.visitante = self.visitante
+        if commit:
+            instance.save()
+        return instance

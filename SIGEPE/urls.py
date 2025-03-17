@@ -3,7 +3,6 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib.auth import views as auth_views
-from apps.recepcao.views import home_sistema
 
 # Configuração do Admin
 admin.site.site_header = 'URUTAU - Administração'
@@ -23,5 +22,5 @@ urlpatterns = [
     path('gabinetes/', include('apps.gabinetes.urls', namespace='gabinetes')),
     
     # Home do sistema
-    path('', home_sistema, name='home'),
-] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT) + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+    path('', include('apps.main.urls', namespace='main')),
+] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

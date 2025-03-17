@@ -39,7 +39,6 @@
                             <th>Nome</th>
                             <th>Documento</th>
                             <th>Telefone</th>
-                            <th>Empresa</th>
                             <th>Última Visita</th>
                             <th>Ações</th>
                         </tr>
@@ -67,7 +66,7 @@
                             <td>
                                 <div class="d-flex align-items-center">
                                     <i class="fas fa-id-card me-2 text-muted"></i>
-                                    {{ visitante.documento }}
+                                    {{ visitante.CPF }}
                                 </div>
                             </td>
                             <td>
@@ -77,18 +76,14 @@
                                 </div>
                             </td>
                             <td>
-                                <div class="d-flex align-items-center">
-                                    <i class="fas fa-building me-2 text-muted"></i>
-                                    {{ visitante.empresa }}
-                                </div>
-                            </td>
-                            <td>
-                                {% if visitante.ultima_visita %}
-                                <div>{{ visitante.ultima_visita.data_visita|date:"d/m/Y" }}</div>
-                                <small class="text-muted">{{ visitante.ultima_visita.data_visita|time:"H:i" }}</small>
+                                {% with ultima_visita=visitante.visita_set.last %}
+                                {% if ultima_visita %}
+                                <div>{{ ultima_visita.data_entrada|date:"d/m/Y" }}</div>
+                                <small class="text-muted">{{ ultima_visita.data_entrada|time:"H:i" }}</small>
                                 {% else %}
                                 <span class="text-muted">Sem visitas</span>
                                 {% endif %}
+                                {% endwith %}
                             </td>
                             <td>
                                 <div class="btn-group">

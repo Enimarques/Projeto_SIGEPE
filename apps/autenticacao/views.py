@@ -7,8 +7,9 @@ from .forms import LoginForm
 # Create your views here.
 
 def login_sistema(request):
+    # Se o usuário já está logado, redireciona para a página principal
     if request.user.is_authenticated:
-        return redirect('recepcao:home_sistema')
+        return redirect('main:home_sistema')
         
     if request.method == 'POST':
         form = LoginForm(request.POST)
@@ -19,7 +20,8 @@ def login_sistema(request):
             
             if user is not None:
                 login(request, user)
-                next_url = request.GET.get('next', 'recepcao:home_sistema')
+                # Pega a URL de redirecionamento do POST ou GET, ou usa a home como padrão
+                next_url = request.POST.get('next') or request.GET.get('next') or 'main:home_sistema'
                 messages.success(request, f'Bem-vindo, {user.first_name}!')
                 return redirect(next_url)
             else:
@@ -27,13 +29,16 @@ def login_sistema(request):
     else:
         form = LoginForm()
     
+    # Passa o next para o template para que ele possa incluir no formulário
+    next_url = request.GET.get('next', '')
     return render(request, 'autenticacao/login_sistema.html', {
         'form': form,
-        'title': 'Login - URUTAU'
+        'title': 'Login - URUTAU',
+        'next': next_url
     })
 
 @login_required
 def logout_sistema(request):
     logout(request)
     messages.success(request, 'Você saiu do sistema com sucesso!')
-    return redirect('recepcao:login_sistema')
+    return redirect('autenticacao:login_sistema')
