@@ -10,7 +10,7 @@
         </div>
         <div class="card-body">
             <!-- Filtros -->
-            <form method="get" class="mb-4">
+            <form method="get" class="mb-4" id="formFiltros">
                 <div class="row g-3">
                     <div class="col-md-3">
                         <label for="status" class="form-label">Status</label>
@@ -18,7 +18,6 @@
                             <option value="">Todos</option>
                             <option value="em_andamento" {% if status_filtro == 'em_andamento' %}selected{% endif %}>Em Andamento</option>
                             <option value="finalizada" {% if status_filtro == 'finalizada' %}selected{% endif %}>Finalizada</option>
-                            <option value="cancelada" {% if status_filtro == 'cancelada' %}selected{% endif %}>Cancelada</option>
                         </select>
                     </div>
                     <div class="col-md-3">
@@ -32,19 +31,24 @@
                     </div>
                     <div class="col-md-4">
                         <label for="busca" class="form-label">Buscar Visitante</label>
-                        <input type="text" name="busca" id="busca" class="form-control" value="{{ busca }}" placeholder="Nome do visitante">
+                        <input type="text" name="busca" id="busca" class="form-control" value="{{ busca|default:'' }}" placeholder="Nome ou CPF do visitante">
                     </div>
                     <div class="col-md-2 d-flex align-items-end">
-                        <button type="submit" class="btn btn-primary w-100">
-                            <i class="fas fa-search"></i> Filtrar
-                        </button>
+                        <div class="btn-group w-100">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-search"></i> Filtrar
+                            </button>
+                            <a href="{% url 'recepcao:historico_visitas' %}" class="btn btn-secondary">
+                                <i class="fas fa-times"></i>
+                            </a>
+                        </div>
                     </div>
                 </div>
             </form>
 
             <!-- Estatísticas -->
             <div class="row mb-4">
-                <div class="col-md-3">
+                <div class="col-md-4">
                     <div class="card bg-info text-white">
                         <div class="card-body">
                             <h5 class="card-title">Total de Visitas</h5>
@@ -52,7 +56,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="col-md-3">
+                <div class="col-md-4">
                     <div class="card bg-warning text-white">
                         <div class="card-body">
                             <h5 class="card-title">Em Andamento</h5>
@@ -60,19 +64,11 @@
                         </div>
                     </div>
                 </div>
-                <div class="col-md-3">
+                <div class="col-md-4">
                     <div class="card bg-success text-white">
                         <div class="card-body">
                             <h5 class="card-title">Finalizadas</h5>
                             <p class="card-text h3">{{ visitas_finalizadas }}</p>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="card bg-danger text-white">
-                        <div class="card-body">
-                            <h5 class="card-title">Canceladas</h5>
-                            <p class="card-text h3">{{ visitas_canceladas }}</p>
                         </div>
                     </div>
                 </div>
@@ -84,6 +80,7 @@
                     <thead>
                         <tr>
                             <th>Visitante</th>
+                            <th>CPF</th>
                             <th>Setor</th>
                             <th>Data/Hora Entrada</th>
                             <th>Data/Hora Saída</th>
@@ -95,20 +92,19 @@
                         {% for visita in page_obj %}
                         <tr>
                             <td>{{ visita.visitante.nome_completo }}</td>
-                            <td>{{ visita.visitante.setor|default:"-" }}</td>
+                            <td>{{ visita.visitante.CPF }}</td>
+                            <td>{{ visita.setor.nome }}</td>
                             <td>{{ visita.data_entrada|date:"d/m/Y H:i" }}</td>
                             <td>{{ visita.data_saida|date:"d/m/Y H:i"|default:"-" }}</td>
                             <td>
-                                {% if visita.status == 'em_andamento' %}
-                                <span class="badge bg-success">Em Andamento</span>
-                                {% elif visita.status == 'finalizada' %}
-                                <span class="badge bg-secondary">Finalizada</span>
-                                {% elif visita.status == 'cancelada' %}
-                                <span class="badge bg-danger">Cancelada</span>
+                                {% if visita.data_saida %}
+                                <span class="badge bg-success">Finalizada</span>
+                                {% else %}
+                                <span class="badge bg-warning">Em Andamento</span>
                                 {% endif %}
                             </td>
                             <td>
-                                {% if visita.status == 'em_andamento' %}
+                                {% if not visita.data_saida %}
                                 <a href="{% url 'recepcao:finalizar_visita' visita.id %}" class="btn btn-sm btn-success">
                                     <i class="fas fa-check"></i> Finalizar
                                 </a>
@@ -122,13 +118,22 @@
                         </tr>
                         {% empty %}
                         <tr>
-                            <td colspan="6" class="text-center py-4">
-                                <i class="fas fa-history fa-3x text-muted mb-3"></i>
-                                <h5 class="text-muted">Nenhuma visita encontrada</h5>
-                                <p class="mb-3">Tente outros filtros ou registre uma nova visita</p>
-                                <a href="{% url 'recepcao:registro_visitas' %}" class="btn btn-primary">
-                                    <i class="fas fa-plus-circle me-2"></i>Registrar Nova Visita
-                                </a>
+                            <td colspan="7" class="text-center py-4">
+                                <div class="text-center">
+                                    <i class="fas fa-history fa-3x text-muted mb-3 d-block"></i>
+                                    <h5 class="text-muted">Nenhuma visita encontrada</h5>
+                                    {% if status_filtro or periodo_filtro or busca %}
+                                    <p class="mb-3">Tente remover alguns filtros</p>
+                                    <a href="{% url 'recepcao:historico_visitas' %}" class="btn btn-secondary">
+                                        <i class="fas fa-times me-2"></i>Limpar Filtros
+                                    </a>
+                                    {% else %}
+                                    <p class="mb-3">Registre uma nova visita</p>
+                                    <a href="{% url 'recepcao:registro_visitas' %}" class="btn btn-primary">
+                                        <i class="fas fa-plus-circle me-2"></i>Registrar Nova Visita
+                                    </a>
+                                    {% endif %}
+                                </div>
                             </td>
                         </tr>
                         {% endfor %}
@@ -142,12 +147,12 @@
                 <ul class="pagination justify-content-center">
                     {% if page_obj.has_previous %}
                     <li class="page-item">
-                        <a class="page-link" href="?page=1{% if busca %}&busca={{ busca }}{% endif %}{% if status_filtro %}&status={{ status_filtro }}{% endif %}{% if periodo_filtro %}&periodo={{ periodo_filtro }}{% endif %}">
+                        <a class="page-link" href="?page=1&status={{ status_filtro|default:'' }}&periodo={{ periodo_filtro|default:'' }}&busca={{ busca|default:'' }}">
                             <i class="fas fa-angle-double-left"></i>
                         </a>
                     </li>
                     <li class="page-item">
-                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if busca %}&busca={{ busca }}{% endif %}{% if status_filtro %}&status={{ status_filtro }}{% endif %}{% if periodo_filtro %}&periodo={{ periodo_filtro }}{% endif %}">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}&status={{ status_filtro|default:'' }}&periodo={{ periodo_filtro|default:'' }}&busca={{ busca|default:'' }}">
                             <i class="fas fa-angle-left"></i>
                         </a>
                     </li>
@@ -160,7 +165,7 @@
                     </li>
                     {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
                     <li class="page-item">
-                        <a class="page-link" href="?page={{ num }}{% if busca %}&busca={{ busca }}{% endif %}{% if status_filtro %}&status={{ status_filtro }}{% endif %}{% if periodo_filtro %}&periodo={{ periodo_filtro }}{% endif %}">
+                        <a class="page-link" href="?page={{ num }}&status={{ status_filtro|default:'' }}&periodo={{ periodo_filtro|default:'' }}&busca={{ busca|default:'' }}">
                             {{ num }}
                         </a>
                     </li>
@@ -169,12 +174,12 @@
 
                     {% if page_obj.has_next %}
                     <li class="page-item">
-                        <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if busca %}&busca={{ busca }}{% endif %}{% if status_filtro %}&status={{ status_filtro }}{% endif %}{% if periodo_filtro %}&periodo={{ periodo_filtro }}{% endif %}">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}&status={{ status_filtro|default:'' }}&periodo={{ periodo_filtro|default:'' }}&busca={{ busca|default:'' }}">
                             <i class="fas fa-angle-right"></i>
                         </a>
                     </li>
                     <li class="page-item">
-                        <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if busca %}&busca={{ busca }}{% endif %}{% if status_filtro %}&status={{ status_filtro }}{% endif %}{% if periodo_filtro %}&periodo={{ periodo_filtro }}{% endif %}">
+                        <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}&status={{ status_filtro|default:'' }}&periodo={{ periodo_filtro|default:'' }}&busca={{ busca|default:'' }}">
                             <i class="fas fa-angle-double-right"></i>
                         </a>
                     </li>
@@ -186,20 +191,20 @@
     </div>
 </div>
 
-<!-- Modal de Confirmação -->
+<!-- Modal de Confirmação de Exclusão -->
 <div class="modal fade" id="confirmacaoModal" tabindex="-1" aria-labelledby="confirmacaoModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="confirmacaoModalLabel">Confirmar Exclusão</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
             </div>
             <div class="modal-body">
-                Tem certeza que deseja excluir esta visita? Esta ação não pode ser desfeita.
+                Tem certeza que deseja excluir esta visita?
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                <a href="#" id="confirmarExclusaoBtn" class="btn btn-danger">Confirmar Exclusão</a>
+                <a href="#" id="btnConfirmarExclusao" class="btn btn-danger">Excluir</a>
             </div>
         </div>
     </div>
@@ -207,9 +212,8 @@
 
 <script>
 function confirmarExclusao(url) {
-    const modal = new bootstrap.Modal(document.getElementById('confirmacaoModal'));
-    document.getElementById('confirmarExclusaoBtn').href = url;
-    modal.show();
+    document.getElementById('btnConfirmarExclusao').href = url;
+    new bootstrap.Modal(document.getElementById('confirmacaoModal')).show();
 }
 </script>
 {% endblock %}

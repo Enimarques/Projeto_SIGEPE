@@ -203,12 +203,19 @@ def historico_visitas(request):
     
     # Query base
     visitas = Visita.objects.all()
+    print(f"Total de visitas antes dos filtros: {visitas.count()}")
     
     # Aplicar filtros
     if status:
-        visitas = visitas.filter(status=status)
+        print(f"Aplicando filtro de status: {status}")
+        if status == 'em_andamento':
+            visitas = visitas.filter(data_saida__isnull=True)
+        elif status == 'finalizada':
+            visitas = visitas.filter(data_saida__isnull=False)
+        print(f"Total após filtro de status: {visitas.count()}")
     
     if periodo:
+        print(f"Aplicando filtro de período: {periodo}")
         hoje = timezone.localtime().date()
         if periodo == 'hoje':
             visitas = visitas.filter(data_entrada__date=hoje)
@@ -216,10 +223,17 @@ def historico_visitas(request):
             inicio_semana = hoje - timedelta(days=hoje.weekday())
             visitas = visitas.filter(data_entrada__date__gte=inicio_semana)
         elif periodo == 'mes':
-            visitas = visitas.filter(data_entrada__month=hoje.month)
+            inicio_mes = hoje.replace(day=1)
+            visitas = visitas.filter(data_entrada__date__gte=inicio_mes)
+        print(f"Total após filtro de período: {visitas.count()}")
     
     if busca:
-        visitas = visitas.filter(visitante__nome_completo__icontains=busca)
+        print(f"Aplicando busca: {busca}")
+        visitas = visitas.filter(
+            Q(visitante__nome_completo__icontains=busca) |
+            Q(visitante__CPF__icontains=busca)
+        )
+        print(f"Total após busca: {visitas.count()}")
     
     # Ordenação
     visitas = visitas.order_by('-data_entrada')
@@ -231,9 +245,8 @@ def historico_visitas(request):
     
     # Estatísticas
     total_visitas = visitas.count()
-    visitas_em_andamento = visitas.filter(status='em_andamento').count()
-    visitas_finalizadas = visitas.filter(status='finalizada').count()
-    visitas_canceladas = visitas.filter(status='cancelada').count()
+    visitas_em_andamento = visitas.filter(data_saida__isnull=True).count()
+    visitas_finalizadas = visitas.filter(data_saida__isnull=False).count()
     
     context = get_base_context('Histórico de Visitas')
     context.update({
@@ -241,7 +254,6 @@ def historico_visitas(request):
         'total_visitas': total_visitas,
         'visitas_em_andamento': visitas_em_andamento,
         'visitas_finalizadas': visitas_finalizadas,
-        'visitas_canceladas': visitas_canceladas,
         # Manter filtros selecionados
         'status_filtro': status,
         'periodo_filtro': periodo,
@@ -312,15 +324,14 @@ def status_visita(request):
 
 @login_required(login_url='autenticacao:login_sistema')
 def finalizar_visita(request, visita_id):
-    if request.method == 'POST':
-        visita = get_object_or_404(Visita, pk=visita_id)
-        if not visita.data_saida:
-            visita.data_saida = timezone.now()
-            visita.status = 'finalizada'
-            visita.save()
-            messages.success(request, 'Visita finalizada com sucesso!')
-        return redirect('recepcao:status_visita')
-    return redirect('recepcao:status_visita')
+    visita = get_object_or_404(Visita, pk=visita_id)
+    if not visita.data_saida:
+        visita.data_saida = timezone.now()
+        visita.status = 'finalizada'
+        visita.save()
+        messages.success(request, 'Visita finalizada com sucesso!')
+        return redirect('recepcao:historico_visitas')
+    return redirect('recepcao:historico_visitas')
 
 @login_required(login_url='autenticacao:login_sistema')
 def excluir_visita(request, pk):
