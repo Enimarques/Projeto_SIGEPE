@@ -234,8 +234,10 @@ class Visita(models.Model):
 
     OBJETIVO_CHOICES = [
         ('reuniao', 'Reunião'),
-        ('entrega', 'Entrega'),
-        ('manutencao', 'Manutenção'),
+        ('entrega', 'Entrega de Documentos'),
+        ('entrega_de_mercadorias', 'Entrega de Mercadorias'),
+        ('entrega_de_alimentos', 'Entrega de Alimentos'),
+        ('servico_de_manutencao_externa', 'Serviço de Manutenção Externa'),
         ('evento', 'Evento'),
         ('outros', 'Outros')
     ]
@@ -265,7 +267,7 @@ class Visita(models.Model):
     )
     objetivo = models.CharField(
         'Objetivo',
-        max_length=20,
+        max_length=40,
         choices=OBJETIVO_CHOICES,
         default='outros'
     )
