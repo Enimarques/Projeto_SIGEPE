@@ -19,4 +19,5 @@ urlpatterns = [
     path('finalizar-visita/<int:visita_id>/', views.finalizar_visita, name='finalizar_visita'),
     path('editar-visitante/<int:pk>/', views.editar_visitante, name='editar_visitante'),
     path('gerar-etiqueta/<int:visita_id>/', views.gerar_etiqueta, name='gerar_etiqueta'),  # Adicionando URL para gerar etiqueta
+    path('alterar-horario-departamento/', views.alterar_horario_departamento, name='alterar_horario_departamento'),  # URL para alterar horário do departamento
 ]

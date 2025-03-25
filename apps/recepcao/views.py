@@ -4,8 +4,9 @@ from django.contrib import messages
 from django.db.models import Q
 from django.utils import timezone
 from datetime import datetime, timedelta
-from .models import Visitante, Visita, Setor
+from .models import Visitante, Visita, Setor, Assessor
 from .forms import VisitanteForm, VisitaForm
+from .forms_departamento import AlterarHorarioSetorForm
 from django.core.paginator import Paginator
 from django.http import JsonResponse
 from django.core.exceptions import PermissionDenied
@@ -361,3 +362,32 @@ def gerar_etiqueta(request, visita_id):
         'nome_exibicao': visita.visitante.nome_social if visita.visitante.nome_social else visita.visitante.nome_completo
     })
     return render(request, 'recepcao/etiqueta_visita.html', context)
+
+@login_required(login_url='autenticacao:login_sistema')
+def alterar_horario_departamento(request):
+    # Verificar se o usuário é um assessor
+    try:
+        assessor = Assessor.objects.get(nome=request.user.get_full_name())
+    except Assessor.DoesNotExist:
+        messages.error(request, 'Você não tem permissão para alterar horários de departamentos.')
+        return redirect('recepcao:home_recepcao')
+    
+    # Obter o departamento do assessor
+    departamento = assessor.departamento
+    
+    if request.method == 'POST':
+        form = AlterarHorarioSetorForm(request.POST, instance=departamento, assessor=assessor)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Horário do departamento alterado com sucesso!')
+            return redirect('recepcao:home_recepcao')
+    else:
+        form = AlterarHorarioSetorForm(instance=departamento, assessor=assessor)
+    
+    context = get_base_context('Alterar Horário do Departamento')
+    context.update({
+        'form': form,
+        'departamento': departamento
+    })
+    
+    return render(request, 'recepcao/alterar_horario_departamento.html', context)

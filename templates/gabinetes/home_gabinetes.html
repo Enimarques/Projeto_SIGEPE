@@ -5,6 +5,73 @@
 
 {% block extra_css %}
 <link href="https://cdn.jsdelivr.net/npm/chart.js@4.3.0/dist/chart.min.css" rel="stylesheet">
+<style>
+    .stats-card {
+        background-color: #fff;
+        border-radius: 10px;
+        padding: 20px;
+        text-align: center;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        height: 100%;
+    }
+    
+    .gabinete-card {
+        background-color: #fff;
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        transition: transform 0.3s, box-shadow 0.3s;
+        height: 100%;
+        cursor: pointer;
+    }
+    
+    .gabinete-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    }
+    
+    .gabinete-img-container {
+        height: 180px;
+        overflow: hidden;
+        position: relative;
+        background-color: #f8f9fa;
+    }
+    
+    .gabinete-img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    
+    .gabinete-img-placeholder {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 100%;
+        width: 100%;
+    }
+    
+    .gabinete-content {
+        padding: 15px;
+    }
+    
+    .gabinete-status {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        border-radius: 50%;
+        width: 15px;
+        height: 15px;
+    }
+    
+    .status-open {
+        background-color: #28a745;
+    }
+    
+    .status-closed {
+        background-color: #dc3545;
+    }
+</style>
 {% endblock %}
 
 {% block content %}
@@ -55,6 +122,47 @@
                 <p>Visitas do Mês</p>
             </div>
         </div>
+    </div>
+
+    <!-- Cards dos Gabinetes -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h3 class="mb-3"><i class="fas fa-door-open me-2"></i>Gabinetes</h3>
+        </div>
+        
+        {% for gabinete in gabinetes %}
+        <div class="col-md-4 mb-4">
+            <a href="{% url 'gabinetes:detalhes_gabinete' gabinete.id %}" class="text-decoration-none">
+                <div class="gabinete-card">
+                    <div class="gabinete-img-container">
+                        {% if gabinete.foto %}
+                        <img src="{{ gabinete.foto.url }}" alt="{{ gabinete.nome }}" class="gabinete-img">
+                        {% else %}
+                        <div class="gabinete-img-placeholder">
+                            <i class="fas fa-user-tie fa-4x text-secondary"></i>
+                        </div>
+                        {% endif %}
+                        <div class="gabinete-status {% if gabinete.esta_aberto %}status-open{% else %}status-closed{% endif %}"></div>
+                    </div>
+                    <div class="gabinete-content">
+                        <h5 class="mb-2">{{ gabinete.nome }}</h5>
+                        <p class="mb-1 text-muted"><i class="fas fa-map-marker-alt me-2"></i>{{ gabinete.get_localizacao_display }}</p>
+                        <p class="mb-1 text-muted"><i class="fas fa-clock me-2"></i>{{ gabinete.horario_abertura|time:"H:i" }} - {{ gabinete.horario_fechamento|time:"H:i" }}</p>
+                        <p class="mb-0 {% if gabinete.esta_aberto %}text-success{% else %}text-danger{% endif %}">
+                            <i class="fas {% if gabinete.esta_aberto %}fa-check-circle{% else %}fa-times-circle{% endif %} me-2"></i>
+                            {{ gabinete.status_funcionamento }}
+                        </p>
+                    </div>
+                </div>
+            </a>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle me-2"></i>Não há gabinetes cadastrados no sistema.
+            </div>
+        </div>
+        {% endfor %}
     </div>
 
     <!-- Gráfico de Visitas -->

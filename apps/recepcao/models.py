@@ -31,7 +31,8 @@ class Setor(models.Model):
         ordering = ['nome']
 
     def __str__(self):
-        return f'{self.nome} ({self.get_localizacao_display()})'
+        tipo_display = 'Gabinete' if self.tipo == 'gabinete_vereador' else 'Departamento'
+        return f'{self.nome} ({tipo_display})'
 
     def esta_aberto(self):
         if not self.horario_abertura or not self.horario_fechamento:
@@ -45,6 +46,48 @@ class Setor(models.Model):
         if esta_aberto is None:
             return "Horário não definido"
         return "Aberto" if esta_aberto else "Fechado"
+
+class Assessor(models.Model):
+    FUNCAO_CHOICES = [
+        ('assessor_1', 'Assessor I'),
+        ('assessor_2', 'Assessor II'),
+        ('assessor_3', 'Assessor III'),
+        ('assessor_4', 'Assessor IV'),
+        ('assessor_5', 'Assessor V'),
+        ('assessor_6', 'Assessor VI'),
+        ('assessor_7', 'Assessor VII'),
+        ('assessor_8', 'Assessor VIII'),
+        ('assessor_9', 'Assessor IX'),
+        ('assessor_10', 'Assessor X'),
+        ('agente_parlamentar', 'Agente Parlamentar'),
+        ('outros', 'Outros')
+    ]
+
+    nome = models.CharField('Nome', max_length=100)
+    departamento = models.ForeignKey(Setor, on_delete=models.PROTECT, verbose_name='Departamento')
+    funcao = models.CharField('Função/Cargo', max_length=20, choices=FUNCAO_CHOICES)
+    horario_entrada = models.TimeField('Horário de Entrada')
+    horario_saida = models.TimeField('Horário de Saída')
+    data_criacao = models.DateTimeField('Data de Criação', auto_now_add=True)
+    data_atualizacao = models.DateTimeField('Data de Atualização', auto_now=True)
+    usuario = models.OneToOneField('auth.User', on_delete=models.SET_NULL, null=True, blank=True, related_name='assessor', verbose_name='Usuário')
+    email = models.EmailField('E-mail', max_length=255, blank=True, null=True)
+    ativo = models.BooleanField('Ativo', default=True)
+
+    class Meta:
+        verbose_name = 'Assessor'
+        verbose_name_plural = 'Assessores'
+        ordering = ['nome']
+
+    def __str__(self):
+        return f'{self.nome} - {self.get_funcao_display()} ({self.departamento.nome})'
+
+    def clean(self):
+        # Validar se o horário do assessor está dentro do horário do departamento
+        if self.departamento and self.departamento.horario_abertura and self.departamento.horario_fechamento:
+            if self.horario_entrada < self.departamento.horario_abertura or self.horario_saida > self.departamento.horario_fechamento:
+                raise ValidationError('O horário do assessor deve estar dentro do horário de funcionamento do departamento.')
+
 
 class Visitante(models.Model):
     ESTADOS_CHOICES = [
@@ -298,6 +341,25 @@ class Visita(models.Model):
 
     def __str__(self):
         return f'{self.visitante} - {self.setor}'
+        
+    def duracao(self):
+        """Calcula a duração da visita em formato legível."""
+        if not self.data_saida:
+            return None
+            
+        # Calcula a diferença entre data de saída e entrada
+        delta = self.data_saida - self.data_entrada
+        
+        # Calcula horas, minutos e segundos
+        total_segundos = int(delta.total_seconds())
+        horas = total_segundos // 3600
+        minutos = (total_segundos % 3600) // 60
+        
+        # Formata a duração
+        if horas > 0:
+            return f"{horas}h {minutos}min"
+        else:
+            return f"{minutos}min"
 
     class Meta:
         verbose_name = 'Visita'
