@@ -5,43 +5,33 @@ from django.utils.html import format_html
 from django.db.models import Q
 from django.contrib.admin.widgets import RelatedFieldWidgetWrapper
 from django.urls import reverse
-from .models import Visitante, Visita, Setor, Assessor
-from apps.autenticacao.views_assessor import generate_password_token
+from .models import Visitante, Visita, Setor
 
-@admin.register(Assessor)
-class AssessorAdmin(admin.ModelAdmin):
-    list_display = ('nome', 'departamento', 'funcao', 'get_horario_trabalho', 'get_status_presenca', 'usuario', 'ativo', 'get_link_senha')
-    list_filter = ('departamento', 'funcao', 'ativo')
-    search_fields = ('nome', 'departamento__nome', 'email')
+@admin.register(Setor)
+class SetorAdmin(admin.ModelAdmin):
+    list_display = ('nome', 'tipo', 'localizacao', 'nome_responsavel', 'funcao', 'get_horario_trabalho', 'get_status_presenca', 'ativo')
+    list_filter = ('tipo', 'localizacao', 'ativo')
+    search_fields = ('nome', 'nome_responsavel', 'email')
     ordering = ['nome']
-    readonly_fields = ('data_criacao', 'data_atualizacao', 'get_link_senha')
+    readonly_fields = ('data_criacao', 'data_atualizacao')
     fieldsets = (
-        ('Informações Básicas', {
-            'fields': ('nome', 'departamento', 'funcao', 'email')
+        ('Informações do Setor', {
+            'fields': ('nome', 'tipo', 'localizacao')
         }),
-        ('Horário de Trabalho', {
-            'fields': ('horario_entrada', 'horario_saida')
+        ('Horário de Funcionamento', {
+            'fields': ('horario_abertura', 'horario_fechamento')
         }),
-        ('Acesso ao Sistema', {
-            'fields': ('usuario', 'ativo', 'get_link_senha')
+        ('Informações do Responsável', {
+            'fields': ('nome_responsavel', 'funcao', 'email', 'horario_entrada', 'horario_saida')
+        }),
+        ('Status', {
+            'fields': ('ativo',)
         }),
         ('Informações do Sistema', {
             'fields': ('data_criacao', 'data_atualizacao'),
             'classes': ('collapse',)
         }),
     )
-    
-    def get_link_senha(self, obj):
-        if obj.id:
-            token = generate_password_token(obj.id)
-            url = reverse('autenticacao:set_password_assessor', args=[token])
-            return format_html(
-                '<a href="{}" class="button" target="_blank">Gerar Link para Definição de Senha</a>'
-                '<div class="help">Clique para gerar um link que permite ao assessor definir sua senha.</div>',
-                url
-            )
-        return "-"
-    get_link_senha.short_description = 'Link para Definição de Senha'
     
     def get_queryset(self, request):
         self.request = request
@@ -162,36 +152,21 @@ class AssessorAdmin(admin.ModelAdmin):
         return form
 
     def get_horario_trabalho(self, obj):
+        if obj.horario_entrada is None or obj.horario_saida is None:
+            return 'Horário não definido'
         return f'{obj.horario_entrada.strftime("%H:%M")} - {obj.horario_saida.strftime("%H:%M")}'
     get_horario_trabalho.short_description = 'Horário de Trabalho'
 
     def get_status_presenca(self, obj):
+        if obj.horario_entrada is None or obj.horario_saida is None:
+            return format_html('<span style="color: #6c757d;">Horário não definido</span>')
         agora = timezone.localtime().time()
         if obj.horario_entrada <= agora <= obj.horario_saida:
             return format_html('<span style="color: #28a745;">✓ Presente</span>')
         return format_html('<span style="color: #dc3545;">✗ Ausente</span>')
     get_status_presenca.short_description = 'Status'
 
-@admin.register(Setor)
-class SetorAdmin(admin.ModelAdmin):
-    list_display = ('nome', 'tipo', 'localizacao', 'get_horario_funcionamento', 'get_status_funcionamento')
-    list_filter = ('tipo', 'localizacao')
-    search_fields = ('nome',)
 
-    def get_horario_funcionamento(self, obj):
-        if obj.horario_abertura and obj.horario_fechamento:
-            return f'{obj.horario_abertura.strftime("%H:%M")} - {obj.horario_fechamento.strftime("%H:%M")}'
-        return 'Não definido'
-    get_horario_funcionamento.short_description = 'Horário de Funcionamento'
-
-    def get_status_funcionamento(self, obj):
-        status = obj.status_funcionamento()
-        if status == "Aberto":
-            return format_html('<span style="color: #188038; font-weight: bold;">{}</span>', status)
-        elif status == "Fechado":
-            return format_html('<span style="color: #d93025; font-weight: bold;">{}</span>', status)
-        return format_html('<span style="color: #666;">{}</span>', status)
-    get_status_funcionamento.short_description = 'Status'
 
 @admin.register(Visitante)
 class VisitanteAdmin(admin.ModelAdmin):

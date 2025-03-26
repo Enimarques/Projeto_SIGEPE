@@ -18,12 +18,41 @@ class Setor(models.Model):
         ('primeiro_piso', '1° Piso'),
         ('segundo_piso', '2° Piso'),
     ]
+    
+    FUNCAO_CHOICES = [
+        ('assessor_1', 'Assessor I'),
+        ('assessor_2', 'Assessor II'),
+        ('assessor_3', 'Assessor III'),
+        ('assessor_4', 'Assessor IV'),
+        ('assessor_5', 'Assessor V'),
+        ('assessor_6', 'Assessor VI'),
+        ('assessor_7', 'Assessor VII'),
+        ('assessor_8', 'Assessor VIII'),
+        ('assessor_9', 'Assessor IX'),
+        ('assessor_10', 'Assessor X'),
+        ('agente_parlamentar', 'Agente Parlamentar'),
+        ('Chefe_de_Gabinete', 'Chefe de Gabinete'),
+        ('Chefe_de_Departamento', 'Chefe de Departamento'),
+        ('outros', 'Outros')
+    ]
 
     nome = models.CharField('Nome do Local', max_length=100)
+    nome_responsavel = models.CharField('Nome do Responsável', max_length=100, blank=True, null=True)
     tipo = models.CharField('Tipo', max_length=20, choices=TIPO_CHOICES, default='departamento')
     localizacao = models.CharField('Localização', max_length=20, choices=LOCALIZACAO_CHOICES, default='terreo')
     horario_abertura = models.TimeField('Horário de Abertura', blank=True, null=True)
     horario_fechamento = models.TimeField('Horário de Fechamento', blank=True, null=True)
+    
+    # Campos migrados do modelo Assessor
+    nome_responsavel = models.CharField('Nome do Responsável', max_length=100, blank=True, null=True)
+    funcao = models.CharField('Função/Cargo', max_length=21, choices=FUNCAO_CHOICES, blank=True, null=True)
+    horario_entrada = models.TimeField('Horário de Entrada', blank=True, null=True)
+    horario_saida = models.TimeField('Horário de Saída', blank=True, null=True)
+    email = models.EmailField('E-mail', max_length=255, blank=True, null=True)
+    ativo = models.BooleanField('Ativo', default=True)
+    usuario = models.OneToOneField('auth.User', on_delete=models.SET_NULL, null=True, blank=True, related_name='setor_responsavel', verbose_name='Usuário')
+    data_criacao = models.DateTimeField('Data de Criação', auto_now_add=True)
+    data_atualizacao = models.DateTimeField('Data de Atualização', auto_now=True)
 
     class Meta:
         verbose_name = 'Setor'
@@ -46,6 +75,32 @@ class Setor(models.Model):
         if esta_aberto is None:
             return "Horário não definido"
         return "Aberto" if esta_aberto else "Fechado"
+
+    def get_horario_trabalho(self):
+        if not self.horario_entrada or not self.horario_saida:
+            return 'Horário não definido'
+        try:
+            if self.horario_entrada is None or self.horario_saida is None:
+                return 'Horário não definido'
+            return f'{self.horario_entrada.strftime("%H:%M")} - {self.horario_saida.strftime("%H:%M")}'
+        except AttributeError:
+            return 'Horário não definido'
+
+    def get_status_presenca(self):
+        if not self.horario_entrada or not self.horario_saida:
+            return 'Horário não definido'
+            
+        agora = timezone.localtime().time()
+        if self.horario_entrada <= agora <= self.horario_saida:
+            return 'Presente'
+        return 'Ausente'
+
+    def clean(self):
+        # Validar se o horário do responsável está dentro do horário do setor
+        if self.horario_entrada and self.horario_saida and self.horario_abertura and self.horario_fechamento:
+            if self.horario_entrada < self.horario_abertura or self.horario_saida > self.horario_fechamento:
+                raise ValidationError('O horário do responsável deve estar dentro do horário de funcionamento do setor.')
+        super().clean()
 
 class Assessor(models.Model):
     FUNCAO_CHOICES = [
@@ -70,9 +125,9 @@ class Assessor(models.Model):
     horario_saida = models.TimeField('Horário de Saída')
     data_criacao = models.DateTimeField('Data de Criação', auto_now_add=True)
     data_atualizacao = models.DateTimeField('Data de Atualização', auto_now=True)
-    usuario = models.OneToOneField('auth.User', on_delete=models.SET_NULL, null=True, blank=True, related_name='assessor', verbose_name='Usuário')
     email = models.EmailField('E-mail', max_length=255, blank=True, null=True)
     ativo = models.BooleanField('Ativo', default=True)
+    usuario = models.OneToOneField('auth.User', on_delete=models.SET_NULL, null=True, blank=True, related_name='assessor', verbose_name='Usuário')
 
     class Meta:
         verbose_name = 'Assessor'
