@@ -1,6 +1,8 @@
 from django import forms
 from .models import Visita, Visitante, Setor
 from django.core.validators import RegexValidator
+from django.utils import timezone
+from datetime import timedelta
 
 class VisitanteForm(forms.ModelForm):
     cpf_validator = RegexValidator(
@@ -83,14 +85,104 @@ class VisitanteForm(forms.ModelForm):
             raise forms.ValidationError('O nome completo é obrigatório.')
         return nome_completo
 
+    def clean_data_nascimento(self):
+        data_nascimento = self.cleaned_data.get('data_nascimento')
+        if not data_nascimento:
+            raise forms.ValidationError('A data de nascimento é obrigatória.')
+        
+        # Verificar idade mínima de 18 anos
+        idade_minima = timezone.now().date() - timedelta(days=18*365)
+        if data_nascimento > idade_minima:
+            raise forms.ValidationError('Você deve ter pelo menos 18 anos.')
+        
+        return data_nascimento
+
     def clean_CPF(self):
         cpf = self.cleaned_data.get('CPF')
         if not cpf:
             raise forms.ValidationError('O CPF é obrigatório.')
-        # Verifica se já existe um visitante com este CPF
+        
+        # Remover pontos e traço para validação
+        cpf_numerico = cpf.replace('.', '').replace('-', '')
+        
+        # Validação de CPF
+        if len(cpf_numerico) != 11:
+            raise forms.ValidationError('CPF inválido.')
+        
+        # Verificar se todos os dígitos são iguais
+        if len(set(cpf_numerico)) == 1:
+            raise forms.ValidationError('CPF inválido.')
+        
+        # Cálculo dos dígitos verificadores
+        def calcula_digito_verificador(cpf_parcial):
+            soma = sum(int(cpf_parcial[i]) * (len(cpf_parcial) + 1 - i) for i in range(len(cpf_parcial)))
+            resto = soma % 11
+            return 0 if resto < 2 else 11 - resto
+        
+        # Verificar primeiro dígito verificador
+        digito1 = calcula_digito_verificador(cpf_numerico[:9])
+        if int(cpf_numerico[9]) != digito1:
+            raise forms.ValidationError('CPF inválido.')
+        
+        # Verificar segundo dígito verificador
+        digito2 = calcula_digito_verificador(cpf_numerico[:10])
+        if int(cpf_numerico[10]) != digito2:
+            raise forms.ValidationError('CPF inválido.')
+        
+        # Verificar se já existe um visitante com este CPF
         if Visitante.objects.filter(CPF=cpf).exclude(id=self.instance.id if self.instance else None).exists():
             raise forms.ValidationError('Este CPF já está cadastrado.')
+        
         return cpf
+
+    def clean_telefone(self):
+        telefone = self.cleaned_data.get('telefone')
+        if not telefone:
+            raise forms.ValidationError('O telefone é obrigatório.')
+        
+        # Remover caracteres não numéricos
+        telefone_numerico = ''.join(filter(str.isdigit, telefone))
+        
+        # Verificar se tem 10, 11 ou 12 dígitos (considerando variações de número)
+        if len(telefone_numerico) < 10 or len(telefone_numerico) > 12:
+            raise forms.ValidationError('Número de telefone inválido.')
+        
+        # Verificar se os primeiros dígitos são válidos
+        ddd = telefone_numerico[:2]
+        
+        # Lista de DDDs válidos (pode ser expandida)
+        ddds_validos = [
+            '11', '12', '13', '14', '15', '16', '17', '18', '19',  # São Paulo
+            '21', '22', '24', '27', '28',  # Rio de Janeiro
+            '31', '32', '33', '34', '35', '37', '38',  # Minas Gerais
+            '41', '42', '43', '44', '45', '46',  # Paraná
+            '47', '48', '49',  # Santa Catarina
+            '51', '53', '54', '55',  # Rio Grande do Sul
+            '61',  # Distrito Federal
+            '62', '64',  # Goiás
+            '63',  # Tocantins
+            '65', '66',  # Mato Grosso
+            '67',  # Mato Grosso do Sul
+            '68',  # Acre
+            '69',  # Rondônia
+            '71', '73', '74', '75', '77',  # Bahia
+            '79',  # Sergipe
+            '81', '87',  # Pernambuco
+            '82',  # Alagoas
+            '83',  # Paraíba
+            '84',  # Rio Grande do Norte
+            '85', '88',  # Ceará
+            '86', '89',  # Piauí
+            '91', '93', '94',  # Pará
+            '92', '97',  # Amazonas
+            '95',  # Roraima
+            '96',  # Amapá
+        ]
+        
+        if ddd not in ddds_validos:
+            raise forms.ValidationError('DDD inválido.')
+        
+        return telefone
 
     def clean(self):
         cleaned_data = super().clean()

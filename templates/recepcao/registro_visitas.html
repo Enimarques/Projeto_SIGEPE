@@ -43,6 +43,11 @@
             <div class="card shadow">
                 <div class="card-header bg-primary text-white">
                     <h4 class="mb-0"><i class="fas fa-clipboard-list"></i> Registro de Visita</h4>
+                    <div class="float-end">
+                        <a href="{% url 'recepcao:totem_visitas' %}" class="btn btn-link text-white" style="text-decoration: none;">
+                            <i class="fas fa-desktop"></i>
+                        </a>
+                    </div>
                 </div>
                 <div class="card-body">
                     {% if visitante_pre_selecionado %}
@@ -139,22 +144,16 @@
                             {% endif %}
                         </div>
 
-                        <div class="d-grid gap-2">
+                        <div class="mt-4">
                             <button type="submit" class="btn btn-primary">
-                                <i class="fas fa-save"></i> Registrar Visita
+                                <i class="fas fa-plus-circle me-2"></i>Registrar Visita
                             </button>
-                            <div class="row g-2">
-                                <div class="col-6">
-                                    <a href="{% url 'recepcao:home_recepcao' %}" class="btn btn-outline-secondary w-100">
-                                        <i class="fas fa-arrow-left me-2"></i>Voltar
-                                    </a>
-                                </div>
-                                <div class="col-6">
-                                    <a href="{% url 'recepcao:cadastro_visitantes' %}" class="btn btn-outline-primary w-100">
-                                        <i class="fas fa-user-plus me-2"></i>Cadastrar Visitante
-                                    </a>
-                                </div>
-                            </div>
+                            <a href="{% url 'recepcao:home_recepcao' %}" class="btn btn-outline-secondary">
+                                <i class="fas fa-times me-2"></i>Cancelar
+                            </a>
+                            <a href="{% url 'recepcao:totem_visitas' %}" class="btn btn-outline-info float-end">
+                                <i class="fas fa-desktop me-2"></i>Modo Totem
+                            </a>
                         </div>
                     </form>
                 </div>

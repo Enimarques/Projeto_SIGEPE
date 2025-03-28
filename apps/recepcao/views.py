@@ -8,12 +8,11 @@ from .models import Visitante, Visita, Setor, Assessor
 from .forms import VisitanteForm, VisitaForm
 from .forms_departamento import AlterarHorarioSetorForm
 from django.core.paginator import Paginator
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 from django.core.exceptions import PermissionDenied
-
-def check_superuser(user):
-    if not user.is_superuser:
-        raise PermissionDenied
+from .reconhecimento_facial import ReconhecimentoFacial
+import json
+import cv2
 
 # Contexto base para todas as views do app
 def get_base_context(title_suffix=''):
@@ -76,13 +75,14 @@ def cadastro_visitantes(request):
         if form.is_valid():
             visitante = form.save()
             messages.success(request, 'Visitante cadastrado com sucesso!')
-            return redirect('recepcao:lista_visitantes')
+            return redirect('recepcao:registrar_face', visitante_id=visitante.id)
     else:
         form = VisitanteForm()
     
     context = get_base_context('Cadastro de Visitante')
     context.update({
-        'form': form
+        'form': form,
+        'visitante': None,  
     })
     
     return render(request, 'recepcao/cadastro_visitantes.html', context)
@@ -354,6 +354,33 @@ def excluir_setor(request, pk):
     return redirect('recepcao:lista_setores')
 
 @login_required(login_url='autenticacao:login_sistema')
+def excluir_visitante(request, pk):
+    visitante = get_object_or_404(Visitante, pk=pk)
+    
+    # Verificar se o visitante tem visitas registradas
+    visitas_existentes = Visita.objects.filter(visitante=visitante).exists()
+    
+    if request.method == 'POST':
+        if visitas_existentes:
+            messages.error(request, 'Não é possível excluir um visitante com histórico de visitas.')
+            return redirect('recepcao:detalhes_visitante', pk=pk)
+        
+        try:
+            visitante.delete()
+            messages.success(request, 'Visitante excluído com sucesso!')
+            return redirect('recepcao:lista_visitantes')
+        except Exception as e:
+            messages.error(request, f'Erro ao excluir visitante: {str(e)}')
+            return redirect('recepcao:detalhes_visitante', pk=pk)
+    
+    context = get_base_context('Excluir Visitante')
+    context.update({
+        'visitante': visitante,
+        'visitas_existentes': visitas_existentes
+    })
+    return render(request, 'recepcao/confirmar_exclusao_visitante.html', context)
+
+@login_required(login_url='autenticacao:login_sistema')
 def gerar_etiqueta(request, visita_id):
     visita = get_object_or_404(Visita, pk=visita_id)
     context = get_base_context('Etiqueta da Visita')
@@ -391,3 +418,134 @@ def alterar_horario_departamento(request):
     })
     
     return render(request, 'recepcao/alterar_horario_departamento.html', context)
+
+@login_required(login_url='autenticacao:login_sistema')
+def registrar_face(request, visitante_id):
+    visitante = get_object_or_404(Visitante, id=visitante_id)
+    
+    if request.method == 'POST':
+        try:
+            # Obter a imagem do formulário
+            face_image = request.FILES.get('face_image')
+            if not face_image:
+                return JsonResponse({'success': False, 'message': 'Imagem não fornecida'})
+            
+            # Salvar a imagem temporariamente
+            import tempfile
+            import os
+            
+            temp_dir = tempfile.mkdtemp()
+            temp_path = os.path.join(temp_dir, 'face.jpg')
+            
+            with open(temp_path, 'wb+') as destination:
+                for chunk in face_image.chunks():
+                    destination.write(chunk)
+            
+            # Processar a face
+            reconhecimento = ReconhecimentoFacial()
+            face_id = reconhecimento.registrar_face(temp_path, visitante.id)
+            
+            # Limpar arquivos temporários
+            os.unlink(temp_path)
+            os.rmdir(temp_dir)
+            
+            if face_id:
+                visitante.face_id = face_id
+                visitante.save()
+                return JsonResponse({'success': True})
+            else:
+                return JsonResponse({'success': False, 'message': 'Não foi possível detectar uma face na imagem'})
+            
+        except Exception as e:
+            return JsonResponse({'success': False, 'message': str(e)})
+    
+    context = get_base_context('Registrar Face')
+    context.update({
+        'visitante': visitante
+    })
+    
+    return render(request, 'recepcao/registrar_face.html', context)
+
+@login_required(login_url='autenticacao:login_sistema')
+def verificar_face(request):
+    if request.method == 'POST':
+        cpf = request.POST.get('cpf')
+        try:
+            visitante = Visitante.objects.get(CPF=cpf)
+            reconhecimento = ReconhecimentoFacial()
+            
+            if reconhecimento.verificar_face(visitante.id):
+                return JsonResponse({
+                    'success': True,
+                    'visitante': {
+                        'id': visitante.id,
+                        'nome_completo': visitante.nome_completo,
+                        'cpf': visitante.CPF
+                    }
+                })
+            else:
+                return JsonResponse({
+                    'success': False,
+                    'message': 'Face não reconhecida. Por favor, tente novamente.'
+                })
+                
+        except Visitante.DoesNotExist:
+            return JsonResponse({
+                'success': False,
+                'message': 'Visitante não encontrado.'
+            })
+        except Exception as e:
+            return JsonResponse({
+                'success': False,
+                'message': f'Erro ao verificar face: {str(e)}'
+            })
+            
+    return JsonResponse({'success': False, 'message': 'Método não permitido'})
+
+@login_required(login_url='autenticacao:login_sistema')
+def verificar_face_frame(request):
+    """Processa um frame para detecção facial e retorna os pontos detectados"""
+    if request.method == 'POST':
+        try:
+            # Obter o frame
+            frame_file = request.FILES.get('frame')
+            if not frame_file:
+                return JsonResponse({'success': False, 'message': 'Frame não fornecido'})
+            
+            # Salvar o frame temporariamente
+            import tempfile
+            import os
+            
+            temp_dir = tempfile.mkdtemp()
+            temp_path = os.path.join(temp_dir, 'frame.jpg')
+            
+            with open(temp_path, 'wb+') as destination:
+                for chunk in frame_file.chunks():
+                    destination.write(chunk)
+            
+            # Carregar o frame
+            frame = cv2.imread(temp_path)
+            
+            # Processar o frame
+            reconhecimento = ReconhecimentoFacial()
+            face_detected = reconhecimento.desenhar_face(frame)
+            
+            # Limpar arquivos temporários
+            os.unlink(temp_path)
+            os.rmdir(temp_dir)
+            
+            return JsonResponse({
+                'success': True,
+                'face_detected': face_detected,
+                'face_points': face_detected  # A função desenhar_face já desenha os pontos
+            })
+            
+        except Exception as e:
+            return JsonResponse({'success': False, 'message': str(e)})
+    
+    return JsonResponse({'success': False, 'message': 'Método não permitido'})
+
+@login_required(login_url='autenticacao:login_sistema')
+def totem_visitas(request):
+    context = get_base_context('Totem de Visitas')
+    return render(request, 'recepcao/totem.html', context)

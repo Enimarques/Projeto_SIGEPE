@@ -60,6 +60,7 @@ class Assessor(models.Model):
         ('assessor_9', 'Assessor IX'),
         ('assessor_10', 'Assessor X'),
         ('agente_parlamentar', 'Agente Parlamentar'),
+        ('chefe_de_gabinete', 'Chefe de Gabinete'),
         ('outros', 'Outros')
     ]
 
@@ -245,6 +246,8 @@ class Visitante(models.Model):
     cidade = models.CharField('Cidade', max_length=100)
     bairro = models.CharField('Bairro', max_length=50, choices=BAIRROS_CHOICES, default='outros')
     foto = models.ImageField('Foto', upload_to='visitantes/', blank=True, null=True)
+    face_id = models.CharField('Face ID', max_length=100, blank=True, null=True)
+    face_registrada = models.BooleanField('Face Registrada', default=False)
 
     class Meta:
         verbose_name = 'Visitante'

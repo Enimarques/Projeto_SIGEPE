@@ -158,31 +158,7 @@
                     </div>
                 </div>
 
-                <!-- Foto -->
-                <div class="row mb-4">
-                    <div class="col-12">
-                        <h5 class="text-primary mb-3">
-                            <i class="fas fa-camera me-2"></i>Foto do Visitante
-                        </h5>
-                    </div>
-
-                    <div class="col-md-12">
-                        {% if visitante.foto %}
-                        <div class="mb-3">
-                            <img src="{{ visitante.foto.url }}" alt="{{ visitante.nome_completo }}" class="rounded" style="max-width: 150px;">
-                        </div>
-                        {% endif %}
-                        <label for="{{ form.foto.id_for_label }}" class="form-label">Foto</label>
-                        {{ form.foto }}
-                        {% if form.foto.errors %}
-                        <div class="invalid-feedback d-block">
-                            {{ form.foto.errors }}
-                        </div>
-                        {% endif %}
-                        <div class="form-text">Formatos aceitos: JPG, PNG. Tamanho máximo: 5MB</div>
-                    </div>
-                </div>
-
+                <!-- Botões -->
                 <div class="mt-4">
                     <button type="submit" class="btn btn-primary">
                         {% if is_editing %}
@@ -204,29 +180,79 @@
 {% block extra_js %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Máscara para CPF
-    const cpfInput = document.getElementById('{{ form.CPF.id_for_label }}');
-    cpfInput.addEventListener('input', function(e) {
-        let value = e.target.value.replace(/\D/g, '');
-        if (value.length <= 11) {
-            value = value.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
-            e.target.value = value;
+    // Função para formatar CPF
+    function formatCPF(input) {
+        let value = input.value.replace(/\D/g, '');
+        
+        if (value.length > 11) {
+            value = value.slice(0, 11);
         }
-    });
+        
+        value = value.replace(/(\d{3})(\d)/, '$1.$2');
+        value = value.replace(/(\d{3})(\d)/, '$1.$2');
+        value = value.replace(/(\d{3})(\d{2})$/, '$1-$2');
+        
+        input.value = value;
+    }
 
-    // Máscara para telefone
-    const telefoneInput = document.getElementById('{{ form.telefone.id_for_label }}');
-    telefoneInput.addEventListener('input', function(e) {
-        let value = e.target.value.replace(/\D/g, '');
-        if (value.length <= 11) {
-            if (value.length > 10) {
-                value = value.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
-            } else {
-                value = value.replace(/(\d{2})(\d{4})(\d{4})/, '($1) $2-$3');
-            }
-            e.target.value = value;
+    // Função para formatar Telefone
+    function formatTelefone(input) {
+        let value = input.value.replace(/\D/g, '');
+        
+        if (value.length > 12) {
+            value = value.slice(0, 12);
         }
-    });
+        
+        value = value.replace(/^(\d{2})(\d)/, '($1) $2');
+        
+        // Ajuste para números com 9 dígitos
+        if (value.length > 10) {
+            value = value.replace(/(\d{5})(\d)/, '$1-$2');
+        } else {
+            value = value.replace(/(\d{4})(\d)/, '$1-$2');
+        }
+        
+        value = value.replace(/(\d{4})-(\d{4})$/, '$1-$2');
+        
+        input.value = value;
+    }
+
+    // Aplicar máscaras
+    const cpfInput = document.getElementById('id_CPF');
+    const telefoneInput = document.getElementById('id_telefone');
+    const dataNascimentoInput = document.getElementById('id_data_nascimento');
+
+    if (cpfInput) {
+        cpfInput.addEventListener('input', function() {
+            formatCPF(this);
+        });
+    }
+
+    if (telefoneInput) {
+        telefoneInput.addEventListener('input', function() {
+            formatTelefone(this);
+        });
+    }
+
+    // Validação de data de nascimento
+    if (dataNascimentoInput) {
+        // Limitar data máxima para hoje
+        const hoje = new Date().toISOString().split('T')[0];
+        dataNascimentoInput.setAttribute('max', hoje);
+        
+        // Validação de idade mínima
+        dataNascimentoInput.addEventListener('change', function() {
+            const dataSelecionada = new Date(this.value);
+            const idadeMinima = new Date();
+            idadeMinima.setFullYear(idadeMinima.getFullYear() - 18);
+            
+            if (dataSelecionada > idadeMinima) {
+                this.setCustomValidity('Você deve ter pelo menos 18 anos');
+            } else {
+                this.setCustomValidity('');
+            }
+        });
+    }
 });
 </script>
 {% endblock %}
