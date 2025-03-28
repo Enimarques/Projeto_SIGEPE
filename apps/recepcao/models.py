@@ -353,7 +353,8 @@ class Visita(models.Model):
     setor = models.ForeignKey(
         Setor,
         on_delete=models.PROTECT,
-        verbose_name='Setor'
+        verbose_name='Setor',
+        related_name='visitas'
     )
     localizacao = models.CharField(
         'Localização',

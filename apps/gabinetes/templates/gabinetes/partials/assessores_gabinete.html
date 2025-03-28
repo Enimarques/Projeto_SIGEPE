@@ -1,0 +1,22 @@
+<div class="card mb-4">
+    <div class="card-body">
+        <h5 class="card-title">Assessores</h5>
+        <div class="list-group">
+            {% for assessor in gabinete.assessores.all %}
+            <div class="list-group-item">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6>{{ assessor.nome_completo }}</h6>
+                        <small class="text-muted">{{ assessor.cargo }}</small>
+                    </div>
+                    <span class="badge bg-primary">{{ assessor.tipo }}</span>
+                </div>
+            </div>
+            {% empty %}
+            <div class="alert alert-info">
+                Nenhum assessor cadastrado para este gabinete
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>

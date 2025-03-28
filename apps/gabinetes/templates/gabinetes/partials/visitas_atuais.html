@@ -1,0 +1,24 @@
+<div class="card">
+  <div class="card-body">
+    <h5 class="card-title mb-4">Visitas em Andamento</h5>
+    {% if visitantes_aguardando %}
+      <div class="list-group">
+        {% for visita in visitantes_aguardando %}
+          <div class="list-group-item">
+            <div class="d-flex justify-content-between align-items-center">
+              <div>
+                <h6>{{ visita.visitante.nome_completo }}</h6>
+                <small class="text-muted">Entrada: {{ visita.data_entrada|date:'H:i' }}</small>
+              </div>
+              <span class="badge bg-primary">Aguardando</span>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="alert alert-info">
+        Nenhuma visita em andamento no momento
+      </div>
+    {% endif %}
+  </div>
+</div>

@@ -1,0 +1,174 @@
+<div class="card shadow-sm">
+  <div class="card-body">
+    <h5 class="card-title mb-4"><i class="fas fa-history me-2"></i>Histórico de Visitas</h5>
+    
+    <form method="get" class="mb-4">
+      <div class="row">
+        <div class="col-md-5 mb-3">
+          <label for="data_inicio" class="form-label">Data Inicial</label>
+          <input type="date" id="data_inicio" name="data_inicio" class="form-control" value="{{ data_inicio|date:'Y-m-d' }}">
+        </div>
+        <div class="col-md-5 mb-3">
+          <label for="data_fim" class="form-label">Data Final</label>
+          <input type="date" id="data_fim" name="data_fim" class="form-control" value="{{ data_fim|date:'Y-m-d' }}">
+        </div>
+        <div class="col-md-2 mb-3 d-flex align-items-end">
+          <button type="submit" class="btn btn-primary w-100"><i class="fas fa-filter me-2"></i>Filtrar</button>
+        </div>
+      </div>
+    </form>
+
+    {% if historico_visitas %}
+      <div class="table-responsive">
+        <table class="table table-hover table-striped">
+          <thead class="table-light">
+            <tr>
+              <th>Visitante</th>
+              <th>Data/Hora</th>
+              <th>Duração</th>
+              <th>Motivo</th>
+              <th>Status</th>
+              <th>Ações</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for visita in historico_visitas %}
+              <tr>
+                <td>
+                  <div class="d-flex align-items-center">
+                    <div class="avatar-sm bg-light rounded-circle text-center me-2" style="width: 32px; height: 32px; line-height: 32px;">
+                      <i class="fas fa-user text-secondary"></i>
+                    </div>
+                    <div>
+                      <h6 class="mb-0">{{ visita.visitante.nome_completo }}</h6>
+                      <small class="text-muted">{{ visita.visitante.documento }}</small>
+                    </div>
+                  </div>
+                </td>
+                <td>
+                  <span class="fw-medium">{{ visita.data_entrada|date:'d/m/Y' }}</span><br>
+                  <small class="text-muted">{{ visita.data_entrada|date:'H:i' }}</small>
+                </td>
+                <td>
+                  {% if visita.data_saida %}
+                    {% with duracao=visita.data_saida|timeuntil:visita.data_entrada %}
+                      <span class="text-muted">{{ duracao }}</span>
+                    {% endwith %}
+                  {% else %}
+                    <span class="text-muted">-</span>
+                  {% endif %}
+                </td>
+                <td>
+                  <span class="text-truncate d-inline-block" style="max-width: 150px;" title="{{ visita.motivo }}">{{ visita.motivo|default:'-' }}</span>
+                </td>
+                <td>
+                  <span class="badge rounded-pill bg-{% if visita.status == 'finalizada' %}success{% elif visita.status == 'em_andamento' %}warning{% else %}info{% endif %} {% if visita.status != 'finalizada' %}text-dark{% endif %}">
+                    {{ visita.get_status_display }}
+                  </span>
+                </td>
+                <td>
+                  <div class="dropdown">
+                    <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" id="dropdownMenuButton{{ visita.id }}" data-bs-toggle="dropdown" aria-expanded="false">
+                      <i class="fas fa-ellipsis-v"></i>
+                    </button>
+                    <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton{{ visita.id }}">
+                      <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#detalhesVisita{{ visita.id }}"><i class="fas fa-eye me-2"></i>Ver detalhes</a></li>
+                      {% if not visita.data_saida %}
+                        <li><a class="dropdown-item" href="{% url 'gabinetes:finalizar_visita' visita.id %}"><i class="fas fa-check-circle me-2"></i>Finalizar visita</a></li>
+                      {% endif %}
+                    </ul>
+                  </div>
+                  
+                  <!-- Modal de Detalhes -->
+                  <div class="modal fade" id="detalhesVisita{{ visita.id }}" tabindex="-1" aria-labelledby="detalhesVisitaLabel{{ visita.id }}" aria-hidden="true">
+                    <div class="modal-dialog">
+                      <div class="modal-content">
+                        <div class="modal-header">
+                          <h5 class="modal-title" id="detalhesVisitaLabel{{ visita.id }}">Detalhes da Visita</h5>
+                          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                          <div class="mb-3">
+                            <h6>Visitante</h6>
+                            <p>{{ visita.visitante.nome_completo }}</p>
+                          </div>
+                          <div class="mb-3">
+                            <h6>Documento</h6>
+                            <p>{{ visita.visitante.documento }}</p>
+                          </div>
+                          <div class="mb-3">
+                            <h6>Data e Hora</h6>
+                            <p>Entrada: {{ visita.data_entrada|date:'d/m/Y H:i' }}<br>
+                            {% if visita.data_saida %}Saída: {{ visita.data_saida|date:'d/m/Y H:i' }}{% else %}Saída: Não registrada{% endif %}</p>
+                          </div>
+                          <div class="mb-3">
+                            <h6>Motivo</h6>
+                            <p>{{ visita.motivo|default:'Não informado' }}</p>
+                          </div>
+                          <div class="mb-3">
+                            <h6>Observações</h6>
+                            <p>{{ visita.observacoes|default:'Não há observações' }}</p>
+                          </div>
+                        </div>
+                        <div class="modal-footer">
+                          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      
+      <!-- Paginação -->
+      {% if historico_visitas.has_other_pages %}
+      <nav aria-label="Navegação de páginas" class="mt-4">
+        <ul class="pagination justify-content-center">
+          {% if historico_visitas.has_previous %}
+            <li class="page-item">
+              <a class="page-link" href="?page={{ historico_visitas.previous_page_number }}{% if data_inicio %}&data_inicio={{ data_inicio|date:'Y-m-d' }}{% endif %}{% if data_fim %}&data_fim={{ data_fim|date:'Y-m-d' }}{% endif %}" aria-label="Anterior">
+                <span aria-hidden="true">&laquo;</span>
+              </a>
+            </li>
+          {% else %}
+            <li class="page-item disabled">
+              <a class="page-link" href="#" aria-label="Anterior">
+                <span aria-hidden="true">&laquo;</span>
+              </a>
+            </li>
+          {% endif %}
+          
+          {% for i in historico_visitas.paginator.page_range %}
+            {% if historico_visitas.number == i %}
+              <li class="page-item active"><a class="page-link" href="#">{{ i }}</a></li>
+            {% else %}
+              <li class="page-item"><a class="page-link" href="?page={{ i }}{% if data_inicio %}&data_inicio={{ data_inicio|date:'Y-m-d' }}{% endif %}{% if data_fim %}&data_fim={{ data_fim|date:'Y-m-d' }}{% endif %}">{{ i }}</a></li>
+            {% endif %}
+          {% endfor %}
+          
+          {% if historico_visitas.has_next %}
+            <li class="page-item">
+              <a class="page-link" href="?page={{ historico_visitas.next_page_number }}{% if data_inicio %}&data_inicio={{ data_inicio|date:'Y-m-d' }}{% endif %}{% if data_fim %}&data_fim={{ data_fim|date:'Y-m-d' }}{% endif %}" aria-label="Próximo">
+                <span aria-hidden="true">&raquo;</span>
+              </a>
+            </li>
+          {% else %}
+            <li class="page-item disabled">
+              <a class="page-link" href="#" aria-label="Próximo">
+                <span aria-hidden="true">&raquo;</span>
+              </a>
+            </li>
+          {% endif %}
+        </ul>
+      </nav>
+      {% endif %}
+    {% else %}
+      <div class="alert alert-warning">
+        <i class="fas fa-exclamation-triangle me-2"></i> Nenhum registro encontrado no período selecionado
+      </div>
+    {% endif %}
+  </div>
+</div>

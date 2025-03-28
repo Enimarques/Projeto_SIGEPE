@@ -1,0 +1,93 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-4">
+    <h2>{{ gabinete.nome }}</h2>
+    
+    <ul class="nav nav-tabs mb-4" id="gabineteTab" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="info-tab" data-bs-toggle="tab" data-bs-target="#info" type="button" role="tab" aria-controls="info" aria-selected="true">
+                <i class="fas fa-info-circle me-2"></i>Informações
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="assessores-tab" data-bs-toggle="tab" data-bs-target="#assessores" type="button" role="tab" aria-controls="assessores" aria-selected="false" tabindex="-1">
+                <i class="fas fa-users me-2"></i>Assessores
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="visitas-tab" data-bs-toggle="tab" data-bs-target="#visitas" type="button" role="tab" aria-controls="visitas" aria-selected="false" tabindex="-1">
+                <i class="fas fa-clipboard-list me-2"></i>Visitas em Andamento
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="visitas-agendadas-tab" data-bs-toggle="tab" data-bs-target="#visitas-agendadas" type="button" role="tab" aria-controls="visitas-agendadas" aria-selected="false" tabindex="-1">
+                <i class="fas fa-calendar-alt me-2"></i>Visitas Agendadas
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="historico-tab" data-bs-toggle="tab" data-bs-target="#historico" type="button" role="tab" aria-controls="historico" aria-selected="false" tabindex="-1">
+                <i class="fas fa-history me-2"></i>Histórico de Visitas
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="metricas-tab" data-bs-toggle="tab" data-bs-target="#metricas" type="button" role="tab" aria-controls="metricas" aria-selected="false" tabindex="-1">
+                <i class="fas fa-chart-bar me-2"></i>Métricas
+            </button>
+        </li>
+    </ul>
+
+    <div class="tab-content">
+        <div class="tab-pane fade show active" id="info" role="tabpanel" aria-labelledby="info-tab">
+            {% include 'gabinetes/partials/informacoes_gabinete.html' %}
+        </div>
+        
+        <div class="tab-pane fade" id="assessores" role="tabpanel" aria-labelledby="assessores-tab">
+            {% include 'gabinetes/partials/assessores_gabinete.html' %}
+        </div>
+        
+        <div class="tab-pane fade" id="visitas" role="tabpanel" aria-labelledby="visitas-tab">
+            <!-- Conteúdo existente de visitas atuais -->
+            {% include 'gabinetes/partials/visitas_atuais.html' %}
+        </div>
+        
+        <div class="tab-pane fade" id="visitas-agendadas" role="tabpanel" aria-labelledby="visitas-agendadas-tab">
+            <!-- Conteúdo de visitas agendadas -->
+            {% include 'gabinetes/partials/visitas_agendadas.html' %}
+        </div>
+        
+        <div class="tab-pane fade" id="metricas">
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">Visitas Hoje</h5>
+                            <p class="display-4">{{ visitas_hoje }}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">Visitas Semana</h5>
+                            <p class="display-4">{{ visitas_semana }}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">Total de Visitas</h5>
+                            <p class="display-4">{{ total_visitas }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="tab-pane fade" id="historico">
+            <!-- Conteúdo do histórico de visitas -->
+            {% include 'gabinetes/partials/historico_visitas.html' %}
+        </div>
+    </div>
+</div>
+{% endblock %}

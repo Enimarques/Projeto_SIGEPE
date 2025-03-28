@@ -9,12 +9,24 @@ from .models import Visitante, Visita, Setor
 
 @admin.register(Setor)
 class SetorAdmin(admin.ModelAdmin):
-    list_display = ('nome', 'tipo', 'localizacao', 'nome_responsavel', 'funcao', 'get_horario_trabalho', 'get_status_presenca', 'ativo')
+    list_display = ('nome', 'tipo', 'localizacao', 'nome_responsavel', 'funcao', 'get_horario_trabalho', 'get_status_presenca', 'visitas_diarias', 'visitas_semanais', 'ativo')
+
+    def visitas_diarias(self, obj):
+        return obj.visitas.filter(data_entrada__date=timezone.localdate()).count()
+    visitas_diarias.short_description = 'Visitas Hoje'
+
+    def visitas_semanais(self, obj):
+        return obj.visitas.filter(data_entrada__gte=timezone.now() - timezone.timedelta(days=7)).count()
+    visitas_semanais.short_description = 'Visitas Semana'
     list_filter = ('tipo', 'localizacao', 'ativo')
     search_fields = ('nome', 'nome_responsavel', 'email')
     ordering = ['nome']
     readonly_fields = ('data_criacao', 'data_atualizacao')
     fieldsets = (
+        ('Métricas de Visitas', {
+            'fields': ('visitas_diarias', 'visitas_semanais'),
+            'classes': ('collapse',)
+        }),
         ('Informações do Setor', {
             'fields': ('nome', 'tipo', 'localizacao')
         }),
@@ -192,6 +204,10 @@ class VisitaAdmin(admin.ModelAdmin):
     date_hierarchy = 'data_entrada'
 
     fieldsets = (
+        ('Métricas de Visitas', {
+            'fields': ('visitas_diarias', 'visitas_semanais'),
+            'classes': ('collapse',)
+        }),
         ('Visitante', {
             'fields': ('visitante',)
         }),
