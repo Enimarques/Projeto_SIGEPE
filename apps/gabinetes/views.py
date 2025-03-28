@@ -110,6 +110,13 @@ def detalhes_gabinete(request, pk):
     
     total_visitas = Visita.objects.filter(setor=gabinete).count()
     
+    # Visitas da última semana
+    data_semana = hoje - timedelta(days=7)
+    visitas_semana = Visita.objects.filter(
+        setor=gabinete,
+        data_entrada__date__gte=data_semana
+    ).count()
+    
     # Histórico de visitas (com filtro de data opcional)
     data_inicio = request.GET.get('data_inicio')
     data_fim = request.GET.get('data_fim')
@@ -130,7 +137,40 @@ def detalhes_gabinete(request, pk):
     else:
         data_fim = hoje
     
-    historico_visitas = historico_query.order_by('-data_entrada')
+    # Ordenar o histórico de visitas por data de entrada (mais recente primeiro)
+    historico_query = historico_query.order_by('-data_entrada')
+    
+    # Paginação do histórico de visitas
+    from django.core.paginator import Paginator
+    paginator = Paginator(historico_query, 10)  # 10 visitas por página
+    page = request.GET.get('page')
+    try:
+        historico_visitas = paginator.get_page(page)
+    except:
+        historico_visitas = paginator.get_page(1)
+    
+    # Consulta visitas realizadas (com data de entrada e saída preenchidas)
+    visitas_realizadas = Visita.objects.filter(
+        setor=gabinete,
+        data_entrada__isnull=False,
+        data_saida__isnull=False
+    ).order_by('-data_entrada')
+    
+    # Consulta visitas agendadas (data futura)
+    visitas_agendadas = Visita.objects.filter(
+        setor=gabinete,
+        data_entrada__gt=datetime.now()
+    ).order_by('data_entrada')
+    
+    # Obter assessores do gabinete
+    assessores = Assessor.objects.filter(departamento=gabinete, ativo=True).order_by('nome')
+    
+    # Verificar se o usuário tem acesso ao gabinete
+    has_access = False
+    if request.user.is_staff or request.user.is_superuser:
+        has_access = True
+    elif hasattr(request.user, 'assessor') and request.user.assessor and request.user.assessor.departamento == gabinete:
+        has_access = True
     
     context = {
         'gabinete': gabinete,
@@ -138,8 +178,13 @@ def detalhes_gabinete(request, pk):
         'visitas_hoje': visitas_hoje,
         'total_visitas': total_visitas,
         'historico_visitas': historico_visitas,
+        'visitas_realizadas': visitas_realizadas,
+        'visitas_agendadas': visitas_agendadas,
         'data_inicio': data_inicio,
-        'data_fim': data_fim
+        'data_fim': data_fim,
+        'visitas_semana': visitas_semana,
+        'assessores': assessores,
+        'has_access': has_access
     }
     
     return render(request, 'gabinetes/detalhes_gabinete.html', context)
