@@ -1,0 +1,128 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">Cadastro de Usuário</h4>
+                </div>
+                <div class="card-body">
+                    <form method="post" novalidate>
+                        {% csrf_token %}
+                        
+                        <div class="form-group mb-3">
+                            <label for="{{ form.username.id_for_label }}">Nome de Usuário:</label>
+                            {{ form.username }}
+                            {% if form.username.errors %}
+                                <div class="text-danger">
+                                    {{ form.username.errors }}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="form-group mb-3">
+                            <label for="{{ form.first_name.id_for_label }}">Nome:</label>
+                            {{ form.first_name }}
+                            {% if form.first_name.errors %}
+                                <div class="text-danger">
+                                    {{ form.first_name.errors }}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="form-group mb-3">
+                            <label for="{{ form.last_name.id_for_label }}">Sobrenome:</label>
+                            {{ form.last_name }}
+                            {% if form.last_name.errors %}
+                                <div class="text-danger">
+                                    {{ form.last_name.errors }}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="form-group mb-3">
+                            <label for="{{ form.email.id_for_label }}">E-mail:</label>
+                            {{ form.email }}
+                            {% if form.email.errors %}
+                                <div class="text-danger">
+                                    {{ form.email.errors }}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="form-group mb-3">
+                            <label for="{{ form.password1.id_for_label }}">Senha:</label>
+                            {{ form.password1 }}
+                            {% if form.password1.errors %}
+                                <div class="text-danger">
+                                    {{ form.password1.errors }}
+                                </div>
+                            {% endif %}
+                            <small class="form-text text-muted">{{ form.password1.help_text }}</small>
+                        </div>
+                        
+                        <div class="form-group mb-3">
+                            <label for="{{ form.password2.id_for_label }}">Confirmar Senha:</label>
+                            {{ form.password2 }}
+                            {% if form.password2.errors %}
+                                <div class="text-danger">
+                                    {{ form.password2.errors }}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="form-group mb-3">
+                            <label for="{{ form.tipo_usuario.id_for_label }}">Tipo de Usuário:</label>
+                            {{ form.tipo_usuario }}
+                            {% if form.tipo_usuario.errors %}
+                                <div class="text-danger">
+                                    {{ form.tipo_usuario.errors }}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="form-group mb-3" id="assessor-field">
+                            <label for="{{ form.assessor.id_for_label }}">Assessor:</label>
+                            {{ form.assessor }}
+                            {% if form.assessor.errors %}
+                                <div class="text-danger">
+                                    {{ form.assessor.errors }}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary">Cadastrar</button>
+                            <a href="{% url 'main:home_sistema' %}" class="btn btn-secondary">Cancelar</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Script para mostrar/esconder o campo de assessor com base no tipo de usuário selecionado
+    document.addEventListener('DOMContentLoaded', function() {
+        const tipoUsuarioSelect = document.getElementById('id_tipo_usuario');
+        const assessorField = document.getElementById('assessor-field');
+        
+        function toggleAssessorField() {
+            if (tipoUsuarioSelect.value === 'assessor') {
+                assessorField.style.display = 'block';
+            } else {
+                assessorField.style.display = 'none';
+            }
+        }
+        
+        // Executar na carga inicial
+        toggleAssessorField();
+        
+        // Adicionar listener para mudanças
+        tipoUsuarioSelect.addEventListener('change', toggleAssessorField);
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="card">
+        <div class="card-body">
+            <h2 class="card-title mb-4">{% if usuario %}Editar{% else %}Novo{% endif %} Usuário</h2>
+            
+            <form method="post" class="needs-validation" novalidate>
+                {% csrf_token %}
+                
+                {% for field in form %}
+                <div class="mb-3">
+                    <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+                    {{ field }}
+                    {% if field.help_text %}
+                    <div class="form-text">{{ field.help_text }}</div>
+                    {% endif %}
+                    {% if field.errors %}
+                    <div class="invalid-feedback d-block">
+                        {% for error in field.errors %}
+                        {{ error }}
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+                {% endfor %}
+                
+                <div class="d-flex justify-content-between">
+                    <a href="{% url 'autenticacao:lista_usuarios' %}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i> Voltar
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Salvar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+    // Script para mostrar/esconder campo de assessor baseado no tipo de usuário
+    document.addEventListener('DOMContentLoaded', function() {
+        const tipoUsuarioSelect = document.getElementById('id_tipo_usuario');
+        const assessorDiv = document.getElementById('id_assessor').closest('.mb-3');
+        
+        function toggleAssessorField() {
+            if (tipoUsuarioSelect.value === 'assessor') {
+                assessorDiv.style.display = 'block';
+            } else {
+                assessorDiv.style.display = 'none';
+            }
+        }
+        
+        tipoUsuarioSelect.addEventListener('change', toggleAssessorField);
+        toggleAssessorField(); // Execute on page load
+    });
+</script>
+{% endblock %}
+{% endblock %}

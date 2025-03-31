@@ -85,30 +85,9 @@ def home_gabinetes(request):
     return render(request, 'gabinetes/home_gabinetes.html', context)
 
 @login_required(login_url='autenticacao:login_sistema')
-@assessor_gabinete_access
 def detalhes_gabinete(request, pk):
     hoje = datetime.now().date()
     gabinete = get_object_or_404(Setor, pk=pk, tipo='gabinete_vereador')
-    
-    # Obter assessores do gabinete
-    assessores = Assessor.objects.filter(departamento=gabinete)
-    
-    # Verificar se o usuário é um assessor e se tem acesso a este gabinete
-    is_assessor = False
-    has_access = True  # Por padrão, usuários não assessores têm acesso completo
-    
-    try:
-        # Verifica se o usuário é um assessor
-        assessor = request.user.assessor
-        is_assessor = True
-        
-        # Verifica se o assessor pertence a este gabinete
-        if assessor.departamento.id != gabinete.id:
-            # Se não pertencer, não mostra dados de visitantes e histórico
-            has_access = False
-    except AttributeError:
-        # Se não for assessor, permite o acesso normalmente (admin ou outros usuários)
-        pass
     
     # Inicializa variáveis para o contexto
     visitantes_aguardando = None
@@ -116,60 +95,51 @@ def detalhes_gabinete(request, pk):
     total_visitas = 0
     historico_visitas = None
     
-    # Só carrega os dados se o usuário tiver acesso
-    if has_access:
-        # Obter visitantes aguardando atendimento
-        visitantes_aguardando = Visita.objects.filter(
-            setor=gabinete,
-            data_entrada__isnull=False,
-            data_saida__isnull=True
-        ).order_by('data_entrada')
-        
-        # Estatísticas de visitas
-        visitas_hoje = Visita.objects.filter(
-            setor=gabinete,
-            data_entrada__date=hoje
-        ).count()
-        
-        total_visitas = Visita.objects.filter(setor=gabinete).count()
-        
-        # Histórico de visitas (com filtro de data opcional)
-        data_inicio = request.GET.get('data_inicio')
-        data_fim = request.GET.get('data_fim')
-        
-        historico_query = Visita.objects.filter(setor=gabinete)
-        
-        if data_inicio:
-            data_inicio = datetime.strptime(data_inicio, '%Y-%m-%d').date()
-            historico_query = historico_query.filter(data_entrada__date__gte=data_inicio)
-        else:
-            # Padrão: último mês
-            data_inicio = hoje - timedelta(days=30)
-            historico_query = historico_query.filter(data_entrada__date__gte=data_inicio)
-        
-        if data_fim:
-            data_fim = datetime.strptime(data_fim, '%Y-%m-%d').date()
-            historico_query = historico_query.filter(data_entrada__date__lte=data_fim)
-        else:
-            data_fim = hoje
-        
-        historico_visitas = historico_query.order_by('-data_entrada')
+    # Obter visitantes aguardando atendimento
+    visitantes_aguardando = Visita.objects.filter(
+        setor=gabinete,
+        data_entrada__isnull=False,
+        data_saida__isnull=True
+    ).order_by('data_entrada')
+    
+    # Estatísticas de visitas
+    visitas_hoje = Visita.objects.filter(
+        setor=gabinete,
+        data_entrada__date=hoje
+    ).count()
+    
+    total_visitas = Visita.objects.filter(setor=gabinete).count()
+    
+    # Histórico de visitas (com filtro de data opcional)
+    data_inicio = request.GET.get('data_inicio')
+    data_fim = request.GET.get('data_fim')
+    
+    historico_query = Visita.objects.filter(setor=gabinete)
+    
+    if data_inicio:
+        data_inicio = datetime.strptime(data_inicio, '%Y-%m-%d').date()
+        historico_query = historico_query.filter(data_entrada__date__gte=data_inicio)
     else:
-        # Se não tiver acesso, define valores padrão para as datas
+        # Padrão: último mês
         data_inicio = hoje - timedelta(days=30)
+        historico_query = historico_query.filter(data_entrada__date__gte=data_inicio)
+    
+    if data_fim:
+        data_fim = datetime.strptime(data_fim, '%Y-%m-%d').date()
+        historico_query = historico_query.filter(data_entrada__date__lte=data_fim)
+    else:
         data_fim = hoje
+    
+    historico_visitas = historico_query.order_by('-data_entrada')
     
     context = {
         'gabinete': gabinete,
-        'assessores': assessores,
         'visitantes_aguardando': visitantes_aguardando,
         'visitas_hoje': visitas_hoje,
         'total_visitas': total_visitas,
         'historico_visitas': historico_visitas,
         'data_inicio': data_inicio,
-        'data_fim': data_fim,
-        'is_assessor': is_assessor,
-        'has_access': has_access
+        'data_fim': data_fim
     }
     
     return render(request, 'gabinetes/detalhes_gabinete.html', context)
