@@ -1,0 +1,320 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}URUTAU - Detalhes do Gabinete{% endblock %}
+
+{% block extra_css %}
+<style>
+    .profile-header {
+        background-color: #f8f9fa;
+        border-radius: 10px;
+        padding: 30px;
+        margin-bottom: 30px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .profile-img {
+        width: 150px;
+        height: 150px;
+        object-fit: cover;
+        border-radius: 50%;
+        border: 5px solid #fff;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    
+    .profile-img-placeholder {
+        width: 150px;
+        height: 150px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: #e9ecef;
+        border-radius: 50%;
+        border: 5px solid #fff;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    
+    .status-badge {
+        font-size: 14px;
+        padding: 5px 10px;
+        border-radius: 20px;
+    }
+    
+    .assessor-card {
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        margin-bottom: 20px;
+        transition: transform 0.2s;
+    }
+    
+    .assessor-card:hover {
+        transform: translateY(-5px);
+    }
+    
+    .visitante-card {
+        border-left: 4px solid #0d6efd;
+        padding: 15px;
+        margin-bottom: 15px;
+        border-radius: 5px;
+        background-color: #fff;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+    
+    .nav-tabs .nav-link.active {
+        font-weight: bold;
+        border-bottom: 3px solid #0d6efd;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Botão Voltar -->
+    <div class="row mb-3">
+        <div class="col">
+            <a href="{% url 'gabinetes:home_gabinetes' %}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-2"></i>Voltar para Gabinetes
+            </a>
+        </div>
+    </div>
+    
+    <!-- Perfil do Gabinete -->
+    <div class="profile-header">
+        <div class="row align-items-center">
+            <div class="col-md-3 text-center">
+                {% if gabinete.foto %}
+                <img src="{{ gabinete.foto.url }}" alt="{{ gabinete.nome }}" class="profile-img">
+                {% else %}
+                <div class="profile-img-placeholder">
+                    <i class="fas fa-user-tie fa-4x text-secondary"></i>
+                </div>
+                {% endif %}
+            </div>
+            <div class="col-md-9">
+                <h2 class="mb-2">{{ gabinete.nome }}</h2>
+                <p class="text-muted mb-3">
+                    <i class="fas fa-map-marker-alt me-2"></i>{{ gabinete.get_localizacao_display }}
+                </p>
+                
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <p class="mb-1">
+                            <i class="fas fa-clock me-2"></i><strong>Horário de Funcionamento:</strong>
+                            {{ gabinete.horario_abertura|time:"H:i" }} - {{ gabinete.horario_fechamento|time:"H:i" }}
+                        </p>
+                    </div>
+                    <div class="col-md-6">
+                        <p class="mb-1">
+                            <span class="status-badge {% if gabinete.esta_aberto %}bg-success{% else %}bg-danger{% endif %} text-white">
+                                <i class="fas {% if gabinete.esta_aberto %}fa-check-circle{% else %}fa-times-circle{% endif %} me-1"></i>
+                                {{ gabinete.status_funcionamento }}
+                            </span>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Abas de Navegação -->
+    <ul class="nav nav-tabs mb-4" id="gabineteTab" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="info-tab" data-bs-toggle="tab" data-bs-target="#info" type="button" role="tab" aria-controls="info" aria-selected="true">
+                <i class="fas fa-info-circle me-2"></i>Informações
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="assessores-tab" data-bs-toggle="tab" data-bs-target="#assessores" type="button" role="tab" aria-controls="assessores" aria-selected="false">
+                <i class="fas fa-users me-2"></i>Assessores
+            </button>
+        </li>
+        {% if has_access %}
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="visitantes-tab" data-bs-toggle="tab" data-bs-target="#visitantes" type="button" role="tab" aria-controls="visitantes" aria-selected="false">
+                <i class="fas fa-user-clock me-2"></i>Visitantes Aguardando
+                {% if visitantes_aguardando %}
+                <span class="badge bg-danger ms-1">{{ visitantes_aguardando|length }}</span>
+                {% endif %}
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="historico-tab" data-bs-toggle="tab" data-bs-target="#historico" type="button" role="tab" aria-controls="historico" aria-selected="false">
+                <i class="fas fa-history me-2"></i>Histórico de Visitas
+            </button>
+        </li>
+        {% endif %}
+    </ul>
+    
+    <!-- Conteúdo das Abas -->
+    <div class="tab-content" id="gabineteTabContent">
+        <!-- Aba de Informações -->
+        <div class="tab-pane fade show active" id="info" role="tabpanel" aria-labelledby="info-tab">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="card-title mb-0"><i class="fas fa-info-circle me-2"></i>Informações do Gabinete</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6 class="mb-3">Dados Gerais</h6>
+                            <p><strong>Nome:</strong> {{ gabinete.nome }}</p>
+                            <p><strong>Localização:</strong> {{ gabinete.get_localizacao_display }}</p>
+                            <p><strong>Horário de Funcionamento:</strong> {{ gabinete.horario_abertura|time:"H:i" }} - {{ gabinete.horario_fechamento|time:"H:i" }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="mb-3">Estatísticas</h6>
+                            <p><strong>Total de Assessores:</strong> {{ assessores|length }}</p>
+                            <p><strong>Visitas Hoje:</strong> {{ visitas_hoje }}</p>
+                            <p><strong>Total de Visitas:</strong> {{ total_visitas }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Aba de Assessores -->
+        <div class="tab-pane fade" id="assessores" role="tabpanel" aria-labelledby="assessores-tab">
+            <div class="row">
+                {% for assessor in assessores %}
+                <div class="col-md-4">
+                    <div class="assessor-card">
+                        <div class="card-body">
+                            <h5 class="card-title">{{ assessor.nome }}</h5>
+                            <p class="card-text text-muted">{{ assessor.get_funcao_display }}</p>
+                            <p class="card-text"><i class="fas fa-clock me-2"></i>{{ assessor.horario_entrada|time:"H:i" }} - {{ assessor.horario_saida|time:"H:i" }}</p>
+                            {% if assessor.usuario %}
+                            <div class="mt-2">
+                                <span class="badge bg-success"><i class="fas fa-check-circle me-1"></i>Acesso ao Sistema</span>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="col-12">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>Não há assessores cadastrados para este gabinete.
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        
+        <!-- Aba de Visitantes Aguardando -->
+        <div class="tab-pane fade" id="visitantes" role="tabpanel" aria-labelledby="visitantes-tab">
+            {% for visita in visitantes_aguardando %}
+            <div class="visitante-card">
+                <div class="row align-items-center">
+                    <div class="col-md-1 text-center">
+                        {% if visita.visitante.foto %}
+                        <img src="{{ visita.visitante.foto.url }}" alt="{{ visita.visitante.nome_completo }}" class="rounded-circle" style="width: 50px; height: 50px; object-fit: cover;">
+                        {% else %}
+                        <div class="rounded-circle bg-light d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
+                            <i class="fas fa-user text-secondary"></i>
+                        </div>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="mb-1">{{ visita.visitante.nome_completo }}</h6>
+                        <p class="mb-0 text-muted small">
+                            <i class="fas fa-clock me-1"></i>Chegada: {{ visita.data_entrada|date:"d/m/Y H:i" }}
+                            <span class="ms-2"><i class="fas fa-phone me-1"></i>{{ visita.visitante.telefone }}</span>
+                        </p>
+                    </div>
+                    <div class="col-md-3 text-end">
+                        <span class="badge bg-warning text-dark">
+                            <i class="fas fa-hourglass-half me-1"></i>Aguardando
+                        </span>
+                        <p class="mb-0 small text-muted mt-1">Motivo: {{ visita.motivo }}</p>
+                    </div>
+                    <div class="col-md-2 text-end">
+                        <form method="post" action="{% url 'gabinetes:finalizar_visita' visita.id %}">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-sm btn-success">
+                                <i class="fas fa-check me-1"></i>Finalizar
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle me-2"></i>Não há visitantes aguardando atendimento.
+            </div>
+            {% endfor %}
+        </div>
+        
+        <!-- Aba de Histórico de Visitas -->
+        <div class="tab-pane fade" id="historico" role="tabpanel" aria-labelledby="historico-tab">
+            <div class="card">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0"><i class="fas fa-history me-2"></i>Histórico de Visitas</h5>
+                    <form class="d-flex" method="get">
+                        <input type="date" name="data_inicio" class="form-control form-control-sm me-2" value="{{ data_inicio|date:'Y-m-d' }}">
+                        <input type="date" name="data_fim" class="form-control form-control-sm me-2" value="{{ data_fim|date:'Y-m-d' }}">
+                        <button type="submit" class="btn btn-sm btn-light">Filtrar</button>
+                    </form>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Visitante</th>
+                                    <th>Data de Entrada</th>
+                                    <th>Data de Saída</th>
+                                    <th>Duração</th>
+                                    <th>Motivo</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for visita in historico_visitas %}
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            {% if visita.visitante.foto %}
+                                            <img src="{{ visita.visitante.foto.url }}" alt="{{ visita.visitante.nome_completo }}" class="rounded-circle me-2" style="width: 30px; height: 30px; object-fit: cover;">
+                                            {% else %}
+                                            <div class="rounded-circle bg-light d-flex align-items-center justify-content-center me-2" style="width: 30px; height: 30px;">
+                                                <i class="fas fa-user text-secondary small"></i>
+                                            </div>
+                                            {% endif %}
+                                            {{ visita.visitante.nome_completo }}
+                                        </div>
+                                    </td>
+                                    <td>{{ visita.data_entrada|date:"d/m/Y H:i" }}</td>
+                                    <td>{% if visita.data_saida %}{{ visita.data_saida|date:"d/m/Y H:i" }}{% else %}<span class="text-warning">Em andamento</span>{% endif %}</td>
+                                    <td>{% if visita.data_saida %}{{ visita.duracao }}{% else %}<span class="text-warning">-</span>{% endif %}</td>
+                                    <td>{{ visita.motivo }}</td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="5" class="text-center">Não há registros de visitas no período selecionado.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Ativar as abas do Bootstrap
+        const triggerTabList = [].slice.call(document.querySelectorAll('#gabineteTab button'));
+        triggerTabList.forEach(function(triggerEl) {
+            const tabTrigger = new bootstrap.Tab(triggerEl);
+            triggerEl.addEventListener('click', function(event) {
+                event.preventDefault();
+                tabTrigger.show();
+            });
+        });
+    });
+</script>
+{% endblock %}

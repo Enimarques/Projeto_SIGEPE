@@ -1,0 +1,214 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- Cabeçalho -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h2 class="text-primary">
+                <i class="fas fa-camera me-2"></i>Registrar Face
+            </h2>
+            <p class="lead text-muted">Registre a face do visitante {{ visitante.nome_completo }}</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{% url 'recepcao:lista_visitantes' %}" class="btn btn-outline-primary">
+                <i class="fas fa-list me-2"></i>Lista de Visitantes
+            </a>
+        </div>
+    </div>
+
+    <!-- Reconhecimento Facial -->
+    <div class="card">
+        <div class="card-header bg-white">
+            <h4 class="mb-0">
+                <i class="fas fa-camera me-2"></i>Captura de Face
+            </h4>
+        </div>
+        <div class="card-body">
+            {% if visitante.face_id %}
+            <div class="alert alert-success">
+                <i class="fas fa-check-circle me-2"></i>Face registrada com sucesso!
+            </div>
+            {% else %}
+            <div class="text-center">
+                <div class="d-grid gap-2 col-md-6 mx-auto">
+                    <button type="button" class="btn btn-primary btn-lg" id="btnCapturarFace">
+                        <i class="fas fa-camera me-2"></i>Iniciar Câmera
+                    </button>
+                </div>
+                <div class="mt-4">
+                    <div id="previewCamera" style="display: none;">
+                        <div class="position-relative">
+                            <video id="video" width="640" height="480" class="rounded mb-3" style="border: 2px solid #ccc;"></video>
+                            <canvas id="overlay" width="640" height="480" class="position-absolute top-0 start-50 translate-middle-x" style="pointer-events: none;"></canvas>
+                            <canvas id="canvas" style="display:none;"></canvas>
+                        </div>
+                        <div class="mt-3">
+                            <p class="text-muted">Posicione o rosto no centro da câmera e aguarde o desenho verde aparecer</p>
+                            <div id="faceStatus" class="alert alert-info">
+                                <i class="fas fa-info-circle me-2"></i>Aguardando detecção facial...
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <div class="mt-4 text-center">
+                <a href="{% url 'recepcao:lista_visitantes' %}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-2"></i>Voltar para Lista
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const btnCapturarFace = document.getElementById('btnCapturarFace');
+const previewCamera = document.getElementById('previewCamera');
+const video = document.getElementById('video');
+const canvas = document.getElementById('canvas');
+const overlay = document.getElementById('overlay');
+const faceStatus = document.getElementById('faceStatus');
+let stream = null;
+let isCapturing = false;
+
+btnCapturarFace.addEventListener('click', async function() {
+    if (isCapturing) {
+        // Capturar a imagem
+        const context = canvas.getContext('2d');
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+        // Converte para blob e envia para o servidor
+        canvas.toBlob(function(blob) {
+            const formData = new FormData();
+            formData.append('face_image', blob, 'face.jpg');
+            
+            fetch('{% url "recepcao:registrar_face" visitante.id %}', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    faceStatus.className = 'alert alert-success';
+                    faceStatus.innerHTML = '<i class="fas fa-check-circle me-2"></i>Face registrada com sucesso!';
+                    setTimeout(() => {
+                        location.reload();
+                    }, 1500);
+                } else {
+                    faceStatus.className = 'alert alert-danger';
+                    faceStatus.innerHTML = `<i class="fas fa-exclamation-circle me-2"></i>${data.message || 'Erro ao registrar face. Tente novamente.'}`;
+                }
+            })
+            .catch(error => {
+                console.error('Erro:', error);
+                faceStatus.className = 'alert alert-danger';
+                faceStatus.innerHTML = '<i class="fas fa-exclamation-circle me-2"></i>Erro ao registrar face. Tente novamente.';
+            });
+        }, 'image/jpeg', 0.95);
+    } else {
+        // Iniciar a câmera
+        try {
+            stream = await navigator.mediaDevices.getUserMedia({ 
+                video: { 
+                    width: 640,
+                    height: 480,
+                    facingMode: "user"
+                } 
+            });
+            video.srcObject = stream;
+            video.play();
+            previewCamera.style.display = 'block';
+            btnCapturarFace.innerHTML = '<i class="fas fa-camera me-2"></i>Capturar';
+            isCapturing = true;
+
+            // Configurar o canvas de overlay
+            const ctx = overlay.getContext('2d');
+            
+            // Função para desenhar a face
+            async function drawFace() {
+                if (!isCapturing) return;
+
+                ctx.clearRect(0, 0, overlay.width, overlay.height);
+                
+                // Capturar frame atual
+                const tempCanvas = document.createElement('canvas');
+                tempCanvas.width = video.videoWidth;
+                tempCanvas.height = video.videoHeight;
+                tempCanvas.getContext('2d').drawImage(video, 0, 0);
+                
+                // Enviar frame para verificação
+                tempCanvas.toBlob(async function(blob) {
+                    const formData = new FormData();
+                    formData.append('frame', blob);
+                    
+                    try {
+                        const response = await fetch('{% url "recepcao:verificar_face_frame" %}', {
+                            method: 'POST',
+                            body: formData,
+                            headers: {
+                                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                            }
+                        });
+                        
+                        const data = await response.json();
+                        if (data.face_detected) {
+                            faceStatus.className = 'alert alert-success';
+                            faceStatus.innerHTML = '<i class="fas fa-check-circle me-2"></i>Face detectada! Clique em Capturar.';
+                            btnCapturarFace.disabled = false;
+                            
+                            // Desenhar os pontos faciais recebidos
+                            const points = data.face_points;
+                            if (points && points.length > 0) {
+                                ctx.strokeStyle = '#00ff00';
+                                ctx.lineWidth = 2;
+                                
+                                for (let i = 0; i < points.length; i++) {
+                                    const point = points[i];
+                                    ctx.beginPath();
+                                    ctx.arc(point.x * overlay.width, point.y * overlay.height, 2, 0, 2 * Math.PI);
+                                    ctx.stroke();
+                                }
+                            }
+                        } else {
+                            faceStatus.className = 'alert alert-warning';
+                            faceStatus.innerHTML = '<i class="fas fa-exclamation-circle me-2"></i>Nenhuma face detectada. Centralize seu rosto.';
+                            btnCapturarFace.disabled = true;
+                        }
+                    } catch (error) {
+                        console.error('Erro:', error);
+                    }
+                }, 'image/jpeg', 0.7);
+                
+                requestAnimationFrame(drawFace);
+            }
+            
+            drawFace();
+            
+        } catch (err) {
+            console.error('Erro ao acessar a câmera:', err);
+            faceStatus.className = 'alert alert-danger';
+            faceStatus.innerHTML = '<i class="fas fa-exclamation-circle me-2"></i>Erro ao acessar a câmera. Verifique as permissões.';
+        }
+    }
+});
+
+// Limpar recursos quando a página for fechada
+window.addEventListener('beforeunload', () => {
+    if (stream) {
+        stream.getTracks().forEach(track => track.stop());
+    }
+});
+</script>
+{% endblock %}

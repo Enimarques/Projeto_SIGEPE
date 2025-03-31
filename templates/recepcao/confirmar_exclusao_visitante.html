@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+
+{% block title %}Excluir Visitante{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <div class="card">
+                <div class="card-header bg-danger text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-trash-alt me-2"></i>Excluir Visitante
+                    </h4>
+                </div>
+                <div class="card-body">
+                    {% if visitas_existentes %}
+                    <div class="alert alert-warning" role="alert">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        Não é possível excluir este visitante porque possui histórico de visitas.
+                    </div>
+                    <div class="text-center">
+                        <a href="{% url 'recepcao:detalhes_visitante' pk=visitante.pk %}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left me-2"></i>Voltar para Detalhes
+                        </a>
+                    </div>
+                    {% else %}
+                    <div class="alert alert-danger" role="alert">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        Tem certeza que deseja excluir o visitante <strong>{{ visitante.nome_completo }}</strong>?
+                    </div>
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="text-center">
+                            <a href="{% url 'recepcao:detalhes_visitante' pk=visitante.pk %}" class="btn btn-secondary me-2">
+                                <i class="fas fa-times me-2"></i>Cancelar
+                            </a>
+                            <button type="submit" class="btn btn-danger">
+                                <i class="fas fa-trash-alt me-2"></i>Confirmar Exclusão
+                            </button>
+                        </div>
+                    </form>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
