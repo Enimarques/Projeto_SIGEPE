@@ -8,6 +8,7 @@
     <br>
     
     <!-- Dashboard -->
+<<<<<<< HEAD
     <div class="row justify-content-center mb-5">
         <!-- Visitas em Andamento -->
         <div class="col-md-3 mb-4">
@@ -23,12 +24,31 @@
                         </div>
                     </div>
                 </div>
+=======
+    <div class="row mb-5">
+        <!-- Visitas em Andamento -->
+        <div class="col-md-3 mb-4">
+            <div class="card border-primary h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0 me-3">
+                            <i class="fas fa-users fa-2x text-primary"></i>
+                        </div>
+                        <div>
+                            <h6 class="card-title text-muted mb-0">Visitas em Andamento</h6>
+                            <h2 class="mt-2 mb-0">{{ visitas_em_andamento }}</h2>
+                        </div>
+                    </div>
+                </div>
+                {% include 'main/assessor_login_button.html' %}
+>>>>>>> deb59c7c06587b572cc4553da79673b6da1dcbaa
             </div>
         </div>
         
         <!-- Total de Visitantes -->
         <div class="col-md-3 mb-4">
             <div class="card border-success h-100">
+<<<<<<< HEAD
                 <div class="card-body text-center">
                     <div class="d-flex flex-column justify-content-center align-items-center h-100">
                         <div class="mb-3">
@@ -40,12 +60,27 @@
                         </div>
                     </div>
                 </div>
+=======
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0 me-3">
+                            <i class="fas fa-address-card fa-2x text-success"></i>
+                        </div>
+                        <div>
+                            <h6 class="card-title text-muted mb-0">Visitantes Cadastrados</h6>
+                            <h2 class="mt-2 mb-0">{{ total_visitantes }}</h2>
+                        </div>
+                    </div>
+                </div>
+                {% include 'main/assessor_login_button.html' %}
+>>>>>>> deb59c7c06587b572cc4553da79673b6da1dcbaa
             </div>
         </div>
         
         <!-- Veículos no Estacionamento -->
         <div class="col-md-3 mb-4">
             <div class="card border-warning h-100">
+<<<<<<< HEAD
                 <div class="card-body text-center">
                     <div class="d-flex flex-column justify-content-center align-items-center h-100">
                         <div class="mb-3">
@@ -57,12 +92,27 @@
                         </div>
                     </div>
                 </div>
+=======
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0 me-3">
+                            <i class="fas fa-car fa-2x text-warning"></i>
+                        </div>
+                        <div>
+                            <h6 class="card-title text-muted mb-0">Veículos no Estacionamento</h6>
+                            <h2 class="mt-2 mb-0">{{ veiculos_no_estacionamento }}</h2>
+                        </div>
+                    </div>
+                </div>
+                {% include 'main/assessor_login_button.html' %}
+>>>>>>> deb59c7c06587b572cc4553da79673b6da1dcbaa
             </div>
         </div>
         
         <!-- Total de Veículos -->
         <div class="col-md-3 mb-4">
             <div class="card border-info h-100">
+<<<<<<< HEAD
                 <div class="card-body text-center">
                     <div class="d-flex flex-column justify-content-center align-items-center h-100">
                         <div class="mb-3">
@@ -74,6 +124,20 @@
                         </div>
                     </div>
                 </div>
+=======
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0 me-3">
+                            <i class="fas fa-database fa-2x text-info"></i>
+                        </div>
+                        <div>
+                            <h6 class="card-title text-muted mb-0">Veículos Cadastrados</h6>
+                            <h2 class="mt-2 mb-0">{{ total_veiculos }}</h2>
+                        </div>
+                    </div>
+                </div>
+                {% include 'main/assessor_login_button.html' %}
+>>>>>>> deb59c7c06587b572cc4553da79673b6da1dcbaa
             </div>
         </div>
     </div>

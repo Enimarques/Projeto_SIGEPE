@@ -1,0 +1,1 @@
+# Importar o arquivo admin.py personalizado para registrar todos os modelos no admin

@@ -30,7 +30,11 @@ Este guia detalha os passos necessários para instalar e configurar o SIGEPE, es
 
 1. Clone o repositório:
 ```bash
+<<<<<<< HEAD
 git clone https://github.com/Enimarques/Projeto_SIGEPE.git
+=======
+git clone [URL_DO_REPOSITORIO]
+>>>>>>> deb59c7c06587b572cc4553da79673b6da1dcbaa
 cd Projeto_SIGEPE
 ```
 
@@ -59,9 +63,12 @@ pip install dlib.whl
 pip install -r requirements.txt
 ```
 
+<<<<<<< HEAD
 ### 3.1. Instalação de Dependências problemas face_recongnitions_models 
 rodar o comando "pip3 install setuptools"
 
+=======
+>>>>>>> deb59c7c06587b572cc4553da79673b6da1dcbaa
 ### 4. Configuração do Django
 
 1. Aplique as migrações:

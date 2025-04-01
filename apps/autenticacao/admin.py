@@ -1,4 +1,5 @@
 from django.contrib import admin
+<<<<<<< HEAD
 from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth.models import User, Group
 from django.utils.html import format_html
@@ -51,3 +52,7 @@ class CustomGroupAdmin(admin.ModelAdmin):
 # Desregistra o GroupAdmin padrão e registra o CustomGroupAdmin
 admin.site.unregister(Group)
 admin.site.register(Group, CustomGroupAdmin)
+=======
+
+# Register your models here.
+>>>>>>> deb59c7c06587b572cc4553da79673b6da1dcbaa

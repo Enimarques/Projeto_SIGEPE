@@ -18,6 +18,7 @@ class Setor(models.Model):
         ('primeiro_piso', '1° Piso'),
         ('segundo_piso', '2° Piso'),
     ]
+<<<<<<< HEAD
     
     FUNCAO_CHOICES = [
         ('assessor_1', 'Assessor I'),
@@ -38,10 +39,15 @@ class Setor(models.Model):
 
     nome = models.CharField('Nome do Local', max_length=100)
     nome_responsavel = models.CharField('Nome do Responsável', max_length=100, blank=True, null=True)
+=======
+
+    nome = models.CharField('Nome do Local', max_length=100)
+>>>>>>> deb59c7c06587b572cc4553da79673b6da1dcbaa
     tipo = models.CharField('Tipo', max_length=20, choices=TIPO_CHOICES, default='departamento')
     localizacao = models.CharField('Localização', max_length=20, choices=LOCALIZACAO_CHOICES, default='terreo')
     horario_abertura = models.TimeField('Horário de Abertura', blank=True, null=True)
     horario_fechamento = models.TimeField('Horário de Fechamento', blank=True, null=True)
+<<<<<<< HEAD
     
     # Campos migrados do modelo Assessor
     nome_responsavel = models.CharField('Nome do Responsável', max_length=100, blank=True, null=True)
@@ -53,6 +59,8 @@ class Setor(models.Model):
     usuario = models.OneToOneField('auth.User', on_delete=models.SET_NULL, null=True, blank=True, related_name='setor_responsavel', verbose_name='Usuário')
     data_criacao = models.DateTimeField('Data de Criação', auto_now_add=True)
     data_atualizacao = models.DateTimeField('Data de Atualização', auto_now=True)
+=======
+>>>>>>> deb59c7c06587b572cc4553da79673b6da1dcbaa
 
     class Meta:
         verbose_name = 'Setor'
@@ -76,6 +84,7 @@ class Setor(models.Model):
             return "Horário não definido"
         return "Aberto" if esta_aberto else "Fechado"
 
+<<<<<<< HEAD
     def get_horario_trabalho(self):
         if not self.horario_entrada or not self.horario_saida:
             return 'Horário não definido'
@@ -102,6 +111,8 @@ class Setor(models.Model):
                 raise ValidationError('O horário do responsável deve estar dentro do horário de funcionamento do setor.')
         super().clean()
 
+=======
+>>>>>>> deb59c7c06587b572cc4553da79673b6da1dcbaa
 class Assessor(models.Model):
     FUNCAO_CHOICES = [
         ('assessor_1', 'Assessor I'),
@@ -120,15 +131,25 @@ class Assessor(models.Model):
     ]
 
     nome = models.CharField('Nome', max_length=100)
+<<<<<<< HEAD
     departamento = models.ForeignKey(Setor, on_delete=models.PROTECT, verbose_name='Departamento')
+=======
+    departamento = models.ForeignKey(Setor, on_delete=models.PROTECT, verbose_name='Departamento', null=True, blank=True)
+>>>>>>> deb59c7c06587b572cc4553da79673b6da1dcbaa
     funcao = models.CharField('Função/Cargo', max_length=20, choices=FUNCAO_CHOICES)
     horario_entrada = models.TimeField('Horário de Entrada')
     horario_saida = models.TimeField('Horário de Saída')
     data_criacao = models.DateTimeField('Data de Criação', auto_now_add=True)
     data_atualizacao = models.DateTimeField('Data de Atualização', auto_now=True)
+<<<<<<< HEAD
     email = models.EmailField('E-mail', max_length=255, blank=True, null=True)
     ativo = models.BooleanField('Ativo', default=True)
     usuario = models.OneToOneField('auth.User', on_delete=models.SET_NULL, null=True, blank=True, related_name='assessor', verbose_name='Usuário')
+=======
+    usuario = models.OneToOneField('auth.User', on_delete=models.SET_NULL, null=True, blank=True, related_name='assessor', verbose_name='Usuário')
+    email = models.EmailField('E-mail', max_length=255, blank=True, null=True)
+    ativo = models.BooleanField('Ativo', default=True)
+>>>>>>> deb59c7c06587b572cc4553da79673b6da1dcbaa
 
     class Meta:
         verbose_name = 'Assessor'
@@ -136,6 +157,7 @@ class Assessor(models.Model):
         ordering = ['nome']
 
     def __str__(self):
+<<<<<<< HEAD
         return f'{self.nome} - {self.get_funcao_display()} ({self.departamento.nome})'
 
     def clean(self):
@@ -143,6 +165,16 @@ class Assessor(models.Model):
         if self.departamento and self.departamento.horario_abertura and self.departamento.horario_fechamento:
             if self.horario_entrada < self.departamento.horario_abertura or self.horario_saida > self.departamento.horario_fechamento:
                 raise ValidationError('O horário do assessor deve estar dentro do horário de funcionamento do departamento.')
+=======
+        return f'{self.nome} - {self.get_funcao_display()} ({self.departamento.nome if self.departamento else "Sem Departamento"})'
+
+    def clean(self):
+        # Validar se o horário do assessor está dentro do horário do departamento
+        if self.departamento:
+            if self.departamento.horario_abertura and self.departamento.horario_fechamento:
+                if self.horario_entrada < self.departamento.horario_abertura or self.horario_saida > self.departamento.horario_fechamento:
+                    raise ValidationError('O horário do assessor deve estar dentro do horário de funcionamento do departamento.')
+>>>>>>> deb59c7c06587b572cc4553da79673b6da1dcbaa
 
 
 class Visitante(models.Model):
