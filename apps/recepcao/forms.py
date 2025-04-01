@@ -16,11 +16,7 @@ class VisitanteForm(forms.ModelForm):
     )
 
     CPF = forms.CharField(
-<<<<<<< HEAD
         max_length=14,   
-=======
-        max_length=14,
->>>>>>> deb59c7c06587b572cc4553da79673b6da1dcbaa
         validators=[cpf_validator],
         widget=forms.TextInput(attrs={
             'class': 'form-control',

@@ -85,16 +85,11 @@ def home_gabinetes(request):
     return render(request, 'gabinetes/home_gabinetes.html', context)
 
 @login_required(login_url='autenticacao:login_sistema')
-<<<<<<< HEAD
-=======
 @assessor_gabinete_access
->>>>>>> deb59c7c06587b572cc4553da79673b6da1dcbaa
 def detalhes_gabinete(request, pk):
     hoje = datetime.now().date()
     gabinete = get_object_or_404(Setor, pk=pk, tipo='gabinete_vereador')
     
-<<<<<<< HEAD
-=======
     # Obter assessores do gabinete
     assessores = Assessor.objects.filter(departamento=gabinete)
     
@@ -115,14 +110,12 @@ def detalhes_gabinete(request, pk):
         # Se não for assessor, permite o acesso normalmente (admin ou outros usuários)
         pass
     
->>>>>>> deb59c7c06587b572cc4553da79673b6da1dcbaa
     # Inicializa variáveis para o contexto
     visitantes_aguardando = None
     visitas_hoje = 0
     total_visitas = 0
     historico_visitas = None
     
-<<<<<<< HEAD
     # Obter visitantes aguardando atendimento
     visitantes_aguardando = Visita.objects.filter(
         setor=gabinete,
@@ -162,8 +155,9 @@ def detalhes_gabinete(request, pk):
     
     context = {
         'gabinete': gabinete,
-=======
-    # Só carrega os dados se o usuário tiver acesso
+        'has_access': has_access
+    }
+    
     if has_access:
         # Obter visitantes aguardando atendimento
         visitantes_aguardando = Visita.objects.filter(
@@ -209,19 +203,14 @@ def detalhes_gabinete(request, pk):
     context = {
         'gabinete': gabinete,
         'assessores': assessores,
->>>>>>> deb59c7c06587b572cc4553da79673b6da1dcbaa
         'visitantes_aguardando': visitantes_aguardando,
         'visitas_hoje': visitas_hoje,
         'total_visitas': total_visitas,
         'historico_visitas': historico_visitas,
         'data_inicio': data_inicio,
-<<<<<<< HEAD
-        'data_fim': data_fim
-=======
         'data_fim': data_fim,
         'is_assessor': is_assessor,
         'has_access': has_access
->>>>>>> deb59c7c06587b572cc4553da79673b6da1dcbaa
     }
     
     return render(request, 'gabinetes/detalhes_gabinete.html', context)

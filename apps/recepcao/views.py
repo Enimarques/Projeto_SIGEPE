@@ -10,15 +10,9 @@ from .forms_departamento import AlterarHorarioSetorForm
 from django.core.paginator import Paginator
 from django.http import JsonResponse, HttpResponse
 from django.core.exceptions import PermissionDenied
-<<<<<<< HEAD
 from .reconhecimento_facial import ReconhecimentoFacial
 import json
 import cv2
-=======
-# from .reconhecimento_facial import ReconhecimentoFacial
-import json
-# import cv2
->>>>>>> deb59c7c06587b572cc4553da79673b6da1dcbaa
 
 # Contexto base para todas as views do app
 def get_base_context(title_suffix=''):
@@ -448,7 +442,6 @@ def registrar_face(request, visitante_id):
                     destination.write(chunk)
             
             # Processar a face
-<<<<<<< HEAD
             reconhecimento = ReconhecimentoFacial()
             face_id = reconhecimento.registrar_face(temp_path, visitante.id)
             
@@ -462,23 +455,6 @@ def registrar_face(request, visitante_id):
                 return JsonResponse({'success': True})
             else:
                 return JsonResponse({'success': False, 'message': 'Não foi possível detectar uma face na imagem'})
-=======
-            # reconhecimento = ReconhecimentoFacial()
-            # face_id = reconhecimento.registrar_face(temp_path, visitante.id)
-            
-            # Limpar arquivos temporários
-            # os.unlink(temp_path)
-            # os.rmdir(temp_dir)
-            
-            # if face_id:
-            #     visitante.face_id = face_id
-            #     visitante.save()
-            #     return JsonResponse({'success': True})
-            # else:
-            #     return JsonResponse({'success': False, 'message': 'Não foi possível detectar uma face na imagem'})
-            
-            return JsonResponse({'success': False, 'message': 'Reconhecimento facial desativado temporariamente'})
->>>>>>> deb59c7c06587b572cc4553da79673b6da1dcbaa
             
         except Exception as e:
             return JsonResponse({'success': False, 'message': str(e)})
@@ -496,7 +472,6 @@ def verificar_face(request):
         cpf = request.POST.get('cpf')
         try:
             visitante = Visitante.objects.get(CPF=cpf)
-<<<<<<< HEAD
             reconhecimento = ReconhecimentoFacial()
             
             if reconhecimento.verificar_face(visitante.id):
@@ -514,7 +489,6 @@ def verificar_face(request):
                     'message': 'Face não reconhecida. Por favor, tente novamente.'
                 })
                 
-=======
             # reconhecimento = ReconhecimentoFacial()
             
             # if reconhecimento.verificar_face(visitante.id):
@@ -536,7 +510,6 @@ def verificar_face(request):
                 'success': False,
                 'message': 'Reconhecimento facial desativado temporariamente'
             })
->>>>>>> deb59c7c06587b572cc4553da79673b6da1dcbaa
         except Visitante.DoesNotExist:
             return JsonResponse({
                 'success': False,
@@ -571,7 +544,6 @@ def verificar_face_frame(request):
                 for chunk in frame_file.chunks():
                     destination.write(chunk)
             
-<<<<<<< HEAD
             # Carregar o frame
             frame = cv2.imread(temp_path)
             
@@ -587,7 +559,8 @@ def verificar_face_frame(request):
                 'success': True,
                 'face_detected': face_detected,
                 'face_points': face_detected  # A função desenhar_face já desenha os pontos
-=======
+            })
+            
             # Processar o frame
             # reconhecimento = ReconhecimentoFacial()
             # face_detected = reconhecimento.desenhar_face(temp_path)
@@ -599,7 +572,6 @@ def verificar_face_frame(request):
             return JsonResponse({
                 'success': False,
                 'message': 'Reconhecimento facial desativado temporariamente'
->>>>>>> deb59c7c06587b572cc4553da79673b6da1dcbaa
             })
             
         except Exception as e:

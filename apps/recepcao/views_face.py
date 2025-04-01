@@ -1,17 +1,9 @@
-<<<<<<< HEAD
-from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from .models import Visitante
 from .reconhecimento_facial import ReconhecimentoFacial
-=======
-from django.shortcuts import render, redirect
-from django.contrib.auth.decorators import login_required
-from django.contrib import messages
 from django.views.decorators.csrf import csrf_exempt
 from .models import Visitante
-# from .reconhecimento_facial import ReconhecimentoFacial
->>>>>>> deb59c7c06587b572cc4553da79673b6da1dcbaa
 from django.http import JsonResponse
 import json
 
@@ -20,7 +12,6 @@ def registrar_face(request, visitante_id):
     """View para registrar a face de um visitante"""
     try:
         visitante = Visitante.objects.get(id=visitante_id)
-<<<<<<< HEAD
         reconhecimento = ReconhecimentoFacial()
         
         if reconhecimento.capturar_face(visitante_id):
@@ -32,10 +23,6 @@ def registrar_face(request, visitante_id):
             
         return redirect('recepcao:detalhe_visitante', visitante_id=visitante_id)
         
-=======
-        messages.warning(request, 'Reconhecimento facial temporariamente desativado')
-        return redirect('recepcao:detalhe_visitante', visitante_id=visitante_id)
->>>>>>> deb59c7c06587b572cc4553da79673b6da1dcbaa
     except Visitante.DoesNotExist:
         messages.error(request, 'Visitante não encontrado.')
         return redirect('recepcao:lista_visitantes')
@@ -45,7 +32,6 @@ def verificar_face(request, visitante_id):
     """View para verificar a face de um visitante"""
     try:
         visitante = Visitante.objects.get(id=visitante_id)
-<<<<<<< HEAD
         
         if not visitante.face_id:
             messages.error(request, 'Este visitante ainda não tem face registrada.')
@@ -59,12 +45,6 @@ def verificar_face(request, visitante_id):
             
         return redirect('recepcao:detalhe_visitante', visitante_id=visitante_id)
         
-    except Visitante.DoesNotExist:
-        messages.error(request, 'Visitante não encontrado.')
-        return redirect('recepcao:lista_visitantes')
-=======
-        messages.warning(request, 'Reconhecimento facial temporariamente desativado')
-        return redirect('recepcao:detalhe_visitante', visitante_id=visitante_id)
     except Visitante.DoesNotExist:
         messages.error(request, 'Visitante não encontrado.')
         return redirect('recepcao:lista_visitantes')
@@ -89,4 +69,3 @@ def verificar_face_frame_api(request):
         'success': False,
         'message': 'Reconhecimento facial temporariamente desativado'
     })
->>>>>>> deb59c7c06587b572cc4553da79673b6da1dcbaa
