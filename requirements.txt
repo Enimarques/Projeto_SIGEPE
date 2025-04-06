@@ -10,7 +10,7 @@ django-axes>=6.1.1,<7.0.0  # Proteção contra tentativas de login
 django-session-timeout>=0.1.0,<1.0.0  # Timeout de sessão
 
 # Formatação e validação
-python-cpf>=0.2.0,<1.0.0  # Validação de CPF
+validate-docbr>=1.10.0  # Validação de CPF e outros documentos
 django-localflavor>=4.0,<5.0  # Campos específicos BR
 django-crispy-forms>=2.0,<3.0  # Formulários melhorados
 
