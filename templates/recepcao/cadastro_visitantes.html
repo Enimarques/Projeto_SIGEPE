@@ -1,0 +1,258 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- Cabeçalho -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h2 class="text-primary">
+                <i class="fas fa-user-plus me-2"></i>Cadastro de Visitante
+            </h2>
+            <p class="lead text-muted">Preencha os dados do visitante</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{% url 'recepcao:lista_visitantes' %}" class="btn btn-outline-primary">
+                <i class="fas fa-list me-2"></i>Lista de Visitantes
+            </a>
+        </div>
+    </div>
+
+    <!-- Formulário -->
+    <div class="card">
+        <div class="card-header bg-white">
+            <h4 class="mb-0">
+                {% if is_editing %}
+                <i class="fas fa-user-edit me-2"></i>Editar Visitante
+                {% else %}
+                <i class="fas fa-user-plus me-2"></i>Cadastrar Visitante
+                {% endif %}
+            </h4>
+        </div>
+        <div class="card-body">
+            <form method="post" enctype="multipart/form-data" class="needs-validation" novalidate>
+                {% csrf_token %}
+                
+                {% if form.non_field_errors %}
+                <div class="alert alert-danger">
+                    {{ form.non_field_errors }}
+                </div>
+                {% endif %}
+
+                <!-- Dados Pessoais -->
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <h5 class="text-primary mb-3">
+                            <i class="fas fa-user me-2"></i>Dados Pessoais
+                        </h5>
+                    </div>
+
+                    <!-- Nome Completo -->
+                    <div class="col-md-6 mb-3">
+                        <label for="{{ form.nome_completo.id_for_label }}" class="form-label">Nome Completo*</label>
+                        {{ form.nome_completo }}
+                        {% if form.nome_completo.errors %}
+                        <div class="invalid-feedback d-block">
+                            {{ form.nome_completo.errors }}
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Nome Social -->
+                    <div class="col-md-6 mb-3">
+                        <label for="{{ form.nome_social.id_for_label }}" class="form-label">Nome Social</label>
+                        {{ form.nome_social }}
+                        {% if form.nome_social.errors %}
+                        <div class="invalid-feedback d-block">
+                            {{ form.nome_social.errors }}
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Data de Nascimento -->
+                    <div class="col-md-4 mb-3">
+                        <label for="{{ form.data_nascimento.id_for_label }}" class="form-label">Data de Nascimento*</label>
+                        {{ form.data_nascimento }}
+                        {% if form.data_nascimento.errors %}
+                        <div class="invalid-feedback d-block">
+                            {{ form.data_nascimento.errors }}
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- CPF -->
+                    <div class="col-md-4 mb-3">
+                        <label for="{{ form.CPF.id_for_label }}" class="form-label">CPF*</label>
+                        {{ form.CPF }}
+                        {% if form.CPF.errors %}
+                        <div class="invalid-feedback d-block">
+                            {{ form.CPF.errors }}
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Telefone -->
+                    <div class="col-md-4 mb-3">
+                        <label for="{{ form.telefone.id_for_label }}" class="form-label">Telefone*</label>
+                        {{ form.telefone }}
+                        {% if form.telefone.errors %}
+                        <div class="invalid-feedback d-block">
+                            {{ form.telefone.errors }}
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Email -->
+                    <div class="col-md-12 mb-3">
+                        <label for="{{ form.email.id_for_label }}" class="form-label">E-mail</label>
+                        {{ form.email }}
+                        {% if form.email.errors %}
+                        <div class="invalid-feedback d-block">
+                            {{ form.email.errors }}
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Localização -->
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <h5 class="text-primary mb-3">
+                            <i class="fas fa-map-marker-alt me-2"></i>Localização
+                        </h5>
+                    </div>
+
+                    <!-- Estado -->
+                    <div class="col-md-4 mb-3">
+                        <label for="{{ form.estado.id_for_label }}" class="form-label">Estado*</label>
+                        {{ form.estado }}
+                        {% if form.estado.errors %}
+                        <div class="invalid-feedback d-block">
+                            {{ form.estado.errors }}
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Cidade -->
+                    <div class="col-md-4 mb-3">
+                        <label for="{{ form.cidade.id_for_label }}" class="form-label">Cidade*</label>
+                        {{ form.cidade }}
+                        {% if form.cidade.errors %}
+                        <div class="invalid-feedback d-block">
+                            {{ form.cidade.errors }}
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Bairro -->
+                    <div class="col-md-4 mb-3">
+                        <label for="{{ form.bairro.id_for_label }}" class="form-label">Bairro*</label>
+                        {{ form.bairro }}
+                        {% if form.bairro.errors %}
+                        <div class="invalid-feedback d-block">
+                            {{ form.bairro.errors }}
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Botões -->
+                <div class="mt-4">
+                    <button type="submit" class="btn btn-primary">
+                        {% if is_editing %}
+                        <i class="fas fa-save me-2"></i>Salvar Alterações
+                        {% else %}
+                        <i class="fas fa-plus-circle me-2"></i>Cadastrar
+                        {% endif %}
+                    </button>
+                    <a href="{% if is_editing %}{% url 'recepcao:lista_visitantes' %}{% else %}{% url 'recepcao:home_recepcao' %}{% endif %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-times me-2"></i>Cancelar
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Função para formatar CPF
+    function formatCPF(input) {
+        let value = input.value.replace(/\D/g, '');
+        
+        if (value.length > 11) {
+            value = value.slice(0, 11);
+        }
+        
+        value = value.replace(/(\d{3})(\d)/, '$1.$2');
+        value = value.replace(/(\d{3})(\d)/, '$1.$2');
+        value = value.replace(/(\d{3})(\d{2})$/, '$1-$2');
+        
+        input.value = value;
+    }
+
+    // Função para formatar Telefone
+    function formatTelefone(input) {
+        let value = input.value.replace(/\D/g, '');
+        
+        if (value.length > 12) {
+            value = value.slice(0, 12);
+        }
+        
+        value = value.replace(/^(\d{2})(\d)/, '($1) $2');
+        
+        // Ajuste para números com 9 dígitos
+        if (value.length > 10) {
+            value = value.replace(/(\d{5})(\d)/, '$1-$2');
+        } else {
+            value = value.replace(/(\d{4})(\d)/, '$1-$2');
+        }
+        
+        value = value.replace(/(\d{4})-(\d{4})$/, '$1-$2');
+        
+        input.value = value;
+    }
+
+    // Aplicar máscaras
+    const cpfInput = document.getElementById('id_CPF');
+    const telefoneInput = document.getElementById('id_telefone');
+    const dataNascimentoInput = document.getElementById('id_data_nascimento');
+
+    if (cpfInput) {
+        cpfInput.addEventListener('input', function() {
+            formatCPF(this);
+        });
+    }
+
+    if (telefoneInput) {
+        telefoneInput.addEventListener('input', function() {
+            formatTelefone(this);
+        });
+    }
+
+    // Validação de data de nascimento
+    if (dataNascimentoInput) {
+        // Limitar data máxima para hoje
+        const hoje = new Date().toISOString().split('T')[0];
+        dataNascimentoInput.setAttribute('max', hoje);
+        
+        // Validação de idade mínima
+        dataNascimentoInput.addEventListener('change', function() {
+            const dataSelecionada = new Date(this.value);
+            const idadeMinima = new Date();
+            idadeMinima.setFullYear(idadeMinima.getFullYear() - 18);
+            
+            if (dataSelecionada > idadeMinima) {
+                this.setCustomValidity('Você deve ter pelo menos 18 anos');
+            } else {
+                this.setCustomValidity('');
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

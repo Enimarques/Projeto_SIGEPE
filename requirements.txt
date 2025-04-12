@@ -1,0 +1,66 @@
+# Django e componentes principais
+Django>=4.2.0,<5.0.0
+django-widget-tweaks>=1.4.12,<2.0.0
+
+# Processamento de imagens
+Pillow>=9.5.0
+
+# Segurança e autenticação
+django-axes>=6.1.1,<7.0.0  # Proteção contra tentativas de login
+django-session-timeout>=0.1.0,<1.0.0  # Timeout de sessão
+
+# Formatação e validação
+validate-docbr>=1.10.0  # Validação de CPF e outros documentos
+django-localflavor>=4.0,<5.0  # Campos específicos BR
+django-crispy-forms>=2.0,<3.0  # Formulários melhorados
+
+# Cache e performance
+django-redis>=5.3.0,<6.0.0  # Cache com Redis
+whitenoise>=6.5.0,<7.0.0  # Servir arquivos estáticos
+
+# Desenvolvimento e debug
+django-debug-toolbar>=4.2.0,<5.0.0  # Barra de debug
+django-extensions>=3.2.0,<4.0.0  # Extensions úteis
+ipython>=8.12.0,<9.0.0  # Shell aprimorado
+
+# Testes
+pytest>=7.4.0,<8.0.0
+pytest-django>=4.5.0,<5.0.0
+coverage>=7.2.0,<8.0.0
+
+# Logging e monitoramento
+django-log-request-id>=2.1.0,<3.0.0  # Logging com request ID
+sentry-sdk>=1.28.0,<2.0.0  # Monitoramento de erros
+
+# Produção
+gunicorn>=21.2.0,<22.0.0  # Servidor WSGI
+python-dotenv>=1.0.0,<2.0.0  # Variáveis de ambiente
+
+# Django e frontend
+Django>=4.2.0,<5.0.0
+django-crispy-forms>=2.0,<3.0
+crispy-bootstrap5>=2024.2
+
+# Reconhecimento Facial
+# Instalar face_recognition_models diretamente do GitHub:
+# pip install git+https://github.com/ageitgey/face_recognition_models
+face_recognition>=1.3.0
+face-recognition-models>=0.3.0
+dlib>=19.22.99
+mediapipe>=0.10.11
+opencv-python>=4.9.0.80
+
+# NOTA: Para Windows, pode ser necessário usar o wheel file do dlib
+# Exemplo: dlib-19.24.99-cp312-cp312-win_amd64.whl
+
+# Processamento de imagens
+Pillow>=9.5.0
+numpy>=1.26.0
+
+# Outras dependências
+python-dotenv>=1.0.0,<2.0.0
+qrcode>=7.4.2
+
+# Geração de relatórios
+reportlab>=4.0.0,<5.0.0  # Geração de PDF
+openpyxl>=3.1.0,<4.0.0  # Geração de Excel

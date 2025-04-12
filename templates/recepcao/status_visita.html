@@ -1,0 +1,221 @@
+{% extends 'base.html' %}
+
+{% block title %}Status das Visitas - URUTAU{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h2 class="text-primary">
+                <i class="fas fa-clipboard-check me-2"></i>Status das Visitas
+            </h2>
+            <p class="lead text-muted">Controle de visitas em andamento</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{% url 'recepcao:totem_visitas' %}" class="btn btn-primary">
+                <i class="fas fa-plus-circle me-2"></i>Nova Visita
+            </a>
+        </div>
+    </div>
+
+    <!-- Estatísticas -->
+    <div class="row mb-4">
+        <div class="col-md-2">
+            <div class="card border-success h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0 me-3">
+                            <i class="fas fa-clock fa-2x text-success"></i>
+                        </div>
+                        <div>
+                            <h6 class="card-title text-muted mb-0">Em Andamento</h6>
+                            <h2 class="mt-2 mb-0">{{ total_em_andamento }}</h2>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card border-info h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0 me-3">
+                            <i class="fas fa-building fa-2x text-info"></i>
+                        </div>
+                        <div>
+                            <h6 class="card-title text-muted mb-0">Térreo</h6>
+                            <h2 class="mt-2 mb-0">{{ total_por_local.terreo }}</h2>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card border-warning h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0 me-3">
+                            <i class="fas fa-university fa-2x text-warning"></i>
+                        </div>
+                        <div>
+                            <h6 class="card-title text-muted mb-0">Plenário</h6>
+                            <h2 class="mt-2 mb-0">{{ total_por_local.plenario }}</h2>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-primary h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0 me-3">
+                            <i class="fas fa-building fa-2x text-primary"></i>
+                        </div>
+                        <div>
+                            <h6 class="card-title text-muted mb-0">1° Piso</h6>
+                            <h2 class="mt-2 mb-0">{{ total_por_local.primeiro_piso }}</h2>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-danger h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0 me-3">
+                            <i class="fas fa-building fa-2x text-danger"></i>
+                        </div>
+                        <div>
+                            <h6 class="card-title text-muted mb-0">2° Piso</h6>
+                            <h2 class="mt-2 mb-0">{{ total_por_local.segundo_piso }}</h2>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <h5 class="card-title mb-3">Filtros</h5>
+            <form method="get" class="row g-3">
+                <div class="col-md-2">
+                    <label for="data" class="form-label">Data</label>
+                    <input type="date" class="form-control" id="data" name="data" value="{{ data_filtro|date:'Y-m-d' }}">
+                </div>
+                <div class="col-md-2">
+                    <label for="hora_inicio" class="form-label">Hora Início</label>
+                    <input type="time" class="form-control" id="hora_inicio" name="hora_inicio" value="{{ hora_inicio_filtro }}">
+                </div>
+                <div class="col-md-2">
+                    <label for="hora_fim" class="form-label">Hora Fim</label>
+                    <input type="time" class="form-control" id="hora_fim" name="hora_fim" value="{{ hora_fim_filtro }}">
+                </div>
+                <div class="col-md-2">
+                    <label for="setor" class="form-label">Setor</label>
+                    <select class="form-select" id="setor" name="setor">
+                        <option value="">Todos</option>
+                        {% for setor in setores %}
+                        <option value="{{ setor.id }}" {% if setor.id|stringformat:"s" == setor_filtro %}selected{% endif %}>
+                            {% if setor.tipo == 'gabinete' %}{{ setor.nome_vereador }}{% else %}{{ setor.nome_local }}{% endif %}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label for="localizacao" class="form-label">Localização</label>
+                    <select class="form-select" id="localizacao" name="localizacao">
+                        <option value="">Todas</option>
+                        {% for key, value in localizacoes.items %}
+                        <option value="{{ key }}" {% if key == localizacao_filtro %}selected{% endif %}>{{ value }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2 d-flex align-items-end">
+                    <div class="d-grid gap-2 w-100">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-filter me-2"></i>Filtrar
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Lista de Visitas -->
+    <div class="card">
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Visitas em Andamento</h5>
+                <div class="btn-group">
+                    <a href="{% url 'recepcao:historico_visitas' %}" class="btn btn-outline-primary btn-sm">
+                        <i class="fas fa-history me-1"></i>Ver Histórico Completo
+                    </a>
+                </div>
+            </div>
+            <hr>
+            {% if visitas %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Visitante</th>
+                            <th>Setor</th>
+                            <th>Localização</th>
+                            <th>Objetivo</th>
+                            <th>Entrada</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for visita in visitas %}
+                        <tr>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    {% if visita.visitante.foto %}
+                                    <img src="{{ visita.visitante.foto.url }}" alt="{{ visita.visitante.nome_completo }}" 
+                                         class="rounded-circle me-2" style="width: 40px; height: 40px; object-fit: cover;">
+                                    {% else %}
+                                    <i class="fas fa-user-circle fa-2x me-2 text-muted"></i>
+                                    {% endif %}
+                                    <div>{{ visita.visitante.nome_completo }}</div>
+                                </div>
+                            </td>
+                            <td>{% if visita.setor.tipo == 'gabinete' %}{{ visita.setor.nome_vereador }}{% else %}{{ visita.setor.nome_local }}{% endif %}</td>
+                            <td>{{ visita.get_localizacao_display }}</td>
+                            <td>{{ visita.get_objetivo_display|default:"-" }}</td>
+                            <td>
+                                {{ visita.data_entrada|date:"d/m/Y" }}<br>
+                                <small class="text-muted">{{ visita.data_entrada|time:"H:i" }}</small>
+                            </td>
+                            <td>
+                                <div class="btn-group">
+                                    <form method="post" action="{% url 'recepcao:finalizar_visita' visita.id %}">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-outline-success btn-sm me-2">
+                                            <i class="fas fa-sign-out-alt me-1"></i>Finalizar Visita
+                                        </button>
+                                    </form>
+                                    <a href="{% url 'recepcao:gerar_etiqueta' visita.id %}" class="btn btn-outline-primary btn-sm">
+                                        <i class="fas fa-tag me-1"></i>Gerar Etiqueta
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center py-5">
+                <i class="fas fa-clipboard-list fa-3x text-muted mb-3"></i>
+                <p class="lead text-muted">Nenhuma visita em andamento no momento.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

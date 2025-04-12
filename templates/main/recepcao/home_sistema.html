@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}URUTAU - Sistema de Gestão de Pessoas{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col">
+            <h2 class="display-6 text-center">
+                <i class="fas fa-building me-2"></i>Bem-vindo ao URUTAU
+            </h2>
+            <p class="text-center text-muted">Sistema de Gestão de Pessoas</p>
+        </div>
+    </div>
+
+    <div class="row justify-content-center">
+        <!-- Recepção -->
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-clipboard-list fa-3x mb-3 text-primary"></i>
+                    <h3 class="card-title">Recepção</h3>
+                    <p class="card-text">Gerencie visitantes, registre visitas e acompanhe o fluxo de pessoas.</p>
+                    <a href="{% url 'recepcao:home_recepcao' %}" class="btn btn-primary">
+                        <i class="fas fa-arrow-right me-2"></i>Acessar
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Estacionamento -->
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-car fa-3x mb-3 text-success"></i>
+                    <h3 class="card-title">Estacionamento</h3>
+                    <p class="card-text">Controle a entrada e saída de veículos no estacionamento.</p>
+                    <a href="{% url 'veiculos:home_veiculos' %}" class="btn btn-success">
+                        <i class="fas fa-arrow-right me-2"></i>Acessar
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Gabinetes -->
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-door-open fa-3x mb-3 text-info"></i>
+                    <h3 class="card-title">Gabinetes</h3>
+                    <p class="card-text">Visualize estatísticas e gerencie as visitas aos gabinetes.</p>
+                    <a href="{% url 'recepcao:home_gabinetes' %}" class="btn btn-info text-white">
+                        <i class="fas fa-arrow-right me-2"></i>Acessar
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

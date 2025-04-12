@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Upload de Foto - SIGEPE{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">Upload de Foto do Visitante</h4>
+                </div>
+                <div class="card-body">
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        
+                        {% if visitante.foto %}
+                        <div class="text-center mb-4">
+                            <img src="{{ visitante.foto.url }}" alt="Foto atual" class="img-thumbnail" style="max-width: 200px;">
+                            <p class="mt-2">Foto atual</p>
+                        </div>
+                        {% endif %}
+                        
+                        <div class="form-group">
+                            <label for="foto">Selecione uma foto:</label>
+                            <input type="file" class="form-control-file" id="foto" name="foto" accept="image/*" required>
+                            <small class="form-text text-muted">
+                                A foto deve mostrar claramente o rosto do visitante, preferencialmente de frente.
+                            </small>
+                        </div>
+                        
+                        <div class="text-center mt-4">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-upload"></i> Enviar Foto
+                            </button>
+                            <a href="{% url 'recepcao:detalhes_visitante' visitante.id %}" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left"></i> Voltar
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            {% if messages %}
+            <div class="mt-3">
+                {% for message in messages %}
+                <div class="alert alert-{{ message.tags }}">
+                    {{ message }}
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

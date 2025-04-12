@@ -1,0 +1,90 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}URUTAU - Controle de Estacionamento{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col">
+            <h2 class="display-6 text-center">
+                <i class="fas fa-car me-2"></i>Controle de Estacionamento
+            </h2>
+            <p class="text-center text-muted">Gestão de entrada e saída de veículos</p>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Veículos Presentes -->
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <h3 class="display-4 text-primary">{{ veiculos_presentes }}</h3>
+                    <p class="card-text">
+                        <i class="fas fa-parking text-primary me-2"></i>
+                        Veículos no Estacionamento
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Veículos Hoje -->
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <h3 class="display-4 text-success">{{ veiculos_hoje }}</h3>
+                    <p class="card-text">
+                        <i class="fas fa-clock text-success me-2"></i>
+                        Veículos Hoje
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Veículos no Mês -->
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <h3 class="display-4 text-info">{{ veiculos_mes }}</h3>
+                    <p class="card-text">
+                        <i class="fas fa-calendar text-info me-2"></i>
+                        Veículos no Mês
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <h4 class="card-title">
+                        <i class="fas fa-sign-in-alt text-primary me-2"></i>
+                        Registrar Entrada
+                    </h4>
+                    <p class="card-text">Registre a entrada de novos veículos no estacionamento.</p>
+                    <a href="{% url 'veiculos:registro_entrada' %}" class="btn btn-primary">
+                        <i class="fas fa-plus me-2"></i>Nova Entrada
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <h4 class="card-title">
+                        <i class="fas fa-sign-out-alt text-success me-2"></i>
+                        Registrar Saída
+                    </h4>
+                    <p class="card-text">Registre a saída de veículos do estacionamento.</p>
+                    <a href="{% url 'veiculos:registro_saida' %}" class="btn btn-success">
+                        <i class="fas fa-check me-2"></i>Registrar Saída
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

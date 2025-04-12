@@ -1,0 +1,449 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Detalhes do Visitante - URUTAU{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    {% csrf_token %}
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h2 class="text-primary">
+                <i class="fas fa-user me-2"></i>Detalhes do Visitante
+            </h2>
+            <p class="lead text-muted">Informações completas e histórico de visitas</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{% url 'recepcao:lista_visitantes' %}" class="btn btn-outline-primary me-2">
+                <i class="fas fa-arrow-left me-2"></i>Voltar
+            </a>
+            <a href="{% url 'recepcao:totem_visitas' %}" class="btn btn-primary">
+                <i class="fas fa-plus-circle me-2"></i>Nova Visita
+            </a>
+        </div>
+    </div>
+
+    <!-- Informações do Visitante -->
+    <div class="row">
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <div class="position-relative mb-4">
+                        {% if visitante.foto %}
+                        <div class="circular-photo-container">
+                            <img src="{{ visitante.foto.url }}" alt="Foto" class="circular-photo">
+                            {% if visitante.face_registrada %}
+                            <span class="badge bg-success position-absolute bottom-0 end-0">
+                                <i class="fas fa-check-circle"></i>
+                            </span>
+                            {% else %}
+                            <span class="badge bg-warning position-absolute bottom-0 end-0">
+                                <i class="fas fa-exclamation-circle"></i>
+                            </span>
+                            {% endif %}
+                        </div>
+                        {% else %}
+                        <div class="circular-photo-container placeholder">
+                            <i class="fas fa-user-circle"></i>
+                        </div>
+                        {% endif %}
+                    </div>
+                    <h4>{{ visitante.nome_completo }}</h4>
+                    {% if visitante.nome_social %}
+                    <p class="text-muted">{{ visitante.nome_social }}</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        <div class="col-md-8 mb-4">
+            <div class="card">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0"><i class="fas fa-user"></i> Detalhes do Visitante</h4>
+                    <div>
+                        <a href="{% url 'recepcao:editar_visitante' visitante.id %}" class="btn btn-primary me-2">
+                            <i class="fas fa-edit me-2"></i>Editar Visitante
+                        </a>
+                        <a href="{% url 'recepcao:excluir_visitante' visitante.id %}" class="btn btn-danger">
+                            <i class="fas fa-trash-alt me-2"></i>Excluir Visitante
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>CPF:</strong> {{ visitante.CPF }}</p>
+                            <p><strong>Data de Nascimento:</strong> {{ visitante.data_nascimento|date:"d/m/Y" }}</p>
+                            <p><strong>Telefone:</strong> {{ visitante.telefone }}</p>
+                            {% if visitante.email %}
+                            <p><strong>E-mail:</strong> {{ visitante.email }}</p>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>Estado:</strong> {{ visitante.get_estado_display }}</p>
+                            <p><strong>Cidade:</strong> {{ visitante.cidade }}</p>
+                            <p><strong>Bairro:</strong> {{ visitante.get_bairro_display }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reconhecimento Facial -->
+    <div class="card mt-4">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0"><i class="fas fa-camera me-2"></i>Reconhecimento Facial</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">Status do Reconhecimento</h5>
+                            <div class="d-flex align-items-center mb-3">
+                                {% if visitante.face_registrada %}
+                                <div class="circular-photo-container small me-3">
+                                    <img src="{{ visitante.foto.url }}" alt="Foto" class="circular-photo">
+                                    <span class="badge bg-success position-absolute bottom-0 end-0">
+                                        <i class="fas fa-check-circle"></i>
+                                    </span>
+                                </div>
+                                <div>
+                                    <p class="mb-0 text-success">
+                                        <i class="fas fa-check-circle me-2"></i>Face registrada
+                                    </p>
+                                    <small class="text-muted">Pronto para reconhecimento</small>
+                                </div>
+                                {% else %}
+                                <div class="circular-photo-container small me-3 placeholder">
+                                    <i class="fas fa-user-circle"></i>
+                                </div>
+                                <div>
+                                    <p class="mb-0 text-warning">
+                                        <i class="fas fa-exclamation-circle me-2"></i>Face não registrada
+                                    </p>
+                                    <small class="text-muted">Tire uma foto para ativar o reconhecimento</small>
+                                </div>
+                                {% endif %}
+                            </div>
+                            <button type="button" class="btn btn-primary" id="btnIniciarCamera">
+                                <i class="fas fa-camera me-2"></i>{% if visitante.foto %}Atualizar{% else %}Tirar{% endif %} Foto
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div id="cameraContainer" class="mt-4" style="display: none;">
+                        <div class="position-relative">
+                            <video id="video" width="640" height="480" class="rounded" style="border: 2px solid #ccc;"></video>
+                            <div class="camera-overlay">
+                                <div class="face-guide"></div>
+                            </div>
+                        </div>
+                        <canvas id="canvas" style="display:none;"></canvas>
+                        <div id="cameraInfo" class="text-muted mt-2"></div>
+                        <div class="mt-3">
+                            <button type="button" class="btn btn-success me-2" id="btnCapturarFoto">
+                                <i class="fas fa-camera me-2"></i>Capturar Foto
+                            </button>
+                            <button type="button" class="btn btn-secondary" id="btnCancelar">
+                                <i class="fas fa-times me-2"></i>Cancelar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Histórico de Visitas -->
+    <div class="card mt-4">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0"><i class="fas fa-history me-2"></i>Histórico de Visitas</h5>
+        </div>
+        <div class="card-body">
+            {% if visitas %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Data/Hora</th>
+                            <th>Visitante</th>
+                            <th>Setor</th>
+                            <th>Objetivo</th>
+                            <th>Status</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for visita in visitas %}
+                        <tr>
+                            <td>{{ visita.data_entrada|date:"d/m/Y H:i" }}</td>
+                            <td>{{ visita.visitante.nome_completo }}</td>
+                            <td>{% if visita.setor.tipo == 'gabinete' %}{{ visita.setor.nome_vereador }}{% else %}{{ visita.setor.nome_local }}{% endif %}</td>
+                            <td>{{ visita.get_localizacao_display }}</td>
+                            <td>
+                                {% if visita.status == 'em_andamento' %}
+                                <span class="badge bg-primary">{{ visita.get_status_display }}</span>
+                                {% elif visita.status == 'finalizada' %}
+                                <span class="badge bg-success">{{ visita.get_status_display }}</span>
+                                {% else %}
+                                <span class="badge bg-danger">{{ visita.get_status_display }}</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if visita.status == 'em_andamento' %}
+                                <a href="{% url 'recepcao:finalizar_visita' visita.id %}" class="btn btn-sm btn-success me-2">
+                                    <i class="fas fa-check me-1"></i>Finalizar
+                                </a>
+                                {% endif %}
+                                <a href="{% url 'recepcao:gerar_etiqueta' visita.id %}" class="btn btn-sm btn-info me-2">
+                                    <i class="fas fa-tag me-1"></i>Etiqueta
+                                </a>
+                                <a href="{% url 'recepcao:excluir_visita' visita.id %}" class="btn btn-sm btn-danger">
+                                    <i class="fas fa-trash-alt me-1"></i>Excluir
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p class="text-muted">Nenhuma visita registrada.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<style>
+.circular-photo-container {
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    overflow: hidden;
+    margin: 0 auto;
+    position: relative;
+    background-color: #f8f9fa;
+    border: 3px solid #e9ecef;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.circular-photo-container.small {
+    width: 60px;
+    height: 60px;
+    border-width: 2px;
+}
+
+.circular-photo-container.placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 4rem;
+    color: #dee2e6;
+}
+
+.circular-photo-container.small.placeholder {
+    font-size: 2rem;
+}
+
+.circular-photo {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.camera-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+}
+
+.face-guide {
+    width: 300px;
+    height: 300px;
+    border: 2px solid rgba(255, 255, 255, 0.8);
+    border-radius: 50%;
+    position: relative;
+}
+
+.face-guide::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 280px;
+    height: 280px;
+    border: 2px dashed rgba(255, 255, 255, 0.5);
+    border-radius: 50%;
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let stream = null;
+let currentCameraLabel = '';
+
+async function getPhysicalCamera() {
+    try {
+        // Primeiro solicita permissão para acessar as câmeras
+        await navigator.mediaDevices.getUserMedia({ video: true });
+        
+        // Lista todas as câmeras disponíveis
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        const videoDevices = devices.filter(device => device.kind === 'videoinput');
+        
+        // Se não houver câmeras, lança erro
+        if (videoDevices.length === 0) {
+            throw new Error('Nenhuma câmera encontrada');
+        }
+
+        // Tenta obter uma câmera física
+        const physicalCamera = videoDevices.find(device => 
+            !device.label.toLowerCase().includes('virtual') && 
+            !device.label.toLowerCase().includes('obs') &&
+            !device.label.toLowerCase().includes('manycam') &&
+            !device.label.toLowerCase().includes('snap') &&
+            !device.label.toLowerCase().includes('droid') &&
+            !device.label.toLowerCase().includes('split')
+        );
+
+        if (!physicalCamera) {
+            throw new Error('Nenhuma câmera física encontrada. Por favor, desative suas câmeras virtuais.');
+        }
+
+        // Salva o nome da câmera
+        currentCameraLabel = physicalCamera.label || 'Câmera Principal';
+
+        // Atualiza o texto do botão
+        const btnCapturarFoto = document.getElementById('btnCapturarFoto');
+        if (btnCapturarFoto) {
+            btnCapturarFoto.innerHTML = `<i class="fas fa-camera me-2"></i>Capturar Foto (${currentCameraLabel})`;
+        }
+
+        // Configurações específicas para câmera física
+        const constraints = {
+            video: {
+                deviceId: { exact: physicalCamera.deviceId },
+                width: { ideal: 1280 },
+                height: { ideal: 720 },
+                frameRate: { ideal: 30 }
+            }
+        };
+
+        return await navigator.mediaDevices.getUserMedia(constraints);
+    } catch (error) {
+        console.error('Erro ao acessar câmera:', error);
+        throw error;
+    }
+}
+
+document.getElementById('btnIniciarCamera')?.addEventListener('click', async function() {
+    try {
+        stream = await getPhysicalCamera();
+        const video = document.getElementById('video');
+        video.srcObject = stream;
+        video.play();
+        document.getElementById('cameraContainer').style.display = 'block';
+        this.style.display = 'none';
+
+        // Adiciona informação da câmera abaixo do vídeo
+        const cameraInfo = document.getElementById('cameraInfo');
+        cameraInfo.innerHTML = `<i class="fas fa-video me-2"></i>Usando: ${currentCameraLabel}`;
+    } catch (err) {
+        console.error('Erro ao acessar a câmera:', err);
+        alert('Erro ao acessar a câmera física. Verifique se:\n\n1. Sua câmera está conectada\n2. Você concedeu permissão\n3. Todas as câmeras virtuais estão desativadas');
+    }
+});
+
+document.getElementById('btnCapturarFoto')?.addEventListener('click', function() {
+    if (!stream) {
+        alert('Câmera não está ativa. Por favor, reinicie a câmera.');
+        return;
+    }
+
+    const video = document.getElementById('video');
+    const canvas = document.getElementById('canvas');
+    const context = canvas.getContext('2d');
+
+    // Configurar o canvas com as dimensões do vídeo
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    
+    // Capturar o frame do vídeo
+    context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+    // Converter para blob e enviar
+    canvas.toBlob(function(blob) {
+        console.log('Convertendo imagem para blob...', blob);
+        const formData = new FormData();
+        formData.append('foto', blob, 'foto.jpg');
+        
+        // Adiciona o token CSRF
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+        console.log('Token CSRF:', csrfToken);
+        
+        console.log('Enviando foto para o servidor...');
+        fetch('{% url "recepcao:upload_foto_visitante" visitante.id %}', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': csrfToken,
+                'Accept': 'application/json'
+            },
+            credentials: 'same-origin'
+        })
+        .then(response => {
+            console.log('Resposta recebida:', response);
+            if (!response.ok) {
+                return response.text().then(text => {
+                    console.error('Erro detalhado:', text);
+                    throw new Error('Erro na resposta do servidor: ' + text);
+                });
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log('Dados recebidos:', data);
+            if (data.success) {
+                // Para a câmera antes de redirecionar
+                if (stream) {
+                    stream.getTracks().forEach(track => track.stop());
+                }
+                // Redireciona para a página de registro facial
+                window.location.href = data.redirect_url;
+            } else {
+                throw new Error(data.message || 'Erro ao salvar a foto');
+            }
+        })
+        .catch(error => {
+            console.error('Erro:', error);
+            alert('Erro ao enviar a foto: ' + error.message);
+        });
+    }, 'image/jpeg', 0.9); // Qualidade 0.9 para garantir boa imagem
+});
+
+document.getElementById('btnCancelar')?.addEventListener('click', function() {
+    if (stream) {
+        stream.getTracks().forEach(track => track.stop());
+    }
+    document.getElementById('cameraContainer').style.display = 'none';
+    document.getElementById('btnIniciarCamera').style.display = 'block';
+});
+
+// Limpar recursos quando a página for fechada
+window.addEventListener('beforeunload', function() {
+    if (stream) {
+        stream.getTracks().forEach(track => track.stop());
+    }
+});
+</script>
+{% endblock %}

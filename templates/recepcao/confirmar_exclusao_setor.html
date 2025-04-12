@@ -1,0 +1,110 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Confirmar Exclusão de Setor{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-danger text-white">
+                    <h4 class="mb-0"><i class="fas fa-exclamation-triangle me-2"></i>Confirmar Exclusão</h4>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-warning">
+                        <h4 class="alert-heading">Atenção!</h4>
+                        <p>Você está prestes a excluir o setor <strong>{% if setor.tipo == 'gabinete' %}{{ setor.nome_vereador }}{% else %}{{ setor.nome_local }}{% endif %}</strong> ({{ setor.get_tipo_display }}).</p>
+                        <hr>
+                        <p class="mb-0">Esta ação não pode ser desfeita. Tem certeza que deseja continuar?</p>
+                        
+                        {% if gabinetes_relacionados %}
+                            <div class="mt-3">
+                                <p class="mb-2"><strong>Atenção:</strong> Os seguintes gabinetes relacionados também serão excluídos:</p>
+                                <ul class="list-group">
+                                    {% for gabinete in gabinetes_relacionados %}
+                                        <li class="list-group-item">
+                                            <strong>{{ gabinete.nome }}</strong> - {{ gabinete.vereador }}
+                                        </li>
+                                    {% endfor %}
+                                </ul>
+                                
+                                <p class="mt-3 text-danger">
+                                    <strong>Total: {{ gabinetes_relacionados.count }} gabinete(s) serão excluído(s).</strong>
+                                </p>
+                            </div>
+                        {% endif %}
+                        
+                        {% if assessores_relacionados %}
+                            <div class="mt-3">
+                                <p class="mb-2"><strong>Atenção:</strong> Os seguintes assessores serão desvinculados deste setor:</p>
+                                <ul class="list-group">
+                                    {% for assessor in assessores_relacionados|slice:":5" %}
+                                        <li class="list-group-item">
+                                            <strong>{{ assessor.nome }}</strong> - {{ assessor.get_funcao_display }}
+                                        </li>
+                                    {% endfor %}
+                                    
+                                    {% if assessores_relacionados.count > 5 %}
+                                        <li class="list-group-item text-muted">
+                                            E mais {{ assessores_relacionados.count|add:"-5" }} assessor(es)...
+                                        </li>
+                                    {% endif %}
+                                </ul>
+                                
+                                <p class="mt-3 text-warning">
+                                    <strong>Total: {{ assessores_relacionados.count }} assessor(es) serão desvinculado(s).</strong>
+                                </p>
+                            </div>
+                        {% endif %}
+                        
+                        {% if visitas_relacionadas %}
+                            <div class="mt-3">
+                                <p class="mb-2"><strong>Atenção:</strong> As seguintes visitas relacionadas também serão excluídas:</p>
+                                <ul class="list-group">
+                                    {% for visita in visitas_relacionadas|slice:":5" %}
+                                        <li class="list-group-item">
+                                            <strong>{{ visita.visitante.nome_completo }}</strong> -
+                                            Data: {{ visita.data_entrada|date:"d/m/Y H:i" }}
+                                            {% if visita.data_saida %}
+                                                até {{ visita.data_saida|date:"d/m/Y H:i" }}
+                                            {% else %}
+                                                (Em andamento)
+                                            {% endif %}
+                                        </li>
+                                    {% endfor %}
+                                    
+                                    {% if visitas_relacionadas.count > 5 %}
+                                        <li class="list-group-item text-muted">
+                                            E mais {{ visitas_relacionadas.count|add:"-5" }} visita(s)...
+                                        </li>
+                                    {% endif %}
+                                </ul>
+                                
+                                <p class="mt-3 text-danger">
+                                    <strong>Total: {{ visitas_relacionadas.count }} visita(s) serão excluída(s).</strong>
+                                </p>
+                            </div>
+                        {% else %}
+                            <p class="mt-3">Este setor não possui visitas relacionadas.</p>
+                        {% endif %}
+                    </div>
+                    
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="d-flex justify-content-between mt-4">
+                            <a href="{% url 'admin:recepcao_setor_changelist' %}" class="btn btn-secondary">
+                                <i class="fas fa-times me-2"></i>Cancelar
+                            </a>
+                            
+                            <button type="submit" class="btn btn-danger">
+                                <i class="fas fa-trash-alt me-2"></i>Confirmar Exclusão
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

@@ -1,0 +1,73 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Reconhecimento Facial - SIGEPE{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">Reconhecimento Facial</h4>
+                </div>
+                <div class="card-body">
+                    <div class="text-center mb-3">
+                        <img src="{% url 'recepcao:video_feed' %}" width="640" height="480" class="img-fluid rounded">
+                    </div>
+                    <div class="alert alert-info" role="alert">
+                        <i class="fas fa-info-circle"></i>
+                        O sistema está realizando o reconhecimento facial em tempo real.
+                    </div>
+                    <div id="resultados" class="mt-3">
+                        <!-- Resultados do reconhecimento serão exibidos aqui -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const resultadosDiv = document.getElementById('resultados');
+    
+    // Função para atualizar os resultados do reconhecimento
+    function atualizarResultados(faces) {
+        let html = '<div class="list-group">';
+        faces.forEach(face => {
+            let classe = face.visitante_id ? 'list-group-item-success' : 'list-group-item-warning';
+            let nome = face.nome || 'Visitante não identificado';
+            html += `
+                <div class="list-group-item ${classe}">
+                    <div class="d-flex w-100 justify-content-between">
+                        <h5 class="mb-1">${nome}</h5>
+                    </div>
+                </div>
+            `;
+        });
+        html += '</div>';
+        resultadosDiv.innerHTML = html;
+    }
+    
+    // Atualiza os resultados a cada 2 segundos
+    setInterval(() => {
+        fetch('{% url "recepcao:verificar_face_api" %}', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                atualizarResultados(data.faces_detected);
+            }
+        })
+        .catch(error => console.error('Erro:', error));
+    }, 2000);
+});
+</script>
+{% endblock %}
+{% endblock %}

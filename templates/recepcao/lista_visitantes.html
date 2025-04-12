@@ -1,0 +1,166 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Lista de Visitantes - URUTAU{% endblock %}
+
+{% block extra_css %}
+<style>
+    .circular-photo-container {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        overflow: hidden;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background-color: #f8f9fa;
+        border: 2px solid #e9ecef;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .circular-photo-container img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .circular-photo-container i {
+        font-size: 1.5rem;
+        color: #dee2e6;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row align-items-center mb-4">
+        <div class="col-md-8">
+            <h1 class="display-5 mb-0">Visitantes</h1>
+            <p class="lead text-muted">Lista completa de visitantes cadastrados</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{% url 'recepcao:cadastro_visitantes' %}" class="btn btn-primary">
+                <i class="fas fa-plus-circle me-2"></i>Novo Visitante
+            </a>
+        </div>
+    </div>
+
+    <!-- Lista de Visitantes -->
+    <div class="card">
+        <div class="card-header bg-white">
+            <div class="d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Visitantes Cadastrados</h5>
+                <div class="input-group" style="max-width: 300px;">
+                    <span class="input-group-text">
+                        <i class="fas fa-search"></i>
+                    </span>
+                    <input type="text" id="searchInput" class="form-control" placeholder="Buscar visitante...">
+                </div>
+            </div>
+        </div>
+        <div class="card-body p-0">
+            {% if visitantes %}
+            <div class="table-responsive">
+                <table class="table table-hover mb-0" id="visitantesTable">
+                    <thead>
+                        <tr>
+                            <th>Nome</th>
+                            <th>Documento</th>
+                            <th>Telefone</th>
+                            <th>Última Visita</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for visitante in visitantes %}
+                        <tr>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    {% if visitante.foto %}
+                                    <div class="circular-photo-container me-2">
+                                        <img src="{{ visitante.foto.url }}" alt="{{ visitante.nome_completo }}">
+                                    </div>
+                                    {% else %}
+                                    <div class="circular-photo-container me-2">
+                                        <i class="fas fa-user"></i>
+                                    </div>
+                                    {% endif %}
+                                    <div>
+                                        <div class="fw-bold">
+                                            <a href="{% url 'recepcao:detalhes_visitante' pk=visitante.id %}" class="text-decoration-none">
+                                                {{ visitante.nome_completo }}
+                                            </a>
+                                        </div>
+                                        <small class="text-muted">ID: {{ visitante.id }}</small>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <i class="fas fa-id-card me-2 text-muted"></i>
+                                    {{ visitante.CPF }}
+                                </div>
+                            </td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <i class="fas fa-phone me-2 text-muted"></i>
+                                    {{ visitante.telefone }}
+                                </div>
+                            </td>
+                            <td>
+                                {% with ultima_visita=visitante.visita_set.last %}
+                                {% if ultima_visita %}
+                                <div>{{ ultima_visita.data_entrada|date:"d/m/Y" }}</div>
+                                <small class="text-muted">{{ ultima_visita.data_entrada|time:"H:i" }}</small>
+                                {% else %}
+                                <span class="text-muted">Sem visitas</span>
+                                {% endif %}
+                                {% endwith %}
+                            </td>
+                            <td>
+                                <div class="btn-group">
+                                    <a href="{% url 'recepcao:totem_visitas' %}" class="btn btn-outline-success btn-sm">
+                                        <i class="fas fa-clipboard-list me-1"></i>Nova Visita
+                                    </a>
+                                    <a href="{% url 'recepcao:detalhes_visitante' visitante.id %}" class="btn btn-outline-primary btn-sm">
+                                        <i class="fas fa-info-circle me-1"></i>Detalhes
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="alert alert-warning" role="alert">
+                Não há visitantes registrados.
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const searchInput = document.getElementById('searchInput');
+        const table = document.getElementById('visitantesTable');
+        
+        if (searchInput && table) {
+            searchInput.addEventListener('keyup', function() {
+                const searchText = this.value.toLowerCase();
+                const rows = table.getElementsByTagName('tr');
+                
+                Array.from(rows).forEach(function(row, index) {
+                    if (index === 0) return; // Skip header row
+                    
+                    const text = row.textContent.toLowerCase();
+                    row.style.display = text.includes(searchText) ? '' : 'none';
+                });
+            });
+        }
+    });
+</script>
+{% endblock %}

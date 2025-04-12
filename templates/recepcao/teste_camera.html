@@ -1,0 +1,259 @@
+{% extends 'base.html' %}
+
+{% block title %}Teste de Câmera{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white text-center">
+                    <h4 class="mb-0">Teste de Câmera</h4>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info" id="statusCamera">
+                        <i class="fas fa-info-circle me-2"></i>
+                        Esta página testa apenas o acesso à câmera, sem reconhecimento facial.
+                    </div>
+                    
+                    <div class="mb-3 text-center">
+                        <button id="btnStartCamera" class="btn btn-success">
+                            <i class="fas fa-video me-2"></i> Iniciar Câmera
+                        </button>
+                        
+                        <button id="btnStopCamera" class="btn btn-danger ms-2" disabled>
+                            <i class="fas fa-video-slash me-2"></i> Parar Câmera
+                        </button>
+                        
+                        <button id="btnSwitchCamera" class="btn btn-warning ms-2" disabled>
+                            <i class="fas fa-sync me-2"></i> Trocar Câmera
+                        </button>
+                    </div>
+                    
+                    <div class="mt-4 border rounded p-2 mx-auto position-relative" style="max-width: 640px; height: 480px; background-color: #f0f0f0;">
+                        <video id="video" width="100%" height="100%" autoplay muted class="rounded"></video>
+                    </div>
+                    
+                    <div class="mt-3">
+                        <h5>Informações da Câmera:</h5>
+                        <div id="cameraInfo" class="p-3 bg-light rounded">
+                            Nenhuma câmera ativa.
+                        </div>
+                    </div>
+                    
+                    <div class="mt-3">
+                        <h5>Câmeras Disponíveis:</h5>
+                        <ul id="cameraList" class="list-group">
+                            <li class="list-group-item">Clique em "Iniciar Câmera" para listar dispositivos disponíveis.</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="mt-4 text-center">
+                        <a href="{% url 'recepcao:totem_visitas' %}" class="btn btn-primary">
+                            <i class="fas fa-arrow-left me-2"></i> Voltar para Totem
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Elementos da interface
+        const video = document.getElementById('video');
+        const btnStartCamera = document.getElementById('btnStartCamera');
+        const btnStopCamera = document.getElementById('btnStopCamera');
+        const btnSwitchCamera = document.getElementById('btnSwitchCamera');
+        const statusCamera = document.getElementById('statusCamera');
+        const cameraInfo = document.getElementById('cameraInfo');
+        const cameraList = document.getElementById('cameraList');
+        
+        // Variáveis para controle de câmera
+        let stream = null;
+        let cameras = [];
+        let currentCameraIndex = 0;
+        
+        // Inicializar obtenção de permissão para listar dispositivos
+        async function inicializarPermissoes() {
+            try {
+                // Solicitar permissão genérica para acessar câmera
+                await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+            } catch (err) {
+                console.error("Erro ao solicitar permissão inicial:", err);
+            }
+        }
+        
+        // Listar câmeras disponíveis
+        async function listarCameras() {
+            try {
+                cameraList.innerHTML = "";
+                
+                if (!navigator.mediaDevices || !navigator.mediaDevices.enumerateDevices) {
+                    cameraList.innerHTML = '<li class="list-group-item list-group-item-warning">Seu navegador não suporta enumeração de dispositivos.</li>';
+                    return;
+                }
+                
+                const devices = await navigator.mediaDevices.enumerateDevices();
+                cameras = devices.filter(device => device.kind === 'videoinput');
+                
+                if (cameras.length === 0) {
+                    cameraList.innerHTML = '<li class="list-group-item list-group-item-danger">Nenhuma câmera encontrada!</li>';
+                    return;
+                }
+                
+                cameras.forEach((camera, index) => {
+                    const item = document.createElement('li');
+                    item.className = 'list-group-item d-flex justify-content-between align-items-center';
+                    
+                    const label = camera.label || `Câmera ${index + 1}`;
+                    const deviceId = camera.deviceId.substring(0, 8) + '...';
+                    
+                    item.innerHTML = `
+                        <div>
+                            <strong>${label}</strong>
+                            <br><small class="text-muted">ID: ${deviceId}</small>
+                        </div>
+                        <button class="btn btn-sm btn-outline-primary select-camera" data-index="${index}">
+                            Selecionar
+                        </button>
+                    `;
+                    
+                    cameraList.appendChild(item);
+                });
+                
+                // Adicionar event listeners para os botões de seleção
+                document.querySelectorAll('.select-camera').forEach(button => {
+                    button.addEventListener('click', function() {
+                        const index = parseInt(this.getAttribute('data-index'));
+                        selecionarCamera(index);
+                    });
+                });
+                
+                // Habilitar botão de troca
+                btnSwitchCamera.disabled = cameras.length <= 1;
+                
+            } catch (err) {
+                console.error("Erro ao listar câmeras:", err);
+                cameraList.innerHTML = `<li class="list-group-item list-group-item-danger">Erro ao listar câmeras: ${err.message}</li>`;
+            }
+        }
+        
+        // Iniciar câmera
+        async function iniciarCamera() {
+            try {
+                statusCamera.className = 'alert alert-info';
+                statusCamera.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> Iniciando câmera...';
+                
+                // Parar qualquer stream ativo
+                if (stream) {
+                    stream.getTracks().forEach(track => track.stop());
+                }
+                
+                // Listar câmeras disponíveis
+                await listarCameras();
+                
+                if (cameras.length === 0) {
+                    throw new Error("Nenhuma câmera disponível");
+                }
+                
+                // Usar a câmera atual
+                const camera = cameras[currentCameraIndex];
+                
+                // Configurar restrições
+                const constraints = {
+                    video: {
+                        deviceId: { exact: camera.deviceId },
+                        width: { ideal: 640 },
+                        height: { ideal: 480 }
+                    },
+                    audio: false
+                };
+                
+                // Acessar a câmera
+                stream = await navigator.mediaDevices.getUserMedia(constraints);
+                
+                // Mostrar o stream no vídeo
+                video.srcObject = stream;
+                
+                // Atualizar interface
+                btnStartCamera.disabled = true;
+                btnStopCamera.disabled = false;
+                btnSwitchCamera.disabled = cameras.length <= 1;
+                
+                // Mostrar informações da câmera
+                const videoTrack = stream.getVideoTracks()[0];
+                cameraInfo.innerHTML = `
+                    <div class="mb-2"><strong>Nome:</strong> ${videoTrack.label}</div>
+                    <div class="mb-2"><strong>Estado:</strong> ${videoTrack.enabled ? 'Ativo' : 'Inativo'}</div>
+                    <div class="mb-2"><strong>Configurações:</strong> ${JSON.stringify(videoTrack.getSettings(), null, 2)}</div>
+                    <div><strong>Restrições:</strong> ${JSON.stringify(videoTrack.getConstraints(), null, 2)}</div>
+                `;
+                
+                statusCamera.className = 'alert alert-success';
+                statusCamera.innerHTML = '<i class="fas fa-check-circle me-2"></i> Câmera iniciada com sucesso!';
+                
+            } catch (err) {
+                console.error("Erro ao iniciar câmera:", err);
+                statusCamera.className = 'alert alert-danger';
+                statusCamera.innerHTML = `<i class="fas fa-exclamation-triangle me-2"></i> Erro ao iniciar câmera: ${err.message}`;
+                
+                btnStartCamera.disabled = false;
+                btnStopCamera.disabled = true;
+            }
+        }
+        
+        // Parar câmera
+        function pararCamera() {
+            if (stream) {
+                stream.getTracks().forEach(track => {
+                    track.stop();
+                });
+                stream = null;
+                video.srcObject = null;
+                
+                // Atualizar interface
+                btnStartCamera.disabled = false;
+                btnStopCamera.disabled = true;
+                btnSwitchCamera.disabled = true;
+                
+                cameraInfo.innerHTML = 'Nenhuma câmera ativa.';
+                
+                statusCamera.className = 'alert alert-info';
+                statusCamera.innerHTML = '<i class="fas fa-info-circle me-2"></i> Câmera parada.';
+            }
+        }
+        
+        // Trocar câmera
+        async function trocarCamera() {
+            if (cameras.length <= 1) {
+                return;
+            }
+            
+            currentCameraIndex = (currentCameraIndex + 1) % cameras.length;
+            await iniciarCamera();
+        }
+        
+        // Selecionar câmera específica
+        async function selecionarCamera(index) {
+            if (index >= 0 && index < cameras.length) {
+                currentCameraIndex = index;
+                await iniciarCamera();
+            }
+        }
+        
+        // Event listeners
+        btnStartCamera.addEventListener('click', iniciarCamera);
+        btnStopCamera.addEventListener('click', pararCamera);
+        btnSwitchCamera.addEventListener('click', trocarCamera);
+        
+        // Inicializar permissões
+        inicializarPermissoes().then(() => {
+            listarCameras();
+        });
+    });
+</script>
+{% endblock %} 

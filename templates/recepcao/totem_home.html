@@ -1,0 +1,91 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Bem-vindo ao Totem - URUTAU{% endblock %}
+
+{% block extra_css %}
+<style>
+    .btn-totem {
+        padding: 30px;
+        margin: 20px;
+        font-size: 24px;
+        border-radius: 15px;
+        transition: all 0.3s;
+    }
+    
+    .btn-totem:hover {
+        transform: scale(1.05);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+    }
+    
+    .btn-totem i {
+        font-size: 48px;
+        display: block;
+        margin-bottom: 15px;
+    }
+    
+    .welcome-title {
+        font-size: 3rem;
+        color: #343a40;
+        margin-bottom: 30px;
+        text-align: center;
+    }
+    
+    .welcome-subtitle {
+        font-size: 1.8rem;
+        color: #6c757d;
+        margin-bottom: 50px;
+        text-align: center;
+        font-style: italic;
+    }
+    
+    .logo-container {
+        text-align: center;
+        margin-bottom: 30px;
+    }
+    
+    .logo-container img {
+        max-width: 300px;
+        height: auto;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid vh-100 d-flex flex-column">
+    <div class="row flex-grow-1 align-items-center">
+        <div class="col-12 text-center">
+            <div class="logo-container mb-4">
+                <img src="{% static 'img/LOGO-CAMARA-PARAUAPEBAS.png' %}" alt="Logo da Câmara" class="img-fluid" onerror="this.onerror=null; this.src='https://via.placeholder.com/120x60?text=Câmara';">
+            </div>
+            
+            <h1 class="welcome-title">Bem-vindo à Câmara Municipal de Parauapebas</h1>
+            <p class="welcome-subtitle">Sua casa de leis</p>
+            
+            <div class="mt-5">
+                <h2 class="mb-4">O que você deseja fazer hoje?</h2>
+                
+                <div class="d-flex justify-content-center mt-5">
+                    <a href="{% url 'recepcao:totem_visitas' %}" class="btn btn-success btn-lg btn-totem">
+                        <i class="fas fa-sign-in-alt"></i>
+                        Fazer uma Visita
+                    </a>
+                    
+                    <a href="{% url 'recepcao:totem_finalizar_visita' %}" class="btn btn-danger btn-lg btn-totem">
+                        <i class="fas fa-sign-out-alt"></i>
+                        Finalizar uma Visita
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-12 p-3">
+            <a href="{% url 'recepcao:home_recepcao' %}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-2"></i>Voltar para Recepção
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %} 

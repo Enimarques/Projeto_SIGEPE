@@ -1,0 +1,294 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Registro de Visitas - URUTAU{% endblock %}
+
+{% block extra_css %}
+<style>
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+    .invalid-feedback {
+        display: block;
+    }
+    .visitante-info {
+        margin-top: 10px;
+        border-radius: 5px;
+        background-color: #f8f9fa;
+    }
+    .visitante-info.error {
+        border-left-color: #dc3545;
+    }
+    .visitante-info h5 {
+        margin-bottom: 10px;
+        color: #495057;
+    }
+    .visitante-info p {
+        margin-bottom: 5px;
+        color: #6c757d;
+    }
+    .visitante-info p strong {
+        color: #495057;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0"><i class="fas fa-clipboard-list"></i> Registro de Visita</h4>
+                    <div class="float-end">
+                        <a href="{% url 'recepcao:totem_visitas' %}" class="btn btn-link text-white" style="text-decoration: none;">
+                            <i class="fas fa-desktop"></i>
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    {% if visitante_pre_selecionado %}
+                    <!-- Dados do Visitante -->
+                    <div class="alert alert-info mb-4">
+                        <div class="d-flex align-items-center">
+                            {% if visitante_pre_selecionado.foto %}
+                            <img src="{{ visitante_pre_selecionado.foto.url }}" alt="{{ visitante_pre_selecionado.nome_completo }}" class="rounded-circle me-3" style="width: 50px; height: 50px; object-fit: cover;">
+                            {% else %}
+                            <i class="fas fa-user-circle fa-3x me-3 text-muted"></i>
+                            {% endif %}
+                            <div>
+                                <h5 class="mb-1">{{ visitante_pre_selecionado.nome_completo }}</h5>
+                                <p class="mb-0">
+                                    <span class="me-3"><i class="fas fa-id-card me-1"></i>{{ visitante_pre_selecionado.CPF }}</span>
+                                    <span><i class="fas fa-phone me-1"></i>{{ visitante_pre_selecionado.telefone }}</span>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <form method="post" id="visita-form">
+                        {% csrf_token %}
+                        
+                        {% if form.errors %}
+                        <div class="alert alert-danger">
+                            <strong>Por favor, corrija os seguintes erros:</strong>
+                            {{ form.errors }}
+                        </div>
+                        {% endif %}
+
+                        {% if not visitante_pre_selecionado %}
+                        <!-- Campo CPF (apenas se não tiver visitante pré-selecionado) -->
+                        <div class="form-group mb-3">
+                            <label for="cpf-input" class="form-label">CPF do Visitante:</label>
+                            {{ form.cpf }}
+                            <div id="visitante-info" class="mt-2 visitante-info" style="display: none; border: 1px solid #ddd; padding: 15px;"></div>
+                        </div>
+                        {% else %}
+                        <!-- Campo CPF oculto para visitante pré-selecionado -->
+                        {{ form.cpf.as_hidden }}
+                        {% endif %}
+
+                        <div class="form-group mb-3">
+                            <label class="form-label">Tipo de Setor:</label>
+                            <div class="btn-group-vertical w-100" role="group">
+                                {% for value, text in form.tipo_setor.field.choices %}
+                                <div class="form-check">
+                                    <input type="radio" name="tipo_setor" 
+                                           value="{{ value }}" 
+                                           class="form-check-input" 
+                                           id="tipo-{{ value }}"
+                                           {% if form.tipo_setor.value == value %}checked{% endif %}>
+                                    <label class="form-check-label" for="tipo-{{ value }}">{{ text }}</label>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <!-- Setor -->
+                        <div class="form-group mb-3">
+                            <label for="{{ form.setor.id_for_label }}" class="form-label">Setor:</label>
+                            <select name="setor" id="{{ form.setor.id_for_label }}" class="form-select">
+                                <option value="">Selecione um setor</option>
+                                {% for setor in form.setor.field.queryset %}
+                                <option value="{{ setor.id }}">
+                                    {% if setor.tipo == 'gabinete' %}
+                                        Gabinete do Vereador {{ setor.nome_vereador }}
+                                    {% else %}
+                                        {{ setor.nome_local }}
+                                    {% endif %}
+                                    ({{ setor.get_localizacao_display }})
+                                </option>
+                                {% endfor %}
+                            </select>
+                            {% if form.setor.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.setor.errors }}
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label for="{{ form.objetivo.id_for_label }}" class="form-label">Objetivo da Visita:</label>
+                            {{ form.objetivo }}
+                            {% if form.objetivo.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.objetivo.errors }}
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label for="{{ form.observacoes.id_for_label }}" class="form-label">Observações:</label>
+                            {{ form.observacoes }}
+                            {% if form.observacoes.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.observacoes.errors }}
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mt-4">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-plus-circle me-2"></i>Registrar Visita
+                            </button>
+                            <a href="{% url 'recepcao:home_recepcao' %}" class="btn btn-outline-secondary">
+                                <i class="fas fa-times me-2"></i>Cancelar
+                            </a>
+                            <a href="{% url 'recepcao:totem_visitas' %}" class="btn btn-outline-info float-end">
+                                <i class="fas fa-desktop me-2"></i>Modo Totem
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    console.log("Script inicializado");
+    
+    // Elementos do DOM
+    const cpfInput = document.getElementById('cpf-input');
+    const visitanteInfo = document.getElementById('visitante-info');
+    const tipoSetorRadios = document.getElementsByName('tipo_setor');
+    const setorSelect = document.getElementById('id_setor');
+    
+    console.log("Elementos encontrados:", {cpfInput, visitanteInfo});
+    
+    if (!cpfInput || !visitanteInfo) {
+        console.error("Elementos essenciais não foram encontrados!");
+        return;
+    }
+    
+    // Função para formatar CPF
+    function formatCPF(cpf) {
+        cpf = cpf.replace(/\D/g, '');
+        if (cpf.length <= 11) {
+            if (cpf.length <= 3) return cpf;
+            if (cpf.length <= 6) return cpf.replace(/(\d{3})(\d+)/, '$1.$2');
+            if (cpf.length <= 9) return cpf.replace(/(\d{3})(\d{3})(\d+)/, '$1.$2.$3');
+            return cpf.replace(/(\d{3})(\d{3})(\d{3})(\d+)/, '$1.$2.$3-$4');
+        }
+        return cpf;
+    }
+    
+    // Buscar visitante quando o CPF está completo
+    function buscarVisitante(cpf) {
+        console.log("Buscando visitante com CPF:", cpf);
+        
+        fetch(`/recepcao/buscar-visitante/?cpf=${cpf}`)
+            .then(response => response.json())
+            .then(data => {
+                console.log("Resposta recebida:", data);
+                
+                if (data.success) {
+                    const visitante = data.visitante;
+                    visitanteInfo.innerHTML = `
+                        <div class="d-flex align-items-center">
+                            ${visitante.foto_url ? 
+                                `<img src="${visitante.foto_url}" alt="${visitante.nome_completo}" class="rounded-circle me-3" style="width: 50px; height: 50px; object-fit: cover;">` :
+                                '<i class="fas fa-user-circle fa-3x me-3 text-muted"></i>'
+                            }
+                            <div>
+                                <h5 class="mb-1">${visitante.nome_completo}</h5>
+                                <p class="mb-0">
+                                    <span class="me-3"><i class="fas fa-id-card me-1"></i>${visitante.cpf}</span>
+                                    <span><i class="fas fa-phone me-1"></i>${visitante.telefone}</span>
+                                </p>
+                            </div>
+                        </div>
+                    `;
+                    visitanteInfo.style.display = 'block';
+                    visitanteInfo.classList.remove('alert-danger');
+                    visitanteInfo.classList.add('alert', 'alert-info');
+                } else {
+                    visitanteInfo.innerHTML = `
+                        <div class="alert alert-warning mb-0">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            ${data.message}
+                        </div>
+                    `;
+                    visitanteInfo.style.display = 'block';
+                }
+            })
+            .catch(error => {
+                console.error("Erro ao buscar visitante:", error);
+                visitanteInfo.innerHTML = `
+                    <div class="alert alert-danger mb-0">
+                        <i class="fas fa-exclamation-circle me-2"></i>
+                        Erro ao buscar visitante. Tente novamente.
+                    </div>
+                `;
+                visitanteInfo.style.display = 'block';
+            });
+    }
+    
+    // Evento para formatar CPF durante digitação
+    if (cpfInput) {
+        cpfInput.addEventListener('input', function(e) {
+            let cpf = e.target.value;
+            e.target.value = formatCPF(cpf);
+            
+            // Buscar visitante quando CPF estiver completo
+            if (cpf.replace(/\D/g, '').length === 11) {
+                buscarVisitante(e.target.value);
+            } else {
+                visitanteInfo.style.display = 'none';
+            }
+        });
+    }
+    
+    // Atualizar lista de setores quando o tipo for alterado
+    tipoSetorRadios.forEach(radio => {
+        radio.addEventListener('change', function() {
+            const tipoSelecionado = this.value;
+            
+            // Limpar select de setores
+            setorSelect.innerHTML = '<option value="">Selecione um setor</option>';
+            
+            // Buscar setores do tipo selecionado
+            fetch(`/recepcao/buscar-setores/?tipo=${tipoSelecionado}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        data.setores.forEach(setor => {
+                            const option = document.createElement('option');
+                            option.value = setor.id;
+                            option.textContent = tipoSelecionado === 'gabinete' ? 
+                                `Gabinete do Vereador ${setor.nome_vereador} (${setor.localizacao})` :
+                                `${setor.nome_local} (${setor.localizacao})`;
+                            setorSelect.appendChild(option);
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error("Erro ao buscar setores:", error);
+                });
+        });
+    });
+});
+</script>
+{% endblock %}

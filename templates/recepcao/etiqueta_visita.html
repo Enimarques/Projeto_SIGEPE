@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Etiqueta de Visita - {{ visita.id }}</title>
+    <style>
+        @page {
+            size: 90mm 29mm; /* Tamanho padrão de etiqueta de identificação */
+            margin: 0;
+        }
+        body {
+            margin: 2mm;
+            font-family: Arial, sans-serif;
+            font-size: 10pt;
+        }
+        .etiqueta {
+            width: 86mm;
+            height: 25mm;
+            padding: 2mm;
+            border: 1px solid #000;
+        }
+        .nome {
+            font-size: 14pt;
+            font-weight: bold;
+            margin-bottom: 2mm;
+        }
+        .info {
+            font-size: 10pt;
+            margin-bottom: 1mm;
+        }
+        .id {
+            font-size: 8pt;
+            text-align: right;
+            color: #666;
+        }
+        @media print {
+            .no-print {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="no-print" style="margin-bottom: 10px;">
+        <button onclick="window.print()">Imprimir Etiqueta</button>
+    </div>
+    
+    <div class="etiqueta">
+        <div class="nome">{{ nome_exibicao }}</div>
+        <div class="info"><strong>Visitante:</strong> {{ visita.visitante.nome_completo }}</div>
+        <div class="info"><strong>Setor:</strong> {{ visita.setor.get_tipo_display }} - {% if visita.setor.tipo == 'gabinete' %}{{ visita.setor.nome_vereador }}{% else %}{{ visita.setor.nome_local }}{% endif %}</div>
+        <div class="info"><strong>Localização:</strong> {{ visita.get_localizacao_display }}</div>
+        <div class="info"><strong>Data:</strong> {{ visita.data_entrada|date:"d/m/Y H:i" }}</div>
+        <div class="id">ID: {{ visita.id }}</div>
+    </div>
+</body>
+</html>
