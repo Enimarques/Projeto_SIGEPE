@@ -122,6 +122,18 @@ def verificar_face_api(request):
             # Converter para RGB para o face_recognition
             rgb_img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
             
+            # Garantir que a imagem esteja no formato correto
+            if rgb_img.dtype != np.uint8:
+                rgb_img = rgb_img.astype(np.uint8)
+            
+            # Normalizar a imagem para garantir que os valores estejam entre 0 e 255
+            if rgb_img.max() > 1.0:
+                rgb_img = rgb_img.astype(np.float32) / 255.0
+                rgb_img = (rgb_img * 255).astype(np.uint8)
+            
+            print(f"Tipo de dados da imagem: {rgb_img.dtype}")
+            print(f"Valores mínimos e máximos: {rgb_img.min()}, {rgb_img.max()}")
+            
             # Tentar diferentes modelos de detecção facial
             face_locations = face_recognition.face_locations(rgb_img, model="hog")
             

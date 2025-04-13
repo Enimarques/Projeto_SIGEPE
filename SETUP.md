@@ -5,13 +5,17 @@ Este guia detalha o passo a passo para instalar e configurar o sistema SIGEPE co
 ## Pré-requisitos
 
 ### 1. Instalar Software Base
+
 - Python 3.12 ([Download](https://www.python.org/downloads/))
+
   - **IMPORTANTE:** Marque a opção "Add Python to PATH" durante a instalação
 
 - Visual Studio Build Tools ([Download](https://visualstudio.microsoft.com/visual-cpp-build-tools/))
+
   - Selecione "Desktop development with C++"
 
 - CMake ([Download](https://cmake.org/download/))
+
   - Escolha o instalador Windows x64
   - Marque "Add CMake to the system PATH" durante a instalação
 
@@ -40,19 +44,30 @@ py -m venv venv
 
 **IMPORTANTE:** A ordem de instalação é crucial para o funcionamento correto do reconhecimento facial.
 
-```bash
+````bash
 # 1. Instalar cmake primeiro
 py -m pip install cmake
 
-# 2. Instalar dlib 
+# 2. Instalar dlib
 py -m pip install dlib
+#esse dando erro
+#tem que baixar o pre compilado e instalar https://github.com/z-mahmud22/Dlib_Windows_Python3.x.git
+#procurar e dar o comando >pip install dlib-19.24.99-cp312-cp312-win_amd64.whl
 
 # 3. Instalar demais dependências
 py -m pip install -r requirements.txt
+#esse dando erro no dlib e nao instalando django
+#nao instalou o django-widget-teaks, reportlab, opencv-python, face_recognition
+
 
 # 4. Instalar face_recognition_models diretamente do GitHub (CRUCIAL)
 py -m pip install git+https://github.com/ageitgey/face_recognition_models
-```
+''
+#depois dar o pip install face_recognition
+
+# 5 **IMPORTANTE:** depois de todo o processo do dlib, tem que dar o comando pra ai  vai funcionar
+ pip install --upgrade pip setuptools wheel
+
 
 ### 4. Verificar Instalação do Reconhecimento Facial
 
@@ -60,7 +75,7 @@ Execute este comando para verificar se a instalação foi bem-sucedida:
 
 ```bash
 py -c "import face_recognition; import face_recognition_models; print('Bibliotecas instaladas com sucesso!')"
-```
+````
 
 ### 5. Configurar o Banco de Dados
 
@@ -145,6 +160,7 @@ py manage.py runserver
 ### Erro face_recognition_models
 
 Se aparecer a mensagem:
+
 ```
 Please install `face_recognition_models` with this command before using `face_recognition`:
 pip install git+https://github.com/ageitgey/face_recognition_models
@@ -170,6 +186,7 @@ Siga estes passos:
 Se o sistema estiver travando ou muito lento ao usar o reconhecimento facial:
 
 1. Edite o arquivo `SIGEPE/settings.py` e altere:
+
    ```python
    'ENABLED': False,  # Temporariamente desativar o reconhecimento facial
    ```
@@ -187,4 +204,4 @@ Se o sistema estiver travando ou muito lento ao usar o reconhecimento facial:
 ## Acessando o Sistema
 
 Após iniciar o servidor, acesse o sistema em:
-http://127.0.0.1:8000/ ou http://localhost:8000/ 
+http://127.0.0.1:8000/ ou http://localhost:8000/

@@ -1,9 +1,9 @@
 # Django e componentes principais
-Django>=4.2.0,<5.0.0
+Django>=5..0
 django-widget-tweaks>=1.4.12,<2.0.0
 
 # Processamento de imagens
-Pillow>=9.5.0
+Pillow>=9.5.0,<10.0.0
 
 # Segurança e autenticação
 django-axes>=6.1.1,<7.0.0  # Proteção contra tentativas de login
@@ -54,11 +54,12 @@ opencv-python>=4.9.0.80
 # Exemplo: dlib-19.24.99-cp312-cp312-win_amd64.whl
 
 # Processamento de imagens
+
 Pillow>=9.5.0
 numpy>=1.26.0
 
 # Outras dependências
-python-dotenv>=1.0.0,<2.0.0
+python-dotenv>=1.0.0,<2.0.0  # Variáveis de ambiente
 qrcode>=7.4.2
 
 # Geração de relatórios

@@ -53,15 +53,55 @@ class FaceRecognitionManager:
                     image_path = os.path.join(settings.MEDIA_ROOT, str(visitante.foto))
                     if os.path.exists(image_path):
                         print(f"Processando foto do visitante {visitante.nome_completo} (ID: {visitante.id})")
-                        image = face_recognition.load_image_file(image_path)
-                        face_encodings = face_recognition.face_encodings(image)
+                        image = cv2.imread(image_path)
+                        if image is None:
+                            raise ValueError(f"Não foi possível carregar a imagem: {image_path}")
                         
-                        if face_encodings:
-                            self.known_face_encodings.append(face_encodings[0])
-                            self.known_face_ids.append(visitante.id)
-                            print(f"Face do visitante {visitante.nome_completo} carregada com sucesso")
-                        else:
-                            print(f"AVISO: Nenhum rosto detectado na foto do visitante {visitante.nome_completo}")
+                        print(f"Dimensões da imagem: {image.shape}")
+                        print(f"Tipo de dados da imagem: {image.dtype}")
+                        
+                        # Pré-processamento da imagem
+                        # 1. Converter para tons de cinza
+                        gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+                        
+                        # 2. Aplicar equalização de histograma para melhorar o contraste
+                        gray = cv2.equalizeHist(gray)
+                        
+                        # 3. Converter de volta para RGB (3 canais)
+                        image = cv2.cvtColor(gray, cv2.COLOR_GRAY2RGB)
+                        
+                        # 4. Garantir que a imagem esteja no formato uint8
+                        if image.dtype != np.uint8:
+                            image = image.astype(np.uint8)
+                        
+                        print(f"Tipo de dados após processamento: {image.dtype}")
+                        print(f"Valores mínimos e máximos: {image.min()}, {image.max()}")
+                        
+                        # Detectar localizações de rostos primeiro
+                        face_locations = face_recognition.face_locations(image)
+                        if not face_locations:
+                            print(f"ERRO: Nenhum rosto detectado na foto do visitante {visitante.nome_completo}")
+                            raise ValueError("Nenhum rosto detectado na foto. Tente novamente com uma foto mais clara do rosto.")
+                        
+                        print(f"Rostos detectados: {len(face_locations)}")
+                        
+                        # Gerar encodings apenas com as localizações já detectadas
+                        face_encodings = face_recognition.face_encodings(image, face_locations)
+
+                        if not face_encodings:
+                            print(f"ERRO: Não foi possível gerar encodings para o rosto detectado")
+                            raise ValueError("Não foi possível processar o rosto na imagem. A imagem pode estar muito escura ou desfocada.")
+
+                        # Atualiza o visitante
+                        visitante.face_registrada = True
+                        visitante.face_id = str(datetime.now().timestamp())  # ID único baseado no timestamp
+                        visitante.save()
+                        print(f"Visitante atualizado: face_registrada={visitante.face_registrada}, face_id={visitante.face_id}")
+
+                        # Atualiza os arrays locais
+                        self.known_face_encodings.append(face_encodings[0])
+                        self.known_face_ids.append(visitante.id)
+                        print(f"Face do visitante {visitante.nome_completo} registrada com sucesso. Total de faces conhecidas: {len(self.known_face_encodings)}")
                 except Exception as e:
                     print(f"ERRO ao carregar face do visitante {visitante.id}: {str(e)}")
 
