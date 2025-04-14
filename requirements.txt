@@ -1,5 +1,5 @@
 # Django e componentes principais
-Django>=5..0
+Django>=5.0.0
 django-widget-tweaks>=1.4.12,<2.0.0
 
 # Processamento de imagens
