@@ -1,1 +1,0 @@
-default_app_config = 'apps.veiculos_new.apps.VeiculosNewConfig'
