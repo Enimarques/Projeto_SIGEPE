@@ -36,9 +36,7 @@ sentry-sdk>=1.28.0,<2.0.0  # Monitoramento de erros
 gunicorn>=21.2.0,<22.0.0  # Servidor WSGI
 python-dotenv>=1.0.0,<2.0.0  # Variáveis de ambiente
 
-# Django e frontend
-Django>=4.2.0,<5.0.0
-django-crispy-forms>=2.0,<3.0
+# Frontend
 crispy-bootstrap5>=2024.2
 
 # Reconhecimento Facial
@@ -54,14 +52,13 @@ opencv-python>=4.9.0.80
 # Exemplo: dlib-19.24.99-cp312-cp312-win_amd64.whl
 
 # Processamento de imagens
-
-Pillow>=9.5.0
 numpy>=1.26.0
 
 # Outras dependências
-python-dotenv>=1.0.0,<2.0.0  # Variáveis de ambiente
 qrcode>=7.4.2
 
 # Geração de relatórios
 reportlab>=4.0.0,<5.0.0  # Geração de PDF
 openpyxl>=3.1.0,<4.0.0  # Geração de Excel
+xhtml2pdf>=0.2.13  # Conversão de HTML para PDF
+weasyprint>=60.2  # Geração de PDF a partir de HTML/CSS

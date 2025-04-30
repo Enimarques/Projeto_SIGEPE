@@ -5,12 +5,15 @@
 
 {% block content %}
 <div class="container">
-    <div class="row mb-4">
-        <div class="col">
-            <h2 class="display-6 text-center">
-                <i class="fas fa-car me-2"></i>Controle de Estacionamento
-            </h2>
-            <p class="text-center text-muted">Gestão de entrada e saída de veículos</p>
+    <div class="row align-items-center mb-4">
+        <div class="col-md-8">
+            <h1 class="display-5 mb-0">Controle de Estacionamento</h1>
+            <p class="lead text-muted">Sistema de controle de entrada e saída de veículos</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="/" class="btn btn-outline-primary">
+                <i class="fas fa-arrow-left me-2"></i>Voltar
+            </a>
         </div>
     </div>
 
@@ -56,31 +59,61 @@
     </div>
 
     <div class="row mt-4">
+        <!-- Card de Registro de Entrada -->
         <div class="col-md-6 mb-4">
             <div class="card h-100">
-                <div class="card-body text-center">
-                    <h4 class="card-title">
-                        <i class="fas fa-sign-in-alt text-primary me-2"></i>
-                        Registrar Entrada
-                    </h4>
-                    <p class="card-text">Registre a entrada de novos veículos no estacionamento.</p>
+                <div class="card-header">
+                    <h4 class="mb-0">Registro de Entrada</h4>
+                </div>
+                <div class="card-body">
+                    <p class="card-text">Registre a entrada de um novo veículo no estacionamento.</p>
                     <a href="{% url 'veiculos:registro_entrada' %}" class="btn btn-primary">
-                        <i class="fas fa-plus me-2"></i>Nova Entrada
+                        <i class="fas fa-sign-in-alt me-2"></i>Registrar Entrada
                     </a>
                 </div>
             </div>
         </div>
 
+        <!-- Card de Registro de Saída -->
         <div class="col-md-6 mb-4">
             <div class="card h-100">
-                <div class="card-body text-center">
-                    <h4 class="card-title">
-                        <i class="fas fa-sign-out-alt text-success me-2"></i>
-                        Registrar Saída
-                    </h4>
-                    <p class="card-text">Registre a saída de veículos do estacionamento.</p>
-                    <a href="{% url 'veiculos:registro_saida' %}" class="btn btn-success">
-                        <i class="fas fa-check me-2"></i>Registrar Saída
+                <div class="card-header">
+                    <h4 class="mb-0">Registro de Saída</h4>
+                </div>
+                <div class="card-body">
+                    <p class="card-text">Registre a saída de um veículo do estacionamento.</p>
+                    <a href="{% url 'veiculos:registro_saida' %}" class="btn btn-danger">
+                        <i class="fas fa-sign-out-alt me-2"></i>Registrar Saída
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Card de Lista de Veículos -->
+        <div class="col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h4 class="mb-0">Lista de Veículos</h4>
+                </div>
+                <div class="card-body">
+                    <p class="card-text">Visualize e gerencie todos os veículos cadastrados.</p>
+                    <a href="{% url 'veiculos:lista_veiculos' %}" class="btn btn-info">
+                        <i class="fas fa-list me-2"></i>Ver Lista
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Card de Histórico -->
+        <div class="col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h4 class="mb-0">Histórico</h4>
+                </div>
+                <div class="card-body">
+                    <p class="card-text">Acesse o histórico completo de movimentações.</p>
+                    <a href="{% url 'veiculos:historico' %}" class="btn btn-secondary">
+                        <i class="fas fa-history me-2"></i>Ver Histórico
                     </a>
                 </div>
             </div>

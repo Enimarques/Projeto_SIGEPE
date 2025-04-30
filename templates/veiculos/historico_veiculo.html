@@ -1,0 +1,117 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Histórico do Veículo - URUTAU{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row align-items-center mb-4">
+        <div class="col-md-8">
+            <h1 class="display-5 mb-0">Histórico do Veículo</h1>
+            <p class="lead text-muted">Registro completo de entradas e saídas</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{% url 'veiculos:lista_veiculos' %}" class="btn btn-outline-primary">
+                <i class="fas fa-arrow-left me-2"></i>Voltar para Lista
+            </a>
+        </div>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <h5 class="card-title">Informações do Veículo</h5>
+                    <p><strong>Placa:</strong> {{ veiculo.placa }}</p>
+                    <p><strong>Modelo:</strong> {{ veiculo.modelo }}</p>
+                    <p><strong>Tipo:</strong> {{ veiculo.get_tipo_display }}</p>
+                    <p><strong>Cor:</strong> {{ veiculo.cor }}</p>
+                </div>
+                <div class="col-md-6">
+                    <h5 class="card-title">Status Atual</h5>
+                    <p><strong>Status:</strong> 
+                        {% if veiculo.bloqueado %}
+                            <span class="badge bg-danger">Bloqueado</span>
+                        {% elif veiculo.data_saida %}
+                            <span class="badge bg-secondary">Saída Realizada</span>
+                        {% else %}
+                            <span class="badge bg-success">No Estacionamento</span>
+                        {% endif %}
+                    </p>
+                    <p><strong>Data de Entrada:</strong> {{ veiculo.data_entrada|date:"d/m/Y H:i" }}</p>
+                    {% if veiculo.data_saida %}
+                        <p><strong>Data de Saída:</strong> {{ veiculo.data_saida|date:"d/m/Y H:i" }}</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h4 class="mb-0"><i class="fas fa-history"></i> Histórico de Visitas</h4>
+            <a href="{% url 'veiculos:lista_veiculos' %}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Voltar
+            </a>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Data Entrada</th>
+                            <th>Data Saída</th>
+                            <th>Visitante</th>
+                            <th>Observações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for registro in page_obj %}
+                        <tr>
+                            <td>{{ registro.data_entrada|date:"d/m/Y H:i" }}</td>
+                            <td>{{ registro.data_saida|date:"d/m/Y H:i"|default:"-" }}</td>
+                            <td>{{ registro.visitante.nome|default:"-" }}</td>
+                            <td>{{ registro.observacoes|default:"-" }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="4" class="text-center">Nenhum registro encontrado</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            {% if page_obj.paginator.num_pages > 1 %}
+            <nav aria-label="Navegação de páginas">
+                <ul class="pagination justify-content-center">
+                    {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page=1">&laquo; Primeira</a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Anterior</a>
+                    </li>
+                    {% endif %}
+
+                    <li class="page-item active">
+                        <span class="page-link">
+                            Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}
+                        </span>
+                    </li>
+
+                    {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}">Próxima</a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">Última &raquo;</a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %} 

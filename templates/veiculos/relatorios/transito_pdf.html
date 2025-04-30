@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Veículos em Trânsito</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 1cm;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            font-size: 12px;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f5f5f5;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .footer {
+            text-align: right;
+            font-size: 10px;
+            color: #666;
+            margin-top: 20px;
+        }
+        .warning {
+            color: #ff9800;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Veículos em Trânsito</h1>
+        <p>Data do Relatório: {{ data_atual|date:"d/m/Y H:i" }}</p>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Placa</th>
+                <th>Modelo</th>
+                <th>Visitante</th>
+                <th>Data Entrada</th>
+                <th>Tempo Estacionado</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for veiculo in veiculos %}
+            <tr>
+                <td>{{ veiculo.placa }}</td>
+                <td>{{ veiculo.modelo }}</td>
+                <td>{{ veiculo.visitante.nome_completo }}</td>
+                <td>{{ veiculo.data_entrada|date:"d/m/Y H:i" }}</td>
+                <td class="{% if veiculo.tempo_estacionado > 4 %}warning{% endif %}">
+                    {{ veiculo.tempo_estacionado }} horas
+                </td>
+                <td>{{ veiculo.get_status_display }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <div class="footer">
+        <p>Página {% block page_number %}{% endblock %}</p>
+    </div>
+</body>
+</html> 
