@@ -113,11 +113,16 @@ class SetorForm(forms.ModelForm):
         }
         
     def __init__(self, *args, **kwargs):
+        hide_responsavel = kwargs.pop('hide_responsavel', False)
         super().__init__(*args, **kwargs)
         instance = kwargs.get('instance')
         
+        # Se for edição de gabinete pelo assessor, esconde o campo
+        if hide_responsavel or (instance and instance.tipo == 'gabinete'):
+            self.fields.pop('nome_responsavel', None)
+        
         # Se for edição, filtra os assessores pelo tipo do setor
-        if instance:
+        if instance and 'nome_responsavel' in self.fields:
             self.fields['nome_responsavel'].queryset = Assessor.objects.filter(
                 ativo=True,
                 departamento__isnull=False
@@ -205,3 +210,18 @@ class SetorForm(forms.ModelForm):
             setor.save()
             
         return setor
+
+    fieldsets = (
+        ('Informações do Gabinete', {
+            'fields': ('nome_vereador', 'email_vereador', 'localizacao'),
+        }),
+        ('Horário de Funcionamento', {
+            'fields': ('horario_abertura', 'horario_fechamento'),
+        }),
+        ('Contato do Assessor', {
+            'fields': ('email', 'telefone'),
+        }),
+        ('Horário do Assessor', {
+            'fields': ('horario_entrada', 'horario_saida'),
+        }),
+    )

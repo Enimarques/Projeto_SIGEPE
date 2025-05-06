@@ -10,6 +10,7 @@ from django.core.files.base import ContentFile
 from django.conf import settings
 from .models import Visitante, Visita, Setor, Assessor
 from .forms import VisitanteForm, VisitaForm
+from .forms_departamento import SetorForm
 from .utils import gerar_etiqueta_pdf
 import base64
 import json
@@ -894,9 +895,12 @@ def totem_finalizar_visita(request):
 @login_required
 def home_gabinetes(request):
     """View para a página inicial dos gabinetes."""
-    # Obtém todos os setores do tipo gabinete
-    gabinetes = Setor.objects.filter(tipo='gabinete')
-    
+    # Se for assessor, mostra só o gabinete dele
+    if hasattr(request.user, 'assessor') and request.user.assessor.departamento and request.user.assessor.departamento.tipo == 'gabinete':
+        gabinetes = Setor.objects.filter(id=request.user.assessor.departamento.id, tipo='gabinete')
+    else:
+        gabinetes = Setor.objects.filter(tipo='gabinete')
+
     # Calcula estatísticas
     total_visitas = Visita.objects.count()
     visitas_hoje = Visita.objects.filter(
@@ -905,14 +909,12 @@ def home_gabinetes(request):
     visitas_em_andamento = Visita.objects.filter(
         data_saida__isnull=True
     ).count()
-    
-    # Calcula visitas do mês atual
     hoje = timezone.now()
     primeiro_dia_mes = hoje.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
     visitas_mes = Visita.objects.filter(
         data_entrada__gte=primeiro_dia_mes
     ).count()
-    
+
     context = {
         'gabinetes': gabinetes,
         'total_visitas': total_visitas,
@@ -920,7 +922,6 @@ def home_gabinetes(request):
         'visitas_em_andamento': visitas_em_andamento,
         'visitas_mes': visitas_mes,
     }
-    
     return render(request, 'recepcao/home_gabinetes.html', context)
 
 @login_required
@@ -986,6 +987,30 @@ def detalhes_gabinete(request, gabinete_id):
     })
     
     return render(request, 'recepcao/detalhes_gabinete.html', context)
+
+@login_required(login_url='autenticacao:login_sistema')
+def editar_gabinete(request, gabinete_id):
+    gabinete = get_object_or_404(Setor, id=gabinete_id, tipo='gabinete')
+    # Só o assessor responsável pode editar
+    if not hasattr(request.user, 'assessor') or request.user.assessor.departamento_id != gabinete.id:
+        raise PermissionDenied('Você não tem permissão para editar este gabinete.')
+
+    if request.method == 'POST':
+        form = SetorForm(request.POST, instance=gabinete, hide_responsavel=True)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Informações do gabinete atualizadas com sucesso!')
+            return redirect('recepcao:detalhes_gabinete', gabinete_id=gabinete.id)
+    else:
+        form = SetorForm(instance=gabinete, hide_responsavel=True)
+
+    context = get_base_context('Editar Gabinete')
+    context.update({
+        'form': form,
+        'gabinete': gabinete,
+        'is_editing': True
+    })
+    return render(request, 'recepcao/editar_gabinete.html', context)
 
 def gerar_pdf_visitas(visitas, gabinete):
     response = HttpResponse(content_type='application/pdf')

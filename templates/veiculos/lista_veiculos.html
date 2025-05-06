@@ -94,7 +94,7 @@
                             </td>
                             <td>{{ veiculo.data_entrada|date:"d/m/Y H:i" }}</td>
                             <td>
-                                <div class="btn-group">
+                                <div class="btn-group" style="gap: 0.5rem;">
                                     <a href="{% url 'veiculos:historico_veiculo' veiculo.id %}" class="btn btn-sm btn-info" title="Histórico">
                                         <i class="fas fa-history"></i>
                                     </a>
@@ -105,6 +105,12 @@
                                     {% else %}
                                     <a href="{% url 'veiculos:desbloquear_veiculo' veiculo.id %}" class="btn btn-sm btn-success" title="Desbloquear">
                                         <i class="fas fa-check"></i>
+                                    </a>
+                                    {% endif %}
+                                    <!-- Botão Registrar Saída -->
+                                    {% if not veiculo.data_saida and not veiculo.bloqueado %}
+                                    <a href="{% url 'veiculos:registro_saida' %}?veiculo_id={{ veiculo.id }}" class="btn btn-sm" style="background-color: #388e3c; color: white;" title="Registrar Saída">
+                                        <i class="fas fa-sign-out-alt"></i> Registrar Saída
                                     </a>
                                     {% endif %}
                                 </div>

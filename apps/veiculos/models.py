@@ -104,18 +104,30 @@ class Veiculo(models.Model):
     def clean(self):
         # Validação da placa
         if self.placa:
-            self.placa = self.placa.upper()
-            if not self.validar_placa(self.placa):
+            placa_str = str(self.placa).upper()
+            self.placa = placa_str
+            if not self.validar_placa(placa_str):
                 raise ValidationError({
                     'placa': "Formato de placa inválido! Use o padrão antigo (ABC-1234) ou Mercosul (ABC1D23)."
                 })
-        
         # Validação dos horários
-        if self.data_saida and self.data_entrada and self.data_saida < self.data_entrada:
-            raise ValidationError({
-                'data_saida': "A data de saída não pode ser anterior à data de entrada."
-            })
-        
+        if self.data_saida and self.data_entrada:
+            from django.utils.timezone import make_naive
+            entrada = self.data_entrada
+            saida = self.data_saida
+            # Garante que ambos são datetime sem timezone para comparação
+            try:
+                entrada = make_naive(entrada)
+            except Exception:
+                pass
+            try:
+                saida = make_naive(saida)
+            except Exception:
+                pass
+            if saida < entrada:
+                raise ValidationError({
+                    'data_saida': "A data de saída não pode ser anterior à data de entrada."
+                })
         # Validação do bloqueio
         if self.bloqueado and not self.motivo_bloqueio:
             raise ValidationError({

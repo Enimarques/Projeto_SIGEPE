@@ -16,54 +16,174 @@
                     </a>
                 </div>
                 <div class="card-body">
-                    <form method="post">
-                        {% csrf_token %}
-                        <div class="row">
-                            <div class="col-md-6">
+                    {% if form.errors %}
+                        <div class="alert alert-danger">
+                            <ul class="mb-0">
+                                {% for field in form %}
+                                    {% for error in field.errors %}
+                                        <li><strong>{{ field.label }}:</strong> {{ error }}</li>
+                                    {% endfor %}
+                                {% endfor %}
+                                {% for error in form.non_field_errors %}
+                                    <li>{{ error }}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    {% endif %}
+                    <div class="row align-items-start justify-content-center mb-3 d-flex">
+                        <div class="col-md-5">
+                            <form method="post">
+                                {% csrf_token %}
                                 <div class="form-group">
-                                    <label for="{{ form.placa.id_for_label }}">Placa</label>
-                                    {% render_field form.placa class="form-control" %}
-                                    {% if form.placa.errors %}
+                                    <label for="{{ form.veiculo.id_for_label }}">Veículo</label>
+                                    {% render_field form.veiculo class="form-control" %}
+                                    {% if form.veiculo.errors %}
                                         <div class="invalid-feedback d-block">
-                                            {{ form.placa.errors }}
+                                            {{ form.veiculo.errors }}
                                         </div>
                                     {% endif %}
                                 </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label for="{{ form.data_saida.id_for_label }}">Data e Hora da Saída</label>
-                                    {% render_field form.data_saida class="form-control" %}
-                                    {% if form.data_saida.errors %}
-                                        <div class="invalid-feedback d-block">
-                                            {{ form.data_saida.errors }}
+                                <div class="row mt-3">
+                                    <div class="col-md-12">
+                                        <div class="form-group">
+                                            <label for="{{ form.observacoes.id_for_label }}">Observações</label>
+                                            {% render_field form.observacoes class="form-control" %}
+                                            {% if form.observacoes.errors %}
+                                                <div class="invalid-feedback d-block">
+                                                    {{ form.observacoes.errors }}
+                                                </div>
+                                            {% endif %}
                                         </div>
-                                    {% endif %}
+                                    </div>
+                                </div>
+                                <div class="row mt-4">
+                                    <div class="col-md-12">
+                                        <button type="submit" class="btn btn-primary">Registrar Saída</button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                        <div class="col-md-5 d-flex">
+                            <div id="mini-card-veiculo" class="card shadow-lg border-success mb-3 ms-4" style="display:none; max-width: 420px; min-width: 320px; border-width: 2px;">
+                                <div class="card-header bg-success text-white d-flex align-items-center justify-content-center" style="border-bottom: 2px solid #218838;">
+                                    <i class="fas fa-car-side fa-lg me-2"></i>
+                                    <span class="fw-bold" id="mini-placa" style="font-size: 1.5rem; letter-spacing: 2px;"></span>
+                                </div>
+                                <div class="card-body py-3">
+                                    <div class="row mb-2">
+                                        <div class="col-6 text-start">
+                                            <i class="fas fa-car"></i> <strong>Modelo:</strong>
+                                        </div>
+                                        <div class="col-6 text-end">
+                                            <span id="mini-modelo"></span>
+                                        </div>
+                                    </div>
+                                    <div class="row mb-2">
+                                        <div class="col-6 text-start">
+                                            <i class="fas fa-palette"></i> <strong>Cor:</strong>
+                                        </div>
+                                        <div class="col-6 text-end">
+                                            <span id="mini-cor"></span>
+                                        </div>
+                                    </div>
+                                    <div class="row mb-2">
+                                        <div class="col-6 text-start">
+                                            <i class="fas fa-truck-moving"></i> <strong>Tipo:</strong>
+                                        </div>
+                                        <div class="col-6 text-end">
+                                            <span id="mini-tipo"></span>
+                                        </div>
+                                    </div>
+                                    <div class="row mb-2">
+                                        <div class="col-6 text-start">
+                                            <i class="fas fa-calendar-plus"></i> <strong>Entrada:</strong>
+                                        </div>
+                                        <div class="col-6 text-end">
+                                            <span id="mini-entrada"></span>
+                                        </div>
+                                    </div>
+                                    <div class="row mb-2">
+                                        <div class="col-6 text-start">
+                                            <i class="fas fa-sign-out-alt"></i> <strong>Saída (agora):</strong>
+                                        </div>
+                                        <div class="col-6 text-end">
+                                            <span id="mini-saida"></span>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-6 text-start">
+                                            <i class="fas fa-user"></i> <strong>Visitante:</strong>
+                                        </div>
+                                        <div class="col-6 text-end">
+                                            <span id="mini-visitante"></span>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                        <div class="row mt-3">
-                            <div class="col-md-12">
-                                <div class="form-group">
-                                    <label for="{{ form.observacoes.id_for_label }}">Observações</label>
-                                    {% render_field form.observacoes class="form-control" %}
-                                    {% if form.observacoes.errors %}
-                                        <div class="invalid-feedback d-block">
-                                            {{ form.observacoes.errors }}
-                                        </div>
-                                    {% endif %}
-                                </div>
-                            </div>
-                        </div>
-                        <div class="row mt-4">
-                            <div class="col-md-12">
-                                <button type="submit" class="btn btn-primary">Registrar Saída</button>
-                            </div>
-                        </div>
-                    </form>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const selectVeiculo = document.getElementById('id_veiculo');
+        const miniCard = document.getElementById('mini-card-veiculo');
+        const dataSaidaInput = document.getElementById('id_data_saida');
+        const saidaSpan = document.getElementById('mini-saida');
+        function atualizarSaidaAgora() {
+            const agora = new Date();
+            const pad = n => n.toString().padStart(2, '0');
+            const dataStr = `${pad(agora.getDate())}/${pad(agora.getMonth()+1)}/${agora.getFullYear()} ${pad(agora.getHours())}:${pad(agora.getMinutes())}`;
+            if (saidaSpan) saidaSpan.textContent = dataStr;
+        }
+        setInterval(atualizarSaidaAgora, 1000); // Atualiza a cada segundo
+        atualizarSaidaAgora();
+        if (selectVeiculo) {
+            selectVeiculo.addEventListener('change', function() {
+                const veiculoId = this.value;
+                if (veiculoId) {
+                    fetch(`/veiculos/veiculo-info/?veiculo_id=${veiculoId}`)
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.erro) {
+                                miniCard.style.display = 'none';
+                            } else {
+                                document.getElementById('mini-placa').textContent = data.placa;
+                                document.getElementById('mini-modelo').textContent = data.modelo;
+                                document.getElementById('mini-cor').textContent = data.cor;
+                                document.getElementById('mini-tipo').textContent = data.tipo;
+                                document.getElementById('mini-entrada').textContent = data.data_entrada;
+                                document.getElementById('mini-visitante').textContent = data.visitante;
+                                miniCard.style.display = 'block';
+                                // Preencher automaticamente o campo de saída
+                                if (data.data_entrada && dataSaidaInput) {
+                                    // data.data_entrada está no formato 'dd/mm/yyyy HH:MM'
+                                    const [date, time] = data.data_entrada.split(' ');
+                                    const [day, month, year] = date.split('/');
+                                    const [hour, minute] = time.split(':');
+                                    let entradaDate = new Date(year, month - 1, day, hour, minute);
+                                    entradaDate.setMinutes(entradaDate.getMinutes() + 1);
+                                    // Formatar para 'YYYY-MM-DDTHH:MM' (padrão input type=datetime-local)
+                                    const pad = n => n.toString().padStart(2, '0');
+                                    const localDatetime = `${entradaDate.getFullYear()}-${pad(entradaDate.getMonth()+1)}-${pad(entradaDate.getDate())}T${pad(entradaDate.getHours())}:${pad(entradaDate.getMinutes())}`;
+                                    dataSaidaInput.value = localDatetime;
+                                }
+                            }
+                        });
+                } else {
+                    miniCard.style.display = 'none';
+                }
+            });
+        }
+    });
+</script>
+
+
+</style>
 {% endblock %}

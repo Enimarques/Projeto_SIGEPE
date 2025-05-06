@@ -1,5 +1,6 @@
 from django import forms
 from .models import Veiculo, HistoricoVeiculo
+from django.utils.timezone import make_naive
 
 class VeiculoForm(forms.ModelForm):
     class Meta:
@@ -57,25 +58,37 @@ class VeiculoForm(forms.ModelForm):
 class SaidaVeiculoForm(forms.ModelForm):
     class Meta:
         model = Veiculo
-        fields = ['placa', 'data_saida', 'observacoes', 'status']
-        
+        fields = ['veiculo', 'observacoes']
         widgets = {
-            'data_saida': forms.DateTimeInput(attrs={
-                'type': 'datetime-local',
-                'class': 'form-control'
-            }),
             'observacoes': forms.Textarea(attrs={
                 'rows': 3,
                 'class': 'form-control',
                 'placeholder': 'Observações sobre a saída'
-            }),
-            'status': forms.Select(attrs={'class': 'form-control'})
+            })
         }
 
-    # Puxa os veículos já cadastrados, para facilitar a seleção
-    placa = forms.ModelChoiceField(
+    veiculo = forms.ModelChoiceField(
         queryset=Veiculo.objects.filter(data_saida__isnull=True),
         empty_label="Selecione o veículo",
-        to_field_name="placa",
         widget=forms.Select(attrs={'class': 'form-control'})
     )
+
+    def clean(self):
+        cleaned_data = super().clean()
+        veiculo = cleaned_data.get('veiculo')
+        data_saida = cleaned_data.get('data_saida')
+        if veiculo and data_saida:
+            entrada = veiculo.data_entrada
+            saida = data_saida
+            try:
+                entrada = make_naive(entrada)
+            except Exception:
+                pass
+            try:
+                saida = make_naive(saida)
+            except Exception:
+                pass
+            diferenca = saida - entrada
+            if diferenca.total_seconds() < 60:
+                self.add_error('data_saida', 'A saída deve ser pelo menos 1 minuto após a entrada do veículo selecionado.')
+        return cleaned_data

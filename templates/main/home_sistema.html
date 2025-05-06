@@ -7,126 +7,195 @@
     <h3 class="text-muted">Sistema de Gestão de Entrada e Saida de Pessoas da Câmara Municipal de Parauapebas</h3>
     <br>
     
+    <!-- DEBUG: Exibe valor de is_assessor -->
+    <div class="alert alert-info">is_assessor: {{ is_assessor }}</div>
+    
     <!-- Dashboard -->
     <div class="row justify-content-center mb-5">
-        <!-- Visitas em Andamento -->
-        <div class="col-md-3 mb-4">
-            <div class="card border-primary h-100">
-                <div class="card-body text-center">
-                    <div class="d-flex flex-column justify-content-center align-items-center h-100">
-                        <div class="mb-3">
-                            <i class="fas fa-users fa-3x text-primary"></i>
-                        </div>
-                        <div>
-                            <h6 class="card-title text-muted mb-1">Visitas em Andamento</h6>
-                            <h2 class="mb-0">{{ visitas_em_andamento }}</h2>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Total de Visitantes -->
-        <div class="col-md-3 mb-4">
-            <div class="card border-success h-100">
-                <div class="card-body text-center">
-                    <div class="d-flex flex-column justify-content-center align-items-center h-100">
-                        <div class="mb-3">
-                            <i class="fas fa-address-card fa-3x text-success"></i>
-                        </div>
-                        <div>
-                            <h6 class="card-title text-muted mb-1">Visitantes Cadastrados</h6>
-                            <h2 class="mb-0">{{ total_visitantes }}</h2>
+        {% if is_guarita %}
+            <!-- Veículos no Estacionamento -->
+            <div class="col-md-3 mb-4">
+                <div class="card border-warning h-100">
+                    <div class="card-body text-center">
+                        <div class="d-flex flex-column justify-content-center align-items-center h-100">
+                            <div class="mb-3">
+                                <i class="fas fa-car fa-3x text-warning"></i>
+                            </div>
+                            <div>
+                                <h6 class="card-title text-muted mb-1">Veículos no Estacionamento</h6>
+                                <h2 class="mb-0">{{ veiculos_no_estacionamento }}</h2>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
-        
-        <!-- Veículos no Estacionamento -->
-        <div class="col-md-3 mb-4">
-            <div class="card border-warning h-100">
-                <div class="card-body text-center">
-                    <div class="d-flex flex-column justify-content-center align-items-center h-100">
-                        <div class="mb-3">
-                            <i class="fas fa-car fa-3x text-warning"></i>
-                        </div>
-                        <div>
-                            <h6 class="card-title text-muted mb-1">Veículos no Estacionamento</h6>
-                            <h2 class="mb-0">{{ veiculos_no_estacionamento }}</h2>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Total de Veículos -->
-        <div class="col-md-3 mb-4">
-            <div class="card border-info h-100">
-                <div class="card-body text-center">
-                    <div class="d-flex flex-column justify-content-center align-items-center h-100">
-                        <div class="mb-3">
-                            <i class="fas fa-car-side fa-3x text-info"></i>
-                        </div>
-                        <div>
-                            <h6 class="card-title text-muted mb-1">Veículos Cadastrados</h6>
-                            <h2 class="mb-0">{{ total_veiculos }}</h2>
+            <!-- Total de Veículos -->
+            <div class="col-md-3 mb-4">
+                <div class="card border-info h-100">
+                    <div class="card-body text-center">
+                        <div class="d-flex flex-column justify-content-center align-items-center h-100">
+                            <div class="mb-3">
+                                <i class="fas fa-car-side fa-3x text-info"></i>
+                            </div>
+                            <div>
+                                <h6 class="card-title text-muted mb-1">Veículos Cadastrados</h6>
+                                <h2 class="mb-0">{{ total_veiculos }}</h2>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
+        {% else %}
+            <!-- Visitas em Andamento -->
+            <div class="col-md-3 mb-4">
+                <div class="card border-primary h-100">
+                    <div class="card-body text-center">
+                        <div class="d-flex flex-column justify-content-center align-items-center h-100">
+                            <div class="mb-3">
+                                <i class="fas fa-users fa-3x text-primary"></i>
+                            </div>
+                            <div>
+                                <h6 class="card-title text-muted mb-1">Visitas em Andamento</h6>
+                                <h2 class="mb-0">{{ visitas_em_andamento }}</h2>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Total de Visitantes -->
+            <div class="col-md-3 mb-4">
+                <div class="card border-success h-100">
+                    <div class="card-body text-center">
+                        <div class="d-flex flex-column justify-content-center align-items-center h-100">
+                            <div class="mb-3">
+                                <i class="fas fa-address-card fa-3x text-success"></i>
+                            </div>
+                            <div>
+                                <h6 class="card-title text-muted mb-1">Visitantes Cadastrados</h6>
+                                <h2 class="mb-0">{{ total_visitantes }}</h2>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Veículos no Estacionamento -->
+            <div class="col-md-3 mb-4">
+                <div class="card border-warning h-100">
+                    <div class="card-body text-center">
+                        <div class="d-flex flex-column justify-content-center align-items-center h-100">
+                            <div class="mb-3">
+                                <i class="fas fa-car fa-3x text-warning"></i>
+                            </div>
+                            <div>
+                                <h6 class="card-title text-muted mb-1">Veículos no Estacionamento</h6>
+                                <h2 class="mb-0">{{ veiculos_no_estacionamento }}</h2>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Total de Veículos -->
+            <div class="col-md-3 mb-4">
+                <div class="card border-info h-100">
+                    <div class="card-body text-center">
+                        <div class="d-flex flex-column justify-content-center align-items-center h-100">
+                            <div class="mb-3">
+                                <i class="fas fa-car-side fa-3x text-info"></i>
+                            </div>
+                            <div>
+                                <h6 class="card-title text-muted mb-1">Veículos Cadastrados</h6>
+                                <h2 class="mb-0">{{ total_veiculos }}</h2>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
     </div>
 
     <!-- Módulos do Sistema -->
     <div class="row justify-content-center">
-        <!-- Módulo de Recepção -->
-        <div class="col-md-4 mb-4">
-            <div class="card h-100">
-                <div class="card-body text-center">
-                    <i class="fas fa-users fa-4x mb-3 text-primary"></i>
-                    <h4 class="card-title">Módulo de Recepção</h4>
-                    <p class="card-text">Gerencie visitantes e controle o fluxo de pessoas.</p>
-                    <div class="mt-4">
-                        <a href="{% url 'recepcao:home_recepcao' %}" class="btn btn-primary">
-                            <i class="fas fa-door-open me-2"></i>Acessar Recepção
-                        </a>
+        {% if is_guarita %}
+            <!-- Módulo de Veículos -->
+            <div class="col-md-4 mb-4">
+                <div class="card h-100">
+                    <div class="card-body text-center">
+                        <i class="fas fa-car fa-4x mb-3 text-success"></i>
+                        <h4 class="card-title">Módulo de Veículos</h4>
+                        <p class="card-text">Controle o fluxo de veículos no estacionamento.</p>
+                        <div class="mt-4">
+                            <a href="{% url 'veiculos:home_veiculos' %}" class="btn btn-success">
+                                <i class="fas fa-parking me-2"></i>Acessar Veículos
+                            </a>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
-
-        <!-- Módulo de Veículos -->
-        <div class="col-md-4 mb-4">
-            <div class="card h-100">
-                <div class="card-body text-center">
-                    <i class="fas fa-car fa-4x mb-3 text-success"></i>
-                    <h4 class="card-title">Módulo de Veículos</h4>
-                    <p class="card-text">Controle o fluxo de veículos no estacionamento.</p>
-                    <div class="mt-4">
-                        <a href="{% url 'veiculos:home_veiculos' %}" class="btn btn-success">
-                            <i class="fas fa-parking me-2"></i>Acessar Veículos
-                        </a>
+        {% else %}
+            {% if is_assessor %}
+                <!-- Módulo de Gabinetes -->
+                <div class="col-md-4 mb-4">
+                    <div class="card h-100">
+                        <div class="card-body text-center">
+                            <i class="fas fa-building fa-4x mb-3 text-warning"></i>
+                            <h4 class="card-title">Módulo de Gabinetes</h4>
+                            <p class="card-text">Gerencie os gabinetes e seus assessores.</p>
+                            <div class="mt-4">
+                                <a href="{% url 'recepcao:home_gabinetes' %}" class="btn btn-warning">
+                                    <i class="fas fa-door-closed me-2"></i>Acessar Gabinetes
+                                </a>
+                            </div>
+                        </div>
                     </div>
                 </div>
-            </div>
-        </div>
-
-        <!-- Módulo de Gabinetes -->
-        <div class="col-md-4 mb-4">
-            <div class="card h-100">
-                <div class="card-body text-center">
-                    <i class="fas fa-building fa-4x mb-3 text-warning"></i>
-                    <h4 class="card-title">Módulo de Gabinetes</h4>
-                    <p class="card-text">Gerencie os gabinetes e seus assessores.</p>
-                    <div class="mt-4">
-                        <a href="{% url 'recepcao:home_gabinetes' %}" class="btn btn-warning">
-                            <i class="fas fa-door-closed me-2"></i>Acessar Gabinetes
-                        </a>
+            {% else %}
+                <!-- Módulo de Recepção -->
+                <div class="col-md-4 mb-4">
+                    <div class="card h-100">
+                        <div class="card-body text-center">
+                            <i class="fas fa-users fa-4x mb-3 text-primary"></i>
+                            <h4 class="card-title">Módulo de Recepção</h4>
+                            <p class="card-text">Gerencie visitantes e controle o fluxo de pessoas.</p>
+                            <div class="mt-4">
+                                <a href="{% url 'recepcao:home_recepcao' %}" class="btn btn-primary">
+                                    <i class="fas fa-door-open me-2"></i>Acessar Recepção
+                                </a>
+                            </div>
+                        </div>
                     </div>
                 </div>
-            </div>
-        </div>
+                <!-- Módulo de Veículos -->
+                <div class="col-md-4 mb-4">
+                    <div class="card h-100">
+                        <div class="card-body text-center">
+                            <i class="fas fa-car fa-4x mb-3 text-success"></i>
+                            <h4 class="card-title">Módulo de Veículos</h4>
+                            <p class="card-text">Controle o fluxo de veículos no estacionamento.</p>
+                            <div class="mt-4">
+                                <a href="{% url 'veiculos:home_veiculos' %}" class="btn btn-success">
+                                    <i class="fas fa-parking me-2"></i>Acessar Veículos
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Módulo de Gabinetes -->
+                <div class="col-md-4 mb-4">
+                    <div class="card h-100">
+                        <div class="card-body text-center">
+                            <i class="fas fa-building fa-4x mb-3 text-warning"></i>
+                            <h4 class="card-title">Módulo de Gabinetes</h4>
+                            <p class="card-text">Gerencie os gabinetes e seus assessores.</p>
+                            <div class="mt-4">
+                                <a href="{% url 'recepcao:home_gabinetes' %}" class="btn btn-warning">
+                                    <i class="fas fa-door-closed me-2"></i>Acessar Gabinetes
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+        {% endif %}
     </div>
 </div>
 {% endblock %}

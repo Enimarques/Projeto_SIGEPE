@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Editar Gabinete - {{ gabinete.nome_vereador }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="mb-4">Editar Informações do Gabinete</h2>
+    <form method="post">
+        {% csrf_token %}
+        <fieldset class="mb-4 p-3 border rounded bg-light">
+            <legend class="fs-5 mb-3">Informações do Gabinete</legend>
+            {{ form.nome_vereador.label_tag }} {{ form.nome_vereador }}<br>
+            {{ form.email_vereador.label_tag }} {{ form.email_vereador }}<br>
+            {{ form.localizacao.label_tag }} {{ form.localizacao }}
+        </fieldset>
+        <fieldset class="mb-4 p-3 border rounded bg-light">
+            <legend class="fs-5 mb-3">Horário de Funcionamento</legend>
+            {{ form.horario_abertura.label_tag }} {{ form.horario_abertura }}<br>
+            {{ form.horario_fechamento.label_tag }} {{ form.horario_fechamento }}
+        </fieldset>
+        <fieldset class="mb-4 p-3 border rounded bg-light">
+            <legend class="fs-5 mb-3">Contato do Assessor</legend>
+            {{ form.email.label_tag }} {{ form.email }}<br>
+            {{ form.telefone.label_tag }} {{ form.telefone }}
+        </fieldset>
+        <fieldset class="mb-4 p-3 border rounded bg-light">
+            <legend class="fs-5 mb-3">Horário do Assessor</legend>
+            {{ form.horario_entrada.label_tag }} {{ form.horario_entrada }}<br>
+            {{ form.horario_saida.label_tag }} {{ form.horario_saida }}
+        </fieldset>
+        <button type="submit" class="btn btn-primary">Salvar Alterações</button>
+        <a href="{% url 'recepcao:detalhes_gabinete' gabinete.id %}" class="btn btn-secondary ms-2">Cancelar</a>
+    </form>
+</div>
+{% endblock %} 

@@ -1,12 +1,13 @@
 from django.urls import path, re_path
-from . import views, views_usuario, views_assessor
+from .views import login_sistema, logout_sistema
+from . import views_usuario, views_assessor
 
 app_name = 'autenticacao'
 
 urlpatterns = [
     # URLs principais do sistema
-    path('login/', views.login_sistema, name='login_sistema'),
-    path('logout/', views.logout_sistema, name='logout_sistema'),
+    path('login/', login_sistema, name='login_sistema'),
+    path('logout/', logout_sistema, name='logout_sistema'),
     
     # URLs de gerenciamento de usuários
     path('usuarios/', views_usuario.lista_usuarios, name='lista_usuarios'),
@@ -15,7 +16,7 @@ urlpatterns = [
     path('usuarios/<int:pk>/excluir/', views_usuario.excluir_usuario, name='excluir_usuario'),
     
     # URLs de compatibilidade com o Django Admin
-    re_path(r'^login/$', views.login_sistema),  # URL sem nome para compatibilidade com o admin
+    re_path(r'^login/$', login_sistema),  # URL sem nome para compatibilidade com o admin
 
     # URL para login de assessores
     path('assessor/login/', views_assessor.login_assessor, name='login_assessor'),

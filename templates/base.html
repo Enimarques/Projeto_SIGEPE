@@ -11,6 +11,7 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <!-- Custom CSS -->
     {% load static %}
+    {% load grupos_tags %}
     <link href="{% static 'css/style.css' %}" rel="stylesheet">
     {% block extra_css %}{% endblock %}
 </head>
@@ -33,30 +34,36 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <!-- Menu do Usuário -->
                 <ul class="navbar-nav ms-auto">
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'admin:index' %}">
-                            <i class="fas fa-cogs"></i> Admin
-                        </a>
-                    </li>
                     {% if user.is_authenticated %}
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
-                            <i class="fas fa-user"></i> {{ user.get_full_name|default:user.username }}
-                        </a>
-                        <ul class="dropdown-menu dropdown-menu-end">
-                            <li>
-                                <a class="dropdown-item" href="{% url 'autenticacao:logout_sistema' %}">
-                                    <i class="fas fa-sign-out-alt"></i> Sair
-                                </a>
-                            </li>
-                        </ul>
-                    </li>
+                        {% with user_groups=user|nomes_grupos %}
+                            {% if user.is_superuser or 'Administradores' in user_groups %}
+                                <li class="nav-item"><a class="nav-link" href="{% url 'admin:index' %}"><i class="fas fa-cogs"></i> Admin</a></li>
+                                <li class="nav-item"><a class="nav-link" href="{% url 'recepcao:home_recepcao' %}"><i class="fas fa-users"></i> Recepção</a></li>
+                                <li class="nav-item"><a class="nav-link" href="{% url 'veiculos:home_veiculos' %}"><i class="fas fa-car"></i> Veículos</a></li>
+                            {% elif 'Agente_Guarita' in user_groups %}
+                                <li class="nav-item"><a class="nav-link" href="{% url 'veiculos:home_veiculos' %}"><i class="fas fa-car"></i> Veículos</a></li>
+                            {% elif 'Assessores' in user_groups %}
+                                <li class="nav-item"><a class="nav-link" href="{% url 'recepcao:home_recepcao' %}"><i class="fas fa-users"></i> Recepção</a></li>
+                            {% endif %}
+                        {% endwith %}
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                                <i class="fas fa-user"></i> {{ user.get_full_name|default:user.username }}
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li>
+                                    <a class="dropdown-item" href="{% url 'autenticacao:logout_sistema' %}">
+                                        <i class="fas fa-sign-out-alt"></i> Sair
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
                     {% else %}
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'autenticacao:login_sistema' %}">
-                            <i class="fas fa-sign-in-alt"></i> Entrar
-                        </a>
-                    </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'autenticacao:login_sistema' %}">
+                                <i class="fas fa-sign-in-alt"></i> Entrar
+                            </a>
+                        </li>
                     {% endif %}
                 </ul>
             </div>

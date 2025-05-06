@@ -4,6 +4,7 @@ Módulo de administração para o app de veículos.
 from django.contrib import admin
 from django.utils.html import format_html
 from .models import Veiculo, HistoricoVeiculo
+from django.utils import timezone
 
 @admin.register(HistoricoVeiculo)
 class HistoricoVeiculoAdmin(admin.ModelAdmin):
@@ -18,7 +19,7 @@ class VeiculoAdmin(admin.ModelAdmin):
     list_filter = ('tipo', 'cor', 'status', 'data_entrada', 'data_saida', 'bloqueado')
     search_fields = ('placa', 'modelo', 'visitante__nome', 'observacoes')
     readonly_fields = ('status', 'data_entrada')
-    actions = ['exportar_para_excel', 'exportar_para_pdf', 'bloquear_veiculos', 'desbloquear_veiculos']
+    actions = ['exportar_para_excel', 'exportar_para_pdf', 'bloquear_veiculos', 'desbloquear_veiculos', 'registrar_saida']
     
     class Media:
         css = {
@@ -81,3 +82,9 @@ class VeiculoAdmin(admin.ModelAdmin):
         else:
             obj.status = 'presente'
         super().save_model(request, obj, form, change)
+
+@admin.action(description='Registrar saída dos veículos selecionados')
+def registrar_saida(modeladmin, request, queryset):
+    for veiculo in queryset:
+        veiculo.data_saida = timezone.now()
+        veiculo.save()

@@ -3,6 +3,7 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from .forms import LoginForm
+from .services.auth_service import AuthenticationService
 
 # Create your views here.
 
@@ -16,10 +17,11 @@ def login_sistema(request):
         if form.is_valid():
             username = form.cleaned_data['username']
             password = form.cleaned_data['password']
-            user = authenticate(request, username=username, password=password)
+            user = AuthenticationService.authenticate_user(username, password)
             
             if user is not None:
                 login(request, user)
+                AuthenticationService.update_last_login(user)
                 # Pega a URL de redirecionamento do POST ou GET, ou usa a home como padrão
                 next_url = request.POST.get('next') or request.GET.get('next') or 'main:home_sistema'
                 messages.success(request, f'Bem-vindo, {user.first_name}!')

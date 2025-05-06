@@ -421,6 +421,13 @@
                     <div class="gabinete-icon">
                         <i class="fas fa-building"></i>
                     </div>
+                    {% if user.is_authenticated and user.assessor and user.assessor.departamento_id == gabinete.id %}
+                    <div class="mb-3 text-end">
+                        <a href="{% url 'recepcao:editar_gabinete' gabinete.id %}" class="btn btn-outline-primary">
+                            <i class="fas fa-edit me-1"></i> Editar
+                        </a>
+                    </div>
+                    {% endif %}
                     <p class="card-text">
                         <i class="fas fa-envelope info-icon"></i>
                         <strong>Email:</strong> {{ gabinete.email_vereador }}<br>

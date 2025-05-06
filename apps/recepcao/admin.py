@@ -104,14 +104,14 @@ class AssessorAdmin(admin.ModelAdmin):
     """Classe de administração para o modelo Assessor."""
     list_display = (
         'nome_responsavel', 'departamento', 'funcao', 'get_horario_trabalho',
-        'get_status_presenca', 'ativo'
+        'get_status_presenca', 'ativo', 'usuario'
     )
     list_filter = ('ativo', 'departamento', 'funcao')
     search_fields = ('nome_responsavel', 'departamento__nome_vereador', 'departamento__nome_local', 'email')
     ordering = ['nome_responsavel']
     fieldsets = (
         ('Informações Básicas', {
-            'fields': ('nome_responsavel', 'departamento', 'funcao', 'email')
+            'fields': ('nome_responsavel', 'departamento', 'funcao', 'email', 'usuario')
         }),
         ('Horário de Trabalho', {
             'fields': ('horario_entrada', 'horario_saida')

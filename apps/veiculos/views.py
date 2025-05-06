@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.core.paginator import Paginator
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from datetime import datetime
 from .models import Veiculo, HistoricoVeiculo
 from .forms import VeiculoForm, SaidaVeiculoForm
@@ -18,8 +18,10 @@ from django.template.loader import get_template
 from xhtml2pdf import pisa
 import xlwt
 from django.db.models import Count
+from apps.autenticacao.decorators import agente_guarita_or_admin_required
+from django.utils.timezone import localtime
 
-@login_required(login_url='autenticacao:login_sistema')
+@agente_guarita_or_admin_required
 def home_veiculos(request):
     hoje = datetime.now().date()
     
@@ -349,3 +351,21 @@ def exportar_veiculos_excel(request):
     
     wb.save(response)
     return response
+
+def veiculo_info_json(request):
+    veiculo_id = request.GET.get('veiculo_id')
+    if not veiculo_id:
+        return JsonResponse({'erro': 'ID não informado'}, status=400)
+    try:
+        veiculo = Veiculo.objects.get(id=veiculo_id)
+        data = {
+            'placa': veiculo.placa,
+            'modelo': veiculo.modelo,
+            'cor': veiculo.get_cor_display() if hasattr(veiculo, 'get_cor_display') else veiculo.cor,
+            'tipo': veiculo.get_tipo_display() if hasattr(veiculo, 'get_tipo_display') else veiculo.tipo,
+            'data_entrada': localtime(veiculo.data_entrada).strftime('%d/%m/%Y %H:%M'),
+            'visitante': str(veiculo.visitante) if veiculo.visitante else '',
+        }
+        return JsonResponse(data)
+    except Veiculo.DoesNotExist:
+        return JsonResponse({'erro': 'Veículo não encontrado'}, status=404)
