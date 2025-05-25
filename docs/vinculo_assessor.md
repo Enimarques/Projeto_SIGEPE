@@ -10,19 +10,64 @@ O sistema SIGEPE possui controle de acesso baseado em grupos e vínculos de usu�
 ### 2.1. Modelo Assessor
 O modelo `Assessor` está localizado em `apps/recepcao/models.py` e possui um campo `usuario` (ForeignKey para o modelo User do Django). Esse campo é o responsável por vincular o Assessor a um usuário do sistema.
 
-- **Campo importante:**
-  - `usuario = models.OneToOneField(User, ...)`
+```
+[Usuário criado no Admin]
+      |
+      v
+[Assessor cadastrado em Recepção > Assessores]
+      |
+      v
+[No cadastro do Assessor, campo "Usuário" é preenchido com o usuário desejado]
+      |
+      v
+[Assessor salvo com campo "ativo" = True]
+      |
+      v
+[Usuário faz login]
+      |
+      v
+[Sistema verifica: existe Assessor ativo vinculado a este usuário?]
+      |         \
+      |          \
+      v           v
+[Sim]         [Não]
+  |             |
+  v             v
+[Exibe apenas   [Exibe módulos conforme outros vínculos/permissões]
+ Gabinetes]
+```
 
-### 2.2. Cadastro e Edição no Admin
-No admin (`apps/recepcao/admin.py`), ao cadastrar ou editar um Assessor, é obrigatório selecionar o usuário correspondente no campo `usuario`. Esse vínculo é fundamental para o sistema reconhecer o usuário como Assessor.
+### 2.2. Passo a Passo Detalhado
 
-- **Dica:** Sempre vincule o usuário correto ao Assessor no admin. Sem esse vínculo, o sistema não reconhecerá o perfil de Assessor, mesmo que o usuário esteja no grupo "Assessores".
+1. **Crie o usuário normalmente no Django Admin**
+   - Menu: `Admin > Usuários`
+   - Preencha nome, e-mail, senha, etc.
+2. **Cadastre o Assessor**
+   - Menu: `Recepção > Assessores`
+   - Clique em "Adicionar Assessor"
+   - Preencha os dados do assessor (nome, gabinete, etc.)
+   - **No campo "Usuário" selecione o usuário criado no passo 1**
+   - Marque "Ativo" se o assessor deve ter acesso
+   - Salve
+3. **Login e Teste**
+   - Faça login com o usuário vinculado
+   - O sistema deve exibir apenas o card de Gabinetes na home
+   - Os módulos de Veículos e Recepção não aparecem
+- **Dica:** Sempre vincule o usuário correto ao Assessor no admin. Sem esse vínculo, o sistema não reconhecerá o 
+perfil de Assessor, mesmo que o usuário esteja no grupo "Assessores".
 
-### 2.3. Lógica de Identificação no Backend
-A identificação se um usuário é Assessor é feita por um método de serviço:
+
+### 2.3. Exemplo Visual (Admin)
+
+- ![Exemplo de cadastro de Assessor no admin](exemplo_admin_assessor.png)
+- Campo "Usuário" é obrigatório
+- Campo "Ativo" define se o vínculo está válido
+
+### 2.4. Lógica de Backend
+
+- O método `AuthenticationService.is_assessor(user)` verifica se existe um Assessor ativo vinculado ao usuário logado:
 
 ```python
-# apps/autenticacao/services/auth_service.py
 class AuthenticationService:
     @staticmethod
     def is_assessor(user):
@@ -30,14 +75,12 @@ class AuthenticationService:
 ```
 - O sistema verifica se existe um Assessor ativo vinculado ao usuário logado.
 
-### 2.4. Uso na View da Home
-Na view da home (`apps/main/views.py`):
+- O contexto `is_assessor` é passado para o template:
 
 ```python
 def home_sistema(request):
     user = request.user
     is_assessor = AuthenticationService.is_assessor(user)
-    ...
     context['is_assessor'] = is_assessor
     ...
 ```
@@ -58,7 +101,15 @@ No template da home (`templates/main/home_sistema.html`), a exibição dos cards
 - O grupo "Assessores" pode ser usado para permissões adicionais, mas o vínculo real é feito pelo campo `usuario` no modelo Assessor.
 - O sistema pode usar decorators ou funções utilitárias para restringir views e ações conforme o perfil.
 
----
+- **O usuário não vê o card de Gabinetes:**
+  - Verifique se o campo "Usuário" está preenchido corretamente no cadastro do Assessor.
+  - Confirme se o campo "Ativo" está marcado.
+  - O usuário está no grupo "Assessores"? (opcional, mas não substitui o vínculo no modelo)
+- **O usuário vê módulos indevidos:**
+  - Pode haver mais de um vínculo (ex: está em outro grupo ou tem outro perfil ativo).
+  - Verifique se o usuário não está vinculado a outro perfil (ex: Recepcionista).
+- **Erro de permissão:**
+  - Revise as permissões do grupo e o vínculo no modelo Assessor.
 
 ## 3. Passo a Passo para Vincular um Assessor
 1. Cadastre o usuário normalmente no Django Admin.
@@ -73,10 +124,11 @@ No template da home (`templates/main/home_sistema.html`), a exibição dos cards
 - Se um Assessor trocar de usuário, atualize o vínculo no admin.
 - Para desativar um Assessor, basta marcar o campo `ativo` como False.
 - Não basta adicionar o usuário ao grupo "Assessores"; o vínculo no modelo é obrigatório.
+- Se um Assessor trocar de usuário, atualize o vínculo no admin.
 
 ---
 
-## 5. Resumo da Lógica
+## 3. Resumo da Lógica
 - **Backend:** Verifica vínculo pelo campo `usuario` do modelo Assessor.
 - **Frontend:** Exibe módulos conforme o contexto `is_assessor`.
 - **Admin:** Cadastro e edição do vínculo são feitos pelo admin do Django.
@@ -113,4 +165,5 @@ class AuthenticationService:
 
 ## 7. Observações
 - O vínculo correto garante que o sistema funcione conforme esperado para cada perfil.
-- Sempre revise o vínculo no admin em caso de dúvidas sobre permissões ou exibição de módulos. 
+- Sempre revise o vínculo no admin em caso de dúvidas sobre permissões ou exibição de módulos.
+- Consulte esta documentação para onboarding de novos membros da equipe ou para troubleshooting de acesso de Assessores. 
