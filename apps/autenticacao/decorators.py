@@ -68,3 +68,11 @@ def agente_guarita_or_admin_required(function):
         messages.error(request, 'Você não tem permissão para acessar esta página.')
         return redirect('main:home_sistema')
     return wrapper
+
+def block_recepcionista(function):
+    def wrapper(request, *args, **kwargs):
+        if AuthenticationService.is_recepcionista(request.user):
+            messages.error(request, 'Recepcionistas não têm acesso a esta área do sistema.')
+            return redirect('main:home_sistema')
+        return function(request, *args, **kwargs)
+    return wrapper

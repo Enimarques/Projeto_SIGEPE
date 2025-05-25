@@ -132,3 +132,10 @@ class AuthenticationService:
             permissions['can_manage_visitors'] = True
             
         return permissions 
+
+    @staticmethod
+    def is_recepcionista(user):
+        """
+        Verifica se o usuário pertence ao grupo Recepcionista.
+        """
+        return user.groups.filter(name='Recepcionista').exists() 

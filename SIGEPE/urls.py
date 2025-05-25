@@ -17,7 +17,7 @@ urlpatterns = [
     path('auth/', include('apps.autenticacao.urls', namespace='autenticacao')),
     
     # Apps principais
-    path('recepcao/', include('apps.recepcao.urls', namespace='recepcao')),
+    path('recepcao/', include('apps.recepcao.urls')),
     path('veiculos/', include('apps.veiculos.urls', namespace='veiculos')),
     
     # Home do sistema

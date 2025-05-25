@@ -44,4 +44,6 @@ urlpatterns = [
     path('gabinetes/', views.home_gabinetes, name='home_gabinetes'),
     path('gabinetes/<int:gabinete_id>/', views.detalhes_gabinete, name='detalhes_gabinete'),
     path('gabinetes/<int:gabinete_id>/editar/', views.editar_gabinete, name='editar_gabinete'),
+    path('departamentos/', views.home_departamentos, name='home_departamentos'),
+    path('departamentos/<int:departamento_id>/', views.detalhes_departamento, name='detalhes_departamento'),
 ]

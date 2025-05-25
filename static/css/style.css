@@ -165,3 +165,84 @@ canvas {
     max-width: 100%;
     height: auto !important;
 }
+
+.stat-card {
+    color: white;
+    border-radius: 15px;
+    padding: 25px;
+    margin-bottom: 25px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    transition: all 0.3s ease;
+    border: none;
+    height: 180px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+}
+.stat-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+}
+.stat-card h3 {
+    font-size: 2.5rem;
+    font-weight: 600;
+    margin-bottom: 10px;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+.stat-card p {
+    font-size: 1.1rem;
+    margin: 0;
+    opacity: 0.9;
+}
+.stat-icon {
+    font-size: 2.5rem;
+    margin-bottom: 15px;
+    opacity: 0.8;
+}
+.stat-card-visitas-hoje {
+    background: linear-gradient(135deg, #6dd5ed, #2193b0) !important;
+}
+.stat-card-visitas-andamento {
+    background: linear-gradient(135deg, #5cb85c, #28a745) !important;
+}
+.stat-card-total-visitas {
+    background: linear-gradient(135deg, #f1c40f, #f39c12) !important;
+}
+.stat-card-visitas-mes {
+    background: linear-gradient(135deg, #e67e22, #e74c3c) !important;
+}
+
+.stat-card, .stat-card * {
+    color: #fff !important;
+}
+
+.btn-voltar {
+    background: #34495e;
+    color: #fff;
+    border: 2px solid #34495e;
+    margin-bottom: 2.2rem;
+    min-height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.btn-voltar:focus, .btn-voltar:active {
+    background: #212529;
+    color: #fff;
+    box-shadow: 0 0 0 3px #b6d4fe;
+    border-color: #2193b0;
+}
+.btn-voltar:hover {
+    background: #2193b0;
+    color: #fff;
+    border-color: #2193b0;
+}
+@media (max-width: 767.98px) {
+    .btn-voltar {
+        width: 100%;
+        justify-content: flex-start;
+        margin-bottom: 2rem;
+    }
+}

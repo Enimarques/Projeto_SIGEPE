@@ -1166,3 +1166,21 @@ def gerar_excel(visitas):
         buffer,
         content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
     )
+
+@login_required(login_url='autenticacao:login_sistema')
+def home_departamentos(request):
+    departamentos = Setor.objects.filter(tipo='departamento')
+    context = {
+        'departamentos': departamentos,
+    }
+    return render(request, 'recepcao/home_departamentos.html', context)
+
+@login_required(login_url='autenticacao:login_sistema')
+def detalhes_departamento(request, departamento_id):
+    departamento = get_object_or_404(Setor, id=departamento_id, tipo='departamento')
+    visitas = Visita.objects.filter(setor=departamento).order_by('-data_entrada')
+    context = {
+        'departamento': departamento,
+        'visitas': visitas,
+    }
+    return render(request, 'recepcao/detalhes_departamento.html', context)

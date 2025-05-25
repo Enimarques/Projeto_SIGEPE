@@ -1,10 +1,13 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Detalhes do Gabinete - {{ gabinete.nome_vereador }}{% endblock %}
+{% block title %}Detalhes do Departamento - {{ departamento.nome_local }}{% endblock %}
 
 {% block extra_css %}
 <style>
+    .container-fluid {
+        /* Removido max-width e margin para voltar ao padrão anterior */
+    }
     .card {
         border: none;
         border-radius: 15px;
@@ -14,6 +17,7 @@
         width: 85%;
         margin-left: auto;
         margin-right: auto;
+        /* Removido max-width */
     }
     .card:hover {
         box-shadow: 0 8px 20px rgba(0,0,0,0.2);
@@ -35,22 +39,11 @@
     .status-aberto {
         background-color: #28a745;
     }
-    .status-fechado {
-        background-color: #dc3545;
-    }
     .info-icon {
         margin-right: 10px;
         color: #2193b0;
         width: 16px;
         text-align: center;
-    }
-    .table th {
-        border-top: none;
-        color: rgb(54, 82, 110);
-        font-weight: 600;
-    }
-    .table td {
-        vertical-align: middle;
     }
     .gabinete-icon {
         height: 270px;
@@ -65,47 +58,6 @@
         font-size: 7.2rem;
         color: #2193b0;
         opacity: 0.8;
-    }
-    .badge {
-        padding: 8px 12px;
-        font-weight: 500;
-        border-radius: 8px;
-    }
-    .page-header {
-        margin-bottom: 30px;
-        padding-bottom: 15px;
-        border-bottom: 1px solid rgba(0,0,0,0.1);
-    }
-    .page-title {
-        color: #2c3e50;
-        font-weight: 600;
-        margin: 0;
-    }
-    .btn-back {
-        background-color: #f8f9fa;
-        color: #2c3e50;
-        border: 1px solid rgba(0,0,0,0.1);
-        border-radius: 8px;
-        padding: 8px 16px;
-        transition: all 0.3s ease;
-    }
-    .btn-back:hover {
-        background-color: #e9ecef;
-        color: #2c3e50;
-        transform: translateX(-3px);
-    }
-    .visits-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 20px;
-    }
-    .visits-stats {
-        display: flex;
-        gap: 15px;
-    }
-    .visits-stats .badge {
-        font-size: 0.9rem;
     }
     .assessor-info {
         margin-top: 20px;
@@ -175,199 +127,14 @@
     .stat-card-visitas-mes {
         background: linear-gradient(135deg, #e74c3c, #e67e22);
     }
-    .gabinete-container {
-        display: flex;
-        justify-content: center;
-    }
-
-    /* Estilos para o modal */
-    .modal-content {
-        border-radius: 15px;
-        border: none;
-        box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-    }
-
-    .modal-header {
-        background: linear-gradient(135deg, #2193b0, #6dd5ed);
-        color: white;
-        border-radius: 15px 15px 0 0;
-        border: none;
-    }
-
-    .modal-body {
-        padding: 25px;
-    }
-
-    .visitante-info {
-        background-color: #f8f9fa;
-        border-radius: 10px;
-        padding: 20px;
-        margin-top: 20px;
-    }
-
-    .info-item {
-        display: flex;
-        align-items: center;
-        margin-bottom: 15px;
-        padding-bottom: 15px;
-        border-bottom: 1px solid rgba(0,0,0,0.1);
-    }
-
-    .info-item:last-child {
-        margin-bottom: 0;
-        padding-bottom: 0;
-        border-bottom: none;
-    }
-
-    .info-icon {
-        color: #2193b0;
-        width: 20px;
-        text-align: center;
-        margin-right: 15px;
-    }
-
-    .visitante-info strong {
-        color: #2c3e50;
-        margin-right: 10px;
-        min-width: 120px;
-    }
-
-    .visitante-info span {
-        color: #6c757d;
-    }
-
-    .visitante-foto {
-        width: 120px;
-        height: 120px;
-        border-radius: 50%;
-        object-fit: cover;
-        margin-bottom: 20px;
-        border: 3px solid #2193b0;
-        box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-    }
-
-    .default-avatar {
-        width: 120px;
-        height: 120px;
-        border-radius: 50%;
-        background: linear-gradient(135deg, #2193b0, #6dd5ed);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: white;
-        font-size: 2.5rem;
-        font-weight: bold;
-        text-transform: uppercase;
-        margin: 0 auto;
-        border: 3px solid #2193b0;
-        box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-    }
-
-    .visitante-nome {
-        color: #2193b0;
-        cursor: pointer;
-        transition: color 0.3s ease;
-        text-decoration: none;
-    }
-
-    .visitante-nome:hover {
-        color: #0d6efd;
-        text-decoration: underline;
-    }
-
-    /* Estilos para os filtros e paginação */
-    .filtros-container {
-        background: #f8f9fa;
-        padding: 15px;
-        border-radius: 8px;
-        margin-bottom: 20px;
-    }
-
-    .filtros-form {
-        display: flex;
-        gap: 15px;
-        flex-wrap: wrap;
-        align-items: flex-end;
-    }
-
-    .filtro-item {
-        flex: 1;
-        min-width: 200px;
-    }
-
-    .btn-filtrar, .btn-exportar {
-        padding: 8px 15px;
-        border-radius: 4px;
-        border: none;
-        cursor: pointer;
-    }
-
-    .btn-filtrar {
-        background: #007bff;
-        color: white;
-    }
-
-    .btn-exportar {
-        background: #28a745;
-        color: white;
-    }
-
-    .status-indicator {
-        display: inline-block;
-        width: 10px;
-        height: 10px;
-        border-radius: 50%;
-        margin-right: 5px;
-        background: #ccc;
-    }
-
-    .status-indicator.active {
-        background: #28a745;
-        animation: pulse 2s infinite;
-    }
-
-    @keyframes pulse {
-        0% { transform: scale(1); }
-        50% { transform: scale(1.2); }
-        100% { transform: scale(1); }
-    }
-
-    .visita-andamento {
-        background-color: rgba(40, 167, 69, 0.1);
-    }
-
-    .paginacao {
-        margin-top: 20px;
-        text-align: center;
-    }
-
-    .paginacao a {
-        padding: 8px 16px;
-        margin: 0 4px;
-        border: 1px solid #ddd;
-        border-radius: 4px;
-        text-decoration: none;
-        color: #007bff;
-    }
-
-    .paginacao a:hover {
-        background: #f1f1f1;
-    }
-
-    .pagina-atual {
-        padding: 8px 16px;
-        margin: 0 4px;
-        background: #007bff;
-        color: white;
-        border-radius: 4px;
-    }
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="container-fluid">
     <div class="page-header d-flex justify-content-between align-items-center">
-        <h1 class="page-title">Detalhes do Gabinete</h1>
+        <h1 class="page-title">Detalhes do Departamento</h1>
+        <!-- Botão Voltar universal -->
         <div class="d-flex justify-content-end">
             {% include 'includes/botao_voltar.html' %}
         </div>
@@ -408,48 +175,41 @@
     </div>
 
     <div class="row">
-        <!-- Informações do Gabinete -->
+        <!-- Informações do Departamento -->
         <div class="col-md-4 gabinete-container">
             <div class="card">
                 <div class="card-header">
                     <h5 class="card-title mb-0">
-                        <span class="status-indicator {% if gabinete.esta_aberto %}status-aberto{% else %}status-fechado{% endif %}"></span>
-                        {{ gabinete.nome_vereador }}
+                        <span class="status-indicator status-aberto"></span>
+                        {{ departamento.nome_local }}
                     </h5>
                 </div>
                 <div class="card-body">
                     <div class="gabinete-icon">
                         <i class="fas fa-building"></i>
                     </div>
-                    {% if user.is_authenticated and user.assessor and user.assessor.departamento_id == gabinete.id %}
-                    <div class="mb-3 text-end">
-                        <a href="{% url 'recepcao:editar_gabinete' gabinete.id %}" class="btn btn-outline-primary">
-                            <i class="fas fa-edit me-1"></i> Editar
-                        </a>
-                    </div>
-                    {% endif %}
                     <p class="card-text">
                         <i class="fas fa-envelope info-icon"></i>
-                        <strong>Email:</strong> {{ gabinete.email_vereador }}<br>
+                        <strong>Email:</strong> {{ departamento.email }}<br>
                         <i class="fas fa-map-marker-alt info-icon"></i>
-                        <strong>Localização:</strong> {{ gabinete.get_localizacao_display }}<br>
+                        <strong>Localização:</strong> {{ departamento.get_localizacao_display }}<br>
                         <i class="fas fa-user info-icon"></i>
-                        <strong>Responsável:</strong> {{ gabinete.nome_responsavel }}<br>
+                        <strong>Responsável:</strong> {{ departamento.nome_responsavel }}<br>
                         <i class="fas fa-clock info-icon"></i>
-                        <strong>Horário:</strong> {{ gabinete.horario_abertura|time:"H:i" }} - {{ gabinete.horario_fechamento|time:"H:i" }}
+                        <strong>Horário:</strong> {{ departamento.horario_abertura|time:"H:i" }} - {{ departamento.horario_fechamento|time:"H:i" }}
                     </p>
                     <div class="assessor-info">
                         <h5 class="assessor-title">Assessor Responsável</h5>
                         <div class="assessor-card">
                             <p class="card-text">
                                 <i class="fas fa-user-tie info-icon"></i>
-                                <strong>Nome:</strong> {{ gabinete.nome_responsavel }}<br>
+                                <strong>Nome:</strong> {{ departamento.nome_responsavel }}<br>
                                 <i class="fas fa-envelope info-icon"></i>
-                                <strong>Email:</strong> {{ gabinete.email }}<br>
+                                <strong>Email:</strong> {{ departamento.email }}<br>
                                 <i class="fas fa-phone info-icon"></i>
-                                <strong>Telefone:</strong> {{ gabinete.telefone }}<br>
+                                <strong>Telefone:</strong> {{ departamento.telefone }}<br>
                                 <i class="fas fa-clock info-icon"></i>
-                                <strong>Horário:</strong> {{ gabinete.horario_entrada|time:"H:i" }} - {{ gabinete.horario_saida|time:"H:i" }}
+                                <strong>Horário:</strong> {{ departamento.horario_abertura|time:"H:i" }} - {{ departamento.horario_fechamento|time:"H:i" }}
                             </p>
                         </div>
                     </div>
@@ -648,39 +408,34 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // Preencher o modal com os dados do visitante
             const nome = this.dataset.visitanteNome;
+            const telefone = this.dataset.visitanteTelefone;
+            const email = this.dataset.visitanteEmail;
+            const nascimento = this.dataset.visitanteNascimento;
+            const objetivo = this.dataset.visitanteObjetivo;
+            const foto = this.dataset.visitanteFoto;
+
             document.getElementById('modalVisitanteNome').textContent = nome;
-            document.getElementById('modalVisitanteTelefone').textContent = this.dataset.visitanteTelefone;
-            document.getElementById('modalVisitanteEmail').textContent = this.dataset.visitanteEmail;
-            document.getElementById('modalVisitanteNascimento').textContent = this.dataset.visitanteNascimento;
-            document.getElementById('modalVisitanteObjetivo').textContent = this.dataset.visitanteObjetivo;
-            
-            // Atualizar a foto/avatar do visitante
-            const fotoElement = document.getElementById('modalVisitanteFoto');
-            const avatarElement = document.getElementById('modalVisitanteAvatar');
-            
-            if (this.dataset.visitanteFoto) {
-                fotoElement.src = this.dataset.visitanteFoto;
-                fotoElement.alt = nome;
-                fotoElement.style.display = 'block';
-                avatarElement.style.display = 'none';
+            document.getElementById('modalVisitanteTelefone').textContent = telefone;
+            document.getElementById('modalVisitanteEmail').textContent = email;
+            document.getElementById('modalVisitanteNascimento').textContent = nascimento;
+            document.getElementById('modalVisitanteObjetivo').textContent = objetivo;
+
+            if (foto) {
+                document.getElementById('modalVisitanteFoto').src = foto;
+                document.getElementById('modalVisitanteFoto').style.display = 'block';
+                document.getElementById('modalVisitanteAvatar').style.display = 'none';
             } else {
-                // Usar as iniciais do nome para o avatar padrão
-                const iniciais = nome.split(' ')
-                    .map(n => n[0])
-                    .join('')
-                    .toUpperCase();
-                avatarElement.textContent = iniciais;
-                avatarElement.style.display = 'flex';
-                fotoElement.style.display = 'none';
+                document.getElementById('modalVisitanteFoto').style.display = 'none';
+                document.getElementById('modalVisitanteAvatar').style.display = 'block';
+                document.getElementById('modalVisitanteAvatar').textContent = nome ? nome.charAt(0).toUpperCase() : '';
             }
         });
     });
 });
 
-function exportarRelatorio(formato) {
-    const url = new URL(window.location.href);
-    url.searchParams.set('formato', formato);
-    window.location.href = url.toString();
+function exportarRelatorio(tipo) {
+    // Implemente a lógica de exportação conforme necessário
+    alert('Exportação para ' + tipo.toUpperCase() + ' não implementada neste exemplo.');
 }
 </script>
 {% endblock %} 

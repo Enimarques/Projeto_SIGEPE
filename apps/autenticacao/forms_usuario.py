@@ -8,6 +8,7 @@ class UsuarioForm(UserCreationForm):
         ('admin', 'Administrador'),
         ('assessor', 'Assessor'),
         ('agente_guarita', 'Agente Guarita'),
+        ('recepcionista', 'Recepcionista'),
     ]
     
     tipo_usuario = forms.ChoiceField(
@@ -119,5 +120,22 @@ class UsuarioForm(UserCreationForm):
                 grupo_assessor = Group.objects.get(name='Assessores')
                 if user in grupo_assessor.user_set.all():
                     grupo_assessor.user_set.remove(user)
+            
+            elif self.cleaned_data['tipo_usuario'] == 'recepcionista':
+                grupo_recepcionista = Group.objects.get(name='Recepcionista')
+                grupo_recepcionista.user_set.add(user)
+                user.is_staff = False
+                user.is_superuser = False
+                user.save()
+                # Remove de outros grupos se necessário
+                grupo_admin = Group.objects.get(name='Administradores')
+                if user in grupo_admin.user_set.all():
+                    grupo_admin.user_set.remove(user)
+                grupo_assessor = Group.objects.get(name='Assessores')
+                if user in grupo_assessor.user_set.all():
+                    grupo_assessor.user_set.remove(user)
+                grupo_guarita = Group.objects.get(name='Agente_Guarita')
+                if user in grupo_guarita.user_set.all():
+                    grupo_guarita.user_set.remove(user)
         
         return user

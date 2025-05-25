@@ -3,6 +3,146 @@
 
 {% block title %}Recepção - URUTAU{% endblock %}
 
+{% block extra_css %}
+<style>
+    .card-stat {
+        min-height: 140px;
+        border-radius: 16px;
+    }
+    .acoes-rapidas-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 32px;
+        justify-content: center;
+    }
+    .card-acao {
+        width: 340px;
+        height: 340px;
+        min-width: 200px;
+        max-width: 100%;
+        min-height: 200px;
+        max-height: 100%;
+        border-radius: 16px;
+        transition: box-shadow 0.2s;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        margin-bottom: 0;
+        overflow: hidden;
+    }
+    .card-acao:hover {
+        box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+    }
+    .card-acao .fa-3x {
+        font-size: 2.2rem;
+    }
+    @media (max-width: 991.98px) {
+        .acoes-rapidas-row {
+            gap: 20px;
+        }
+        .card-acao {
+            width: 220px;
+            height: 220px;
+            min-width: 140px;
+            min-height: 140px;
+        }
+    }
+    @media (max-width: 767.98px) {
+        .acoes-rapidas-row {
+            flex-direction: column;
+            align-items: center;
+            gap: 16px;
+        }
+        .card-acao {
+            width: 100%;
+            max-width: 350px;
+            height: auto;
+            min-height: 120px;
+            padding: 16px 10px 10px 10px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        .card-acao .fa-3x {
+            font-size: 1.5rem;
+        }
+    }
+    .stat-card {
+        color: white;
+        border-radius: 15px;
+        padding: 25px;
+        margin-bottom: 25px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        transition: all 0.3s ease;
+        border: none;
+        height: 180px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+    }
+    .stat-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+    }
+    .stat-card h3 {
+        font-size: 2.5rem;
+        font-weight: 600;
+        margin-bottom: 10px;
+        text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .stat-card p {
+        font-size: 1.1rem;
+        margin: 0;
+        opacity: 0.9;
+    }
+    .stat-icon {
+        font-size: 2rem;
+        margin-bottom: 15px;
+        opacity: 0.8;
+    }
+    .stat-card-visitas-hoje {
+        background: linear-gradient(135deg, #6dd5ed, #2193b0);
+    }
+    .stat-card-visitas-andamento {
+        background: linear-gradient(135deg, #5cb85c, #28a745);
+    }
+    .stat-card-total-visitas {
+        background: linear-gradient(135deg, #f1c40f, #f39c12);
+    }
+    .stat-card-visitas-mes {
+        background: linear-gradient(135deg, #e67e22, #e74c3c);
+    }
+    @media (max-width: 991.98px) {
+        .stat-card {
+            height: 140px;
+            padding: 16px 8px;
+        }
+        .stat-card h3 {
+            font-size: 1.7rem;
+        }
+        .stat-icon {
+            font-size: 1.3rem;
+        }
+    }
+    @media (max-width: 575.98px) {
+        .stat-card {
+            height: auto;
+            padding: 10px 4px;
+        }
+        .stat-card h3 {
+            font-size: 1.2rem;
+        }
+        .stat-icon {
+            font-size: 1rem;
+        }
+    }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="container-fluid py-4">
     <div class="row mb-4">
@@ -12,160 +152,117 @@
         </div>
     </div>
 
-    <div class="row">
-        <div class="col-md-3 col-sm-6">
-            <div class="card text-white bg-primary mb-3 h-100 shadow-sm">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-start">
-                        <div>
-                            <h6 class="card-subtitle mb-2">Visitas Registradas Hoje</h6>
-                            <h2 class="card-title mb-0">{{ visitas_hoje }}</h2>
-                        </div>
-                        <i class="fas fa-calendar-day fa-2x opacity-50"></i>
-                    </div>
-                </div>
+    <div class="d-flex justify-content-end">
+        {% include 'includes/botao_voltar.html' %}
+    </div>
+
+    <!-- Cards de Estatísticas -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="stat-card stat-card-visitas-hoje">
+                <i class="fas fa-calendar-day stat-icon"></i>
+                <h3>{{ visitas_hoje }}</h3>
+                <p>Visitas Registradas Hoje</p>
             </div>
         </div>
-        <div class="col-md-3 col-sm-6">
-            <div class="card text-white bg-success mb-3 h-100 shadow-sm">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-start">
-                        <div>
-                            <h6 class="card-subtitle mb-2">Visitas em Andamento</h6>
-                            <h2 class="card-title mb-0">{{ visitas_em_andamento }}</h2>
-                        </div>
-                        <i class="fas fa-walking fa-2x opacity-50"></i>
-                    </div>
-                </div>
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="stat-card stat-card-visitas-andamento">
+                <i class="fas fa-walking stat-icon"></i>
+                <h3>{{ visitas_em_andamento }}</h3>
+                <p>Visitas em Andamento</p>
             </div>
         </div>
-        <div class="col-md-3 col-sm-6">
-            <div class="card text-white bg-warning mb-3 h-100 shadow-sm">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-start">
-                        <div>
-                            <h6 class="card-subtitle mb-2">Visitas Finalizadas Hoje</h6>
-                            <h2 class="card-title mb-0">{{ visitas_finalizadas_hoje }}</h2>
-                        </div>
-                        <i class="fas fa-check-circle fa-2x opacity-50"></i>
-                    </div>
-                </div>
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="stat-card stat-card-total-visitas">
+                <i class="fas fa-check-circle stat-icon"></i>
+                <h3>{{ visitas_finalizadas_hoje }}</h3>
+                <p>Visitas Finalizadas Hoje</p>
             </div>
         </div>
-        <div class="col-md-3 col-sm-6">
-            <div class="card text-white bg-info mb-3 h-100 shadow-sm">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-start">
-                        <div>
-                            <h6 class="card-subtitle mb-2">Total de Visitantes Cadastrados</h6>
-                            <h2 class="card-title mb-0">{{ total_visitantes }}</h2>
-                        </div>
-                        <i class="fas fa-users fa-2x opacity-50"></i>
-                    </div>
-                </div>
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="stat-card stat-card-visitas-mes">
+                <i class="fas fa-users stat-icon"></i>
+                <h3>{{ total_visitantes }}</h3>
+                <p>Total de Visitantes Cadastrados</p>
             </div>
         </div>
     </div>
 
-    <div class="row mt-4">
-        <div class="col-md-12">
-            <div class="card shadow-sm">
-                <div class="card-header bg-white">
-                    <h5 class="card-title mb-0">Ações Rápidas</h5>
+    <!-- Divisor visual acima das ações rápidas -->
+    <hr class="my-4" />
+
+    <!-- Ações Rápidas -->
+    <div class="acoes-rapidas-row mt-2 mb-2">
+        <div class="card card-acao">
+            <div class="card-body text-center">
+                <div class="mb-3">
+                    <i class="fas fa-user-plus fa-3x text-primary"></i>
                 </div>
-                <div class="card-body">
-                    <div class="row g-4">
-                        <div class="col-md-6 col-lg">
-                            <div class="card h-100">
-                                <div class="card-body text-center">
-                                    <div class="mb-3">
-                                        <i class="fas fa-user-plus fa-3x text-primary"></i>
-                                    </div>
-                                    <h5 class="card-title">Cadastrar Visitante</h5>
-                                    <p class="card-text">Adicione um novo visitante</p>
-                                    <a href="{% url 'recepcao:cadastro_visitantes' %}" class="btn btn-primary">
-                                        <i class="fas fa-plus-circle me-2"></i>Cadastrar
-                                    </a>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="col-md-6 col-lg">
-                            <div class="card h-100">
-                                <div class="card-body text-center">
-                                    <div class="mb-3">
-                                        <i class="fas fa-clipboard-check fa-3x text-success"></i>
-                                    </div>
-                                    <h5 class="card-title">Nova Visita</h5>
-                                    <p class="card-text">Registre uma nova visita</p>
-                                    <a href="{% url 'recepcao:registro_visitas' %}" class="btn btn-success">
-                                        <i class="fas fa-plus-circle me-2"></i>Registrar
-                                    </a>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="col-md-6 col-lg">
-                            <div class="card h-100">
-                                <div class="card-body text-center">
-                                    <div class="mb-3">
-                                        <i class="fas fa-clipboard-list fa-3x text-info"></i>
-                                    </div>
-                                    <h5 class="card-title">Status das Visitas</h5>
-                                    <p class="card-text">Acompanhe as visitas em andamento</p>
-                                    <a href="{% url 'recepcao:status_visita' %}" class="btn btn-info text-white">
-                                        <i class="fas fa-eye me-2"></i>Ver Status
-                                    </a>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="col-md-6 col-lg">
-                            <div class="card h-100">
-                                <div class="card-body text-center">
-                                    <div class="mb-3">
-                                        <i class="fas fa-history fa-3x text-secondary"></i>
-                                    </div>
-                                    <h5 class="card-title">Histórico</h5>
-                                    <p class="card-text">Consulte o histórico de visitas</p>
-                                    <a href="{% url 'recepcao:historico_visitas' %}" class="btn btn-secondary">
-                                        <i class="fas fa-search me-2"></i>Consultar
-                                    </a>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="col-md-6 col-lg">
-                            <div class="card h-100">
-                                <div class="card-body text-center">
-                                    <div class="mb-3">
-                                        <i class="fas fa-users fa-3x text-warning"></i>
-                                    </div>
-                                    <h5 class="card-title">Visitantes Cadastrados</h5>
-                                    <p class="card-text">Visualize todos os visitantes</p>
-                                    <a href="{% url 'recepcao:lista_visitantes' %}" class="btn btn-warning text-dark">
-                                        <i class="fas fa-list me-2"></i>Ver Lista
-                                    </a>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="col-md-6 col-lg">
-                            <div class="card h-100">
-                                <div class="card-body text-center">
-                                    <div class="mb-3">
-                                        <i class="fas fa-desktop fa-3x text-info"></i>
-                                    </div>
-                                    <h5 class="card-title">Modo Totem</h5>
-                                    <p class="card-text">Acesse o modo totem</p>
-                                    <a href="{% url 'recepcao:totem_home' %}" class="btn btn-info btn-lg mb-2">
-                                        <i class="fas fa-desktop me-2"></i>Modo Totem
-                                    </a>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                <h5 class="card-title">Cadastrar Visitante</h5>
+                <p class="card-text">Adicione um novo visitante</p>
+                <a href="{% url 'recepcao:cadastro_visitantes' %}" class="btn btn-primary">
+                    <i class="fas fa-plus-circle me-2"></i>Cadastrar
+                </a>
+            </div>
+        </div>
+        <div class="card card-acao">
+            <div class="card-body text-center">
+                <div class="mb-3">
+                    <i class="fas fa-clipboard-check fa-3x text-success"></i>
                 </div>
+                <h5 class="card-title">Nova Visita</h5>
+                <p class="card-text">Registre uma nova visita</p>
+                <a href="{% url 'recepcao:registro_visitas' %}" class="btn btn-success">
+                    <i class="fas fa-plus-circle me-2"></i>Registrar
+                </a>
+            </div>
+        </div>
+        <div class="card card-acao">
+            <div class="card-body text-center">
+                <div class="mb-3">
+                    <i class="fas fa-clipboard-list fa-3x text-info"></i>
+                </div>
+                <h5 class="card-title">Status das Visitas</h5>
+                <p class="card-text">Acompanhe as visitas em andamento</p>
+                <a href="{% url 'recepcao:status_visita' %}" class="btn btn-info text-white">
+                    <i class="fas fa-eye me-2"></i>Ver Status
+                </a>
+            </div>
+        </div>
+        <div class="card card-acao">
+            <div class="card-body text-center">
+                <div class="mb-3">
+                    <i class="fas fa-history fa-3x text-secondary"></i>
+                </div>
+                <h5 class="card-title">Histórico</h5>
+                <p class="card-text">Consulte o histórico de visitas</p>
+                <a href="{% url 'recepcao:historico_visitas' %}" class="btn btn-secondary">
+                    <i class="fas fa-search me-2"></i>Consultar
+                </a>
+            </div>
+        </div>
+        <div class="card card-acao">
+            <div class="card-body text-center">
+                <div class="mb-3">
+                    <i class="fas fa-users fa-3x text-warning"></i>
+                </div>
+                <h5 class="card-title">Visitantes Cadastrados</h5>
+                <p class="card-text">Visualize todos os visitantes</p>
+                <a href="{% url 'recepcao:lista_visitantes' %}" class="btn btn-warning text-dark">
+                    <i class="fas fa-list me-2"></i>Ver Lista
+                </a>
+            </div>
+        </div>
+        <div class="card card-acao">
+            <div class="card-body text-center">
+                <div class="mb-3">
+                    <i class="fas fa-desktop fa-3x text-info"></i>
+                </div>
+                <h5 class="card-title">Modo Totem</h5>
+                <p class="card-text">Acesse o modo totem</p>
+                <a href="{% url 'recepcao:totem_home' %}" class="btn btn-info btn-lg mb-2">
+                    <i class="fas fa-desktop me-2"></i>Modo Totem
+                </a>
             </div>
         </div>
     </div>

@@ -1,18 +1,46 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Gabinetes{% endblock %}
+{% block title %}Departamentos{% endblock %}
 
 {% block extra_css %}
 <style>
     .card {
         transition: all 0.3s ease;
         border: none;
-        border-radius: 15px;
+        border-radius: 20px;
         overflow: hidden;
         background: #fff;
         box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        margin-bottom: 25px;
+        margin-bottom: 30px;
+        width: 100%;
+        max-width: 450px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+    @media (max-width: 991.98px) {
+        .card {
+            max-width: 100%;
+            margin-bottom: 20px;
+        }
+        .gabinete-icon {
+            height: 140px;
+        }
+    }
+    @media (max-width: 575.98px) {
+        .card {
+            max-width: 100%;
+            padding: 0 5px;
+        }
+        .gabinete-icon {
+            height: 90px;
+        }
+        .card-title {
+            font-size: 1.1rem;
+        }
+        .stat-card h3 {
+            font-size: 1.5rem;
+        }
     }
     .card:hover {
         transform: translateY(-5px);
@@ -145,82 +173,75 @@
 
 {% block content %}
 <div class="container-fluid">
+    <div class="page-header">
+        <h1 class="page-title">Departamentos</h1>
+    </div>
+    
+    <!-- Botão Voltar acima dos cards, alinhado à direita -->
     <div class="d-flex justify-content-end">
         {% include 'includes/botao_voltar.html' %}
     </div>
-    <div class="page-header">
-        <h1 class="page-title">Gabinetes</h1>
-    </div>
-    
+
     <!-- Cards de Estatísticas -->
-    <div class="stats-container">
-        <div class="row mb-4">
-            <div class="col-xl-3 col-md-6 mb-4">
-                <div class="stat-card stat-card-visitas-hoje">
-                    <i class="fas fa-calendar-day stat-icon"></i>
-                    <h3>{{ total_visitas }}</h3>
-                    <p>Total de Visitas</p>
-                </div>
+    <div class="row mb-4 mt-2">
+        <div class="col-md-4">
+            <div class="stat-card stat-card-visitas-hoje">
+                <i class="fas fa-calendar-day stat-icon"></i>
+                <h3>{{ total_visitas }}</h3>
+                <p>Total de Visitas</p>
             </div>
-            <div class="col-xl-3 col-md-6 mb-4">
-                <div class="stat-card stat-card-visitas-andamento">
-                    <i class="fas fa-calendar-day stat-icon"></i>
-                    <h3>{{ visitas_hoje }}</h3>
-                    <p>Visitas Hoje</p>
-                </div>
+        </div>
+        <div class="col-md-4">
+            <div class="stat-card stat-card-visitas-andamento">
+                <i class="fas fa-calendar-day stat-icon"></i>
+                <h3>{{ visitas_hoje }}</h3>
+                <p>Visitas Hoje</p>
             </div>
-            <div class="col-xl-3 col-md-6 mb-4">
-                <div class="stat-card stat-card-total-visitas">
-                    <i class="fas fa-clock stat-icon"></i>
-                    <h3>{{ visitas_em_andamento }}</h3>
-                    <p>Visitas em Andamento</p>
-                </div>
-            </div>
-            <div class="col-xl-3 col-md-6 mb-4">
-                <div class="stat-card stat-card-visitas-mes">
-                    <i class="fas fa-calendar-alt stat-icon"></i>
-                    <h3>{{ visitas_mes }}</h3>
-                    <p>Visitas no Mês</p>
-                </div>
+        </div>
+        <div class="col-md-4">
+            <div class="stat-card stat-card-total-visitas">
+                <i class="fas fa-clock stat-icon"></i>
+                <h3>{{ visitas_em_andamento }}</h3>
+                <p>Visitas em Andamento</p>
             </div>
         </div>
     </div>
 
-    <!-- Cards dos Gabinetes -->
+    <!-- Cards dos Departamentos -->
     <div class="row">
-        {% for gabinete in gabinetes %}
+        {% for departamento in departamentos %}
         <div class="col-xl-4 col-md-6 mb-4">
-            <a href="{% url 'recepcao:detalhes_gabinete' gabinete.id %}" class="card-link">
+            <a href="{% url 'recepcao:detalhes_departamento' departamento.id %}" class="card-link">
                 <div class="card">
                     <div class="gabinete-icon">
                         <i class="fas fa-building"></i>
                     </div>
                     <div class="card-body">
                         <h5 class="card-title">
-                            <span class="status-indicator {% if gabinete.esta_aberto %}status-aberto{% else %}status-fechado{% endif %}"></span>
-                            {{ gabinete.nome_vereador }}
+                            <span class="status-indicator status-aberto"></span>
+                            {{ departamento.nome_local }}
                         </h5>
                         <p class="card-text">
                             <i class="fas fa-envelope info-icon"></i>
-                            <strong>Email:</strong> {{ gabinete.email_vereador }}<br>
+                            <strong>Email:</strong> {{ departamento.email }}<br>
                             <i class="fas fa-map-marker-alt info-icon"></i>
-                            <strong>Localização:</strong> {{ gabinete.get_localizacao_display }}<br>
+                            <strong>Localização:</strong> {{ departamento.get_localizacao_display }}<br>
                             <i class="fas fa-user info-icon"></i>
-                            <strong>Responsável:</strong> {{ gabinete.nome_responsavel }}<br>
+                            <strong>Responsável:</strong> {{ departamento.nome_responsavel }}<br>
                             <i class="fas fa-clock info-icon"></i>
-                            <strong>Horário:</strong> {{ gabinete.horario_abertura|time:"H:i" }} - {{ gabinete.horario_fechamento|time:"H:i" }}
+                            <strong>Horário:</strong> {{ departamento.horario_abertura|time:"H:i" }} - {{ departamento.horario_fechamento|time:"H:i" }}
                         </p>
                         <div class="assessor-info">
                             <h6 class="assessor-title">Assessor Responsável</h6>
                             <p class="card-text">
                                 <i class="fas fa-user-tie info-icon"></i>
-                                <strong>Nome:</strong> {{ gabinete.nome_responsavel }}<br>
+                                <strong>Nome:</strong> {{ departamento.nome_responsavel }}<br>
                                 <i class="fas fa-envelope info-icon"></i>
-                                <strong>Email:</strong> {{ gabinete.email }}<br>
+                                <strong>Email:</strong> {{ departamento.email }}<br>
                                 <i class="fas fa-phone info-icon"></i>
-                                <strong>Telefone:</strong> {{ gabinete.telefone }}<br>
+                                <strong>Telefone:</strong> {{ departamento.telefone }}<br>
                                 <i class="fas fa-clock info-icon"></i>
-                                <strong>Horário:</strong> {{ gabinete.horario_entrada|time:"H:i" }} - {{ gabinete.horario_saida|time:"H:i" }}
+                                <strong>Horário:</strong> {{ departamento.horario_abertura|time:"H:i" }} - {{ departamento.horario_fechamento|time:"H:i" }}
                             </p>
                         </div>
                     </div>
@@ -234,7 +255,6 @@
 
 {% block extra_js %}
 <script>
-    // Atualiza a página a cada minuto para mostrar o status atualizado
     setInterval(function() {
         location.reload();
     }, 60000);

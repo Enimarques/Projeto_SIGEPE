@@ -20,7 +20,9 @@ import xlwt
 from django.db.models import Count
 from apps.autenticacao.decorators import agente_guarita_or_admin_required
 from django.utils.timezone import localtime
+from apps.autenticacao.decorators import block_recepcionista
 
+@block_recepcionista
 @agente_guarita_or_admin_required
 def home_veiculos(request):
     hoje = datetime.now().date()
