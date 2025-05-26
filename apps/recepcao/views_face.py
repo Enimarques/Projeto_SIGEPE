@@ -66,7 +66,6 @@ def video_feed(request):
                                content_type='multipart/x-mixed-replace; boundary=frame')
 
 @csrf_exempt
-@login_required
 def verificar_face_api(request):
     """API para verificar face em uma imagem"""
     if request.method == 'POST':

@@ -1,5 +1,6 @@
 from django.urls import path
 from . import views, views_face
+from .views_face import verificar_face_api
 
 app_name = 'recepcao'
 
@@ -35,6 +36,7 @@ urlpatterns = [
     path('totem/', views.totem_visitas, name='totem_visitas'),
     path('totem/home/', views.totem_home, name='totem_home'),
     path('totem/finalizar-visita/', views.totem_finalizar_visita, name='totem_finalizar_visita'),
+    path('totem/setor/', views.totem_selecionar_setor, name='totem_selecionar_setor'),
     
     path('visitantes/<int:pk>/excluir/', views.excluir_visitante, name='excluir_visitante'),
     
@@ -46,4 +48,5 @@ urlpatterns = [
     path('gabinetes/<int:gabinete_id>/editar/', views.editar_gabinete, name='editar_gabinete'),
     path('departamentos/', views.home_departamentos, name='home_departamentos'),
     path('departamentos/<int:departamento_id>/', views.detalhes_departamento, name='detalhes_departamento'),
+    path('recepcao/verificar_face_api/', verificar_face_api, name='verificar_face_api'),
 ]

@@ -4,158 +4,57 @@
 {% block title %}Totem de Visitas{% endblock %}
 
 {% block content %}
-<div class="container-fluid vh-100 d-flex flex-column">
-    <!-- Botão Voltar -->
-    <div class="row">
-        <div class="col-12 p-3">
-            <a href="{% url 'recepcao:home_recepcao' %}" class="btn btn-secondary">
-                <i class="fas fa-arrow-left me-2"></i>Voltar para Recepção
-            </a>
-        </div>
+<div class="container-fluid vh-100 bg-light">
+    <!-- Botão fora do card, alinhado à direita -->
+    <div class="w-100 d-flex justify-content-end" style="max-width: 900px; margin: 2rem auto 0.5rem auto;">
+        <a href="{% url 'recepcao:home_recepcao' %}" class="btn btn-light btn-xs"
+           style="border-radius: 0.6rem; color: #444; border: 1px solid #ccc; font-weight: 500; font-size: 0.98rem; padding: 0.35rem 0.9rem;">
+            <i class="fas fa-arrow-left me-2"></i>Voltar para Recepção
+        </a>
     </div>
-    
-    <div class="row flex-grow-1">
-        <div class="col-12 text-center py-4">
-            <h1 class="display-4 text-primary">
-                <i class="fas fa-building me-3"></i>Bem-vindo ao Sistema de Visitas
-            </h1>
+    <!-- Card branco centralizado -->
+    <div class="d-flex flex-column align-items-center justify-content-center w-100" style="max-width: 420px; margin: 0 auto;">
+        <h2 class="mb-3 mt-2 fw-bold text-primary text-center" style="font-size: 1.5rem;">
+            <i class="fas fa-camera me-2"></i>Posicione seu rosto para identificação
+        </h2>
+        <div class="camera-area-totem mb-3 position-relative mx-auto bg-white shadow-sm" style="border: 3px solid #007bff; border-radius: 1.5rem;">
+            <video id="video" autoplay playsinline class="rounded-4 border-0 totem-video" style="background:#222;"></video>
+            <canvas id="canvas" style="display:none;"></canvas>
+            <div id="faceGuide" class="face-guide-totem"></div>
+            <div id="dicas" class="dicas-totem">
+                <i class="fas fa-lightbulb me-2"></i> Posicione seu rosto dentro do guia amarelo
+            </div>
         </div>
-
-        <!-- Área principal do totem -->
-        <div class="col-12 col-md-8 mx-auto">
-            <div class="card shadow-lg">
-                <div class="card-body p-5">
-                    <!-- Etapa 1: Reconhecimento Facial -->
-                    <div id="etapaReconhecimento" class="text-center">
-                        <h2 class="mb-4">
-                            <i class="fas fa-camera me-2"></i>Posicione seu rosto para identificação
-                        </h2>
-                        
-                        <div class="camera-area mb-4 position-relative">
-                            <video id="video" width="640" height="480" class="rounded" style="border: 3px solid #007bff;"></video>
-                            <canvas id="canvas" style="display:none;"></canvas>
-                            <div id="faceGuide" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 250px; height: 330px; border: 3px dashed yellow; border-radius: 50% 50% 40% 40%; pointer-events: none;"></div>
-                            <div id="diagnosticoCamera" style="position: absolute; top: 10px; left: 10px; background-color: rgba(0,0,0,0.6); color: white; padding: 8px; font-size: 12px; border-radius: 5px;"></div>
-                            
-                            <div id="dicas" style="position: absolute; bottom: 20px; left: 0; right: 0; text-align: center; background-color: rgba(0,0,0,0.6); color: white; padding: 10px;">
-                                <i class="fas fa-lightbulb me-2"></i> Posicione seu rosto dentro do guia amarelo
-                            </div>
+        <div class="status-mensagens mb-2 w-100">
+            <div id="statusReconhecimento" class="alert alert-info w-100 mb-2 p-2" aria-live="polite" style="background:#e3f6fd;color:#007bff;font-size:1rem;">
+                <i class="fas fa-info-circle me-2"></i>Olhe diretamente para a câmera
+            </div>
+            <div id="mensagem-camera" class="alert alert-info w-100 p-2" style="background:#e3f6fd;color:#007bff;font-size:1rem;">
+                Posicione seu rosto no centro da tela
+            </div>
+        </div>
+        <div class="d-flex justify-content-center align-items-center gap-2 mb-2">
+            <button id="btnReiniciarCamera" class="btn btn-warning btn-sm fw-bold botao-pequeno" style="font-size:1rem;">
+                <i class="fas fa-sync-alt me-2"></i> Reiniciar Câmera
+            </button>
+        </div>
+        <button id="btnIniciarReconhecimento" class="btn btn-primary btn-md fw-bold w-100 mb-2" style="font-size:1.1rem;">
+            <i class="fas fa-search me-2"></i>Iniciar Reconhecimento
+        </button>
+        <div id="result" class="mt-2 w-100" aria-live="polite"></div>
+        <!-- Modal de sucesso -->
+        <div id="modalSucesso" class="modal fade" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content p-4 text-center" style="border-radius:1.5rem; border:3px solid #28a745; box-shadow:0 4px 32px rgba(40,167,69,0.10);">
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <span class="d-inline-block bg-success text-white rounded-circle p-3 mb-2" style="font-size:2.5rem;">
+                                <i class="fas fa-check"></i>
+                            </span>
                         </div>
-
-                        <div id="statusReconhecimento" class="alert alert-info">
-                            <i class="fas fa-info-circle me-2"></i>Olhe diretamente para a câmera
-                        </div>
-
-                        <div id="mensagem-camera" class="alert alert-info mt-3">
-                            Posicione seu rosto no centro da tela
-                        </div>
-                        
-                        <div class="row mt-3">
-                            <div class="col-12 text-center">
-                                <button id="btn-parar-reconhecimento" class="btn btn-danger">
-                                    <i class="fas fa-stop-circle me-2"></i>Parar Reconhecimento
-                                </button>
-                            </div>
-                        </div>
-
-                        <div class="mt-4">
-                            <a href="{% url 'recepcao:cadastro_visitantes' %}" class="btn btn-outline-primary">
-                                <i class="fas fa-user-plus me-2"></i>Não possui cadastro? Clique aqui
-                            </a>
-                        </div>
-
-                        <div class="row mt-3">
-                            <div class="col-md-6 mb-2">
-                                <button id="btnReiniciarCamera" class="btn btn-warning btn-block w-100">
-                                    <i class="fas fa-sync-alt me-2"></i> Reiniciar Câmera
-                                </button>
-                            </div>
-                            <div class="col-md-6 mb-2">
-                                <a href="{% url 'recepcao:teste_camera' %}" class="btn btn-info btn-block w-100" target="_blank">
-                                    <i class="fas fa-tools me-2"></i> Diagnosticar Câmera
-                                </a>
-                            </div>
-                            <div class="col-12 mt-2">
-                                <a href="{% url 'recepcao:lista_visitantes' %}" class="btn btn-secondary btn-block w-100">
-                                    <i class="fas fa-user-plus me-2"></i> Cadastrar Novo Visitante
-                                </a>
-                            </div>
-                        </div>
-
-                        <div id="mensagem-boas-vindas" class="alert alert-success" style="display: none;">
-                            <h4><i class="fas fa-smile me-2"></i>Seja bem-vindo(a), <span id="nome-visitante"></span>!</h4>
-                        </div>
-                    </div>
-
-                    <!-- Etapa 2: Seleção do Setor (inicialmente oculta) -->
-                    <div id="etapaSetor" style="display:none;">
-                        <h2 class="text-center mb-4">
-                            <i class="fas fa-building me-2"></i>Selecione o Setor
-                        </h2>
-
-                        <!-- Informações do visitante reconhecido -->
-                        <div class="alert alert-info mb-4">
-                            <div class="d-flex align-items-center">
-                                <i class="fas fa-user-circle fa-3x me-3 text-primary"></i>
-                                <div>
-                                    <h5 class="mb-1" id="nomeVisitante"></h5>
-                                    <p class="mb-0" id="cpfVisitante"></p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="row justify-content-center">
-                            <div class="col-md-8">
-                                <div class="form-group">
-                                    <label for="tipoSetor" class="form-label">Tipo de Setor</label>
-                                    <select class="form-select form-select-lg mb-3" id="tipoSetor">
-                                        <option value="">Selecione o tipo...</option>
-                                        {% for value, label in Setor.TIPO_CHOICES %}
-                                        <option value="{{ value }}">{{ label }}</option>
-                                        {% endfor %}
-                                    </select>
-                                </div>
-
-                                <div class="form-group">
-                                    <label for="setor" class="form-label">Setor</label>
-                                    <select class="form-select form-select-lg mb-3" id="setor">
-                                        <option value="">Selecione o setor...</option>
-                                    </select>
-                                </div>
-
-                                <div class="form-group">
-                                    <label for="objetivo" class="form-label">Objetivo da Visita</label>
-                                    <select class="form-select form-select-lg mb-3" id="objetivo">
-                                        <option value="">Selecione o objetivo...</option>
-                                        {% for value, label in OBJETIVO_CHOICES %}
-                                        <option value="{{ value }}">{{ label }}</option>
-                                        {% endfor %}
-                                    </select>
-                                </div>
-
-                                <div class="d-grid gap-2 mt-4">
-                                    <button class="btn btn-primary btn-lg" id="btnRegistrarVisita">
-                                        <i class="fas fa-check-circle me-2"></i>Registrar Visita
-                                    </button>
-                                    <button class="btn btn-secondary" id="btnVoltar">
-                                        <i class="fas fa-arrow-left me-2"></i>Voltar
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Etapa 3: Confirmação (inicialmente oculta) -->
-                    <div id="etapaConfirmacao" style="display:none;">
-                        <div class="text-center">
-                            <i class="fas fa-check-circle text-success" style="font-size: 5rem;"></i>
-                            <h2 class="mt-4">Visita Registrada com Sucesso!</h2>
-                            <p class="lead">Sua etiqueta está sendo impressa...</p>
-                            <div class="mt-4">
-                                <button class="btn btn-primary btn-lg" id="btnNovaVisita">
-                                    <i class="fas fa-redo me-2"></i>Nova Visita
-                                </button>
-                            </div>
+                        <h4 id="modalNomeVisitante" class="fw-bold text-success mb-2"></h4>
+                        <div class="mb-2 text-secondary" style="font-size:1.1rem;">
+                            <i class="fas fa-smile-beam me-2"></i>Reconhecimento bem-sucedido! Bem-vindo(a)!
                         </div>
                     </div>
                 </div>
@@ -163,760 +62,302 @@
         </div>
     </div>
 </div>
-
-<!-- CSRF Token -->
 {% csrf_token %}
 {% endblock %}
 
 {% block extra_css %}
-<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-<link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
 <style>
-.select2-container--bootstrap-5 .select2-selection {
-    height: calc(3.5rem + 2px);
-    padding: 1rem 0.75rem;
-    font-size: 1.25rem;
-    border-radius: 0.5rem;
-}
-
-.select2-container--bootstrap-5 .select2-selection--single .select2-selection__rendered {
+.totem-device {
+    background: none;
+    box-shadow: none;
+    border-radius: 0;
     padding: 0;
-    line-height: 1.5;
+    max-width: unset;
+    min-height: unset;
+    max-height: unset;
+    position: static;
+    display: block;
 }
-
-.select2-container--bootstrap-5 .select2-selection--single .select2-selection__placeholder {
-    color: #6c757d;
+.totem-screen {
+    background: none;
+    box-shadow: none;
+    border-radius: 0;
+    padding: 0;
+    min-height: unset;
+    max-width: unset;
+    max-height: unset;
+    width: 100%;
+    position: static;
+    overflow: visible;
+    display: block;
+    gap: 0;
 }
-
-.select2-container--bootstrap-5 .select2-dropdown {
-    border-color: #86b7fe;
-    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+.camera-area-totem {
+    position: relative;
+    width: 320px;
+    height: 400px;
+    margin: 0 auto 1.2rem auto;
+    background: #fff;
+    border-radius: 1.5rem;
+    border: 3px solid #007bff;
+    box-shadow: 0 2px 16px 0 rgba(0,0,0,0.08);
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
-
-.select2-container--bootstrap-5 .select2-results__option--highlighted[aria-selected] {
-    background-color: #0d6efd;
+.totem-video {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover;
+    border-radius: 1.5rem;
+    background: #222;
+    display: block;
 }
-
-/* Remover estilo de desabilitado */
-.select2-container--bootstrap-5.select2-container--disabled .select2-selection,
-.select2-container--bootstrap-5 .select2-selection--disabled {
-    background-color: #ffffff !important;
-    border-color: #ced4da !important;
-    cursor: pointer !important;
+.face-guide-totem {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 180px;
+    height: 240px;
+    border: 4px dashed #ffe066;
+    border-radius: 50% 50% 40% 40%;
+    pointer-events: none;
+    z-index: 2;
 }
-
-.select2-container--bootstrap-5.select2-container--disabled .select2-selection--single .select2-selection__rendered {
-    color: #212529 !important;
+.dicas-totem {
+    position: absolute;
+    bottom: 16px;
+    left: 0;
+    right: 0;
+    text-align: center;
+    background-color: rgba(0,0,0,0.7);
+    color: #fff;
+    padding: 10px 0;
+    font-size: 1rem;
+    border-radius: 0 0 1.5rem 1.5rem;
+    z-index: 3;
+}
+.status-mensagens {
+    width: 100%;
+    margin-top: 0.5rem;
+    margin-bottom: 0.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+.status-mensagens .alert {
+    font-size: 1rem;
+    padding: 0.7rem 1.2rem;
+    margin: 0;
+    border-radius: 0.7rem;
+    min-width: 180px;
+    width: 100%;
+    background: #e3f6fd;
+    color: #007bff;
+    border: none;
+    text-align: left;
+    box-shadow: none;
+}
+.btn-md, .btn-lg, .btn {
+    font-size: 1.1rem !important;
+    padding: 0.9rem 1.2rem !important;
+    border-radius: 0.7rem !important;
+    font-weight: 600;
+}
+.btn-danger {
+    width: 100%;
+    margin-bottom: 0.5rem;
+}
+.btn-outline-primary {
+    width: 100%;
+    margin-bottom: 0.5rem;
+}
+.row.gap-btns, .row.w-100.g-2 {
+    width: 100%;
+    margin: 0;
+    gap: 0.5rem;
+}
+.row.gap-btns .col-12, .row.gap-btns .col-md-6, .row.w-100.g-2 .col-6 {
+    padding: 0;
+}
+.btn-warning, .btn-info {
+    width: 100%;
+}
+.btn-secondary {
+    width: 100%;
+    margin-top: 0.5rem;
+}
+.botao-pequeno {
+    min-width: 140px;
+    max-width: 180px;
+    width: 160px;
+    padding-left: 0.5rem !important;
+    padding-right: 0.5rem !important;
+    text-align: center;
+}
+@media (max-width: 600px) {
+    .totem-device, .totem-screen {
+        max-width: 98vw;
+        width: 100vw;
+        min-width: unset;
+        min-height: 400px;
+        max-height: unset;
+        padding: 0.5rem;
+    }
+    .totem-screen {
+        min-height: 500px;
+        max-width: 98vw;
+        max-height: unset;
+        padding: 1rem;
+    }
+    .camera-area-totem {
+        width: 98vw;
+        height: 60vw;
+        min-height: 220px;
+        max-height: 70vw;
+    }
+    .totem-video {
+        width: 100% !important;
+        height: 100% !important;
+    }
 }
 </style>
 {% endblock %}
 
 {% block extra_js %}
 <script>
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', async function() {
     const video = document.getElementById('video');
     const canvas = document.getElementById('canvas');
-    const etapaReconhecimento = document.getElementById('etapaReconhecimento');
-    const etapaSetor = document.getElementById('etapaSetor');
-    const etapaConfirmacao = document.getElementById('etapaConfirmacao');
-    const tipoSetor = document.getElementById('tipoSetor');
-    const setor = document.getElementById('setor');
-    const objetivo = document.getElementById('objetivo');
-    const btnRegistrarVisita = document.getElementById('btnRegistrarVisita');
-    const btnNovaVisita = document.getElementById('btnNovaVisita');
-    const btnVoltar = document.getElementById('btnVoltar');
-    
-    let visitanteReconhecido = null;
+    const resultDiv = document.getElementById('result');
+    const faceGuide = document.getElementById('faceGuide');
+    const btnIniciar = document.getElementById('btnIniciarReconhecimento');
     let stream = null;
+    let cameraActive = false;
+    let reconhecimentoAtivo = false;
+    let reconhecimentoInterval = null;
 
-    // Dados dos setores carregados dinamicamente
-    const setores = {};
-
-    // Atualizar opções do setor quando o tipo é selecionado
-    $('#tipoSetor').on('change', function() {
-        const tipo = $(this).val();
-        const $setor = $('#setor');
-        
-        // Limpar opções atuais
-        $setor.empty();
-        $setor.append(new Option('Selecione o setor...', '', true, true));
-        
-        // Se um tipo foi selecionado, buscar setores do backend
-        if (tipo) {
-            $.ajax({
-                url: '{% url "recepcao:buscar_setores" %}',
-                method: 'GET',
-                data: { tipo: tipo },
-                success: function(data) {
-                    data.setores.forEach(function(setor) {
-                        const setorNome = setor.tipo === 'gabinete' ? 
-                            `Gabinete do Vereador ${setor.nome_vereador} (${setor.localizacao})` : 
-                            `${setor.nome_local} (${setor.localizacao})`;
-                        $setor.append(new Option(setorNome, setor.id));
-                    });
-                },
-                error: function() {
-                    alert('Erro ao buscar setores');
-                }
-            });
-        }
-    });
-
-    // Inicializar Select2
-    $('#tipoSetor').select2({
-        theme: 'bootstrap-5',
-        width: '100%',
-        placeholder: 'Selecione o tipo de setor...',
-        allowClear: true
-    });
-
-    $('#setor').select2({
-        theme: 'bootstrap-5',
-        width: '100%',
-        placeholder: 'Selecione o setor...',
-        allowClear: true
-    });
-
-    $('#objetivo').select2({
-        theme: 'bootstrap-5',
-        width: '100%',
-        placeholder: 'Selecione o objetivo da visita...',
-        allowClear: true
-    });
-
-    // Validar seleção antes de registrar visita
-    btnRegistrarVisita.addEventListener('click', async function() {
-        // Validação dos campos
-        let mensagensErro = [];
-        
-        if (!tipoSetor.value) {
-            mensagensErro.push("Selecione um tipo de setor");
-        }
-        
-        if (!setor.value) {
-            mensagensErro.push("Selecione um setor");
-        }
-        
-        if (!objetivo.value) {
-            mensagensErro.push("Selecione um objetivo para a visita");
-        }
-        
-        if (!visitanteReconhecido || !visitanteReconhecido.visitante_id) {
-            mensagensErro.push("Dados do visitante não disponíveis. Tente o reconhecimento novamente.");
-        }
-        
-        // Se houver erros, mostrar mensagem e interromper
-        if (mensagensErro.length > 0) {
-            alert("Por favor, corrija os seguintes problemas:\n- " + mensagensErro.join("\n- "));
-            return;
-        }
-        
-        console.log("Tentando registrar visita...");
-        
+    // Iniciar câmera
+    async function startCamera() {
         try {
-            // Preparar dados para envio
-            const formData = new FormData();
-            formData.append('visitante_id', visitanteReconhecido.visitante_id);
-            formData.append('setor_id', setor.value);
-            formData.append('objetivo', objetivo.value);
-            formData.append('csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value);
-            
-            // Imprimir no console os dados para debug
-            console.log("Enviando dados:", {
-                visitante_id: visitanteReconhecido.visitante_id,
-                setor_id: setor.value,
-                objetivo: objetivo.value
-            });
-            
-            // Mostrar indicador de carregamento
-            document.getElementById('btnRegistrarVisita').innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Processando...';
-            document.getElementById('btnRegistrarVisita').disabled = true;
-            
-            // Enviar requisição para registrar a visita
-            const response = await fetch('{% url "recepcao:registrar_visita_api" %}', {
-                method: 'POST',
-                body: formData
-            });
-            
-            const data = await response.json();
-            
-            if (data.success) {
-                console.log("Visita registrada com sucesso:", data);
-                mostrarEtapaConfirmacao();
-                
-                // Abrir etiqueta em nova janela
-                const etiquetaWindow = window.open(data.url_etiqueta, '_blank');
-                
-                // Redirecionar para a home do totem após 3 segundos
-                setTimeout(() => {
-                    window.location.href = data.url_redirect;
-                }, 3000);
-            } else {
-                throw new Error(data.message || "Erro ao registrar visita");
-            }
-        } catch (error) {
-            console.error("Erro ao registrar visita:", error);
-            alert(`Erro ao registrar visita: ${error.message}`);
-            
-            // Restaurar botão
-            document.getElementById('btnRegistrarVisita').innerHTML = '<i class="fas fa-check-circle me-2"></i>Registrar Visita';
-            document.getElementById('btnRegistrarVisita').disabled = false;
-        }
-    });
-
-    // Variáveis para controle de câmera
-    let currentCameraIndex = 0;
-    let availableCameras = [];
-    const btnReiniciarCamera = document.getElementById('btnReiniciarCamera');
-    const statusReconhecimento = document.getElementById('statusReconhecimento');
-    
-    // Configurações de reconhecimento facial
-    let faceTolerance = 0.6; // Valor padrão - menor = mais restrito
-    
-    // Função para verificar se a câmera é virtual com base em seu nome
-    function isCameraVirtual(label) {
-        const nomesVirtualCam = [
-            'virtual', 'obs', 'manycam', 'vcam', 'droidcam', 'iriun', 
-            'epoccam', 'xsplit', 'snapcam', 'camtwist', 'webcamoid', 
-            'emulador', 'emulated', 'fake', 'dummy', 'simulada'
-        ];
-        
-        if (!label) return false; // Se não tem nome, assumimos que não é virtual
-        
-        label = label.toLowerCase();
-        return nomesVirtualCam.some(term => label.includes(term));
-    }
-    
-    // Função para listar câmeras disponíveis
-    async function listarCamerasDisponiveis() {
-        if (!navigator.mediaDevices || !navigator.mediaDevices.enumerateDevices) {
-            console.log("enumerateDevices() não suportado.");
-            return;
-        }
-        
-        try {
-            const devices = await navigator.mediaDevices.enumerateDevices();
-            const todasCameras = devices.filter(device => device.kind === 'videoinput');
-            
-            console.log(`${todasCameras.length} câmeras encontradas no total`);
-            
-            // Filtrar câmeras virtuais
-            availableCameras = todasCameras.filter(camera => {
-                const isVirtual = isCameraVirtual(camera.label);
-                if (isVirtual) {
-                    console.warn(`Câmera virtual ignorada: ${camera.label}`);
-                    // Atualizar mensagem de status
-                    const statusReconhecimento = document.getElementById('statusReconhecimento');
-                    statusReconhecimento.innerHTML += `
-                        <div class="mt-2 small text-warning">
-                            <i class="fas fa-exclamation-triangle"></i>
-                            Câmera virtual detectada e ignorada: ${camera.label}
-                        </div>
-                    `;
-                }
-                return !isVirtual;
-            });
-            
-            console.log(`${availableCameras.length} câmeras físicas disponíveis para uso`);
-            
-            if (availableCameras.length === 0) {
-                const statusReconhecimento = document.getElementById('statusReconhecimento');
-                statusReconhecimento.innerHTML = `
-                    <div class="alert alert-danger">
-                        <i class="fas fa-exclamation-triangle me-2"></i>
-                        <strong>Nenhuma câmera física detectada</strong><br>
-                        O sistema encontrou apenas câmeras virtuais, que não são permitidas.<br>
-                        Por favor, conecte uma webcam física para continuar.
-                    </div>
-                `;
-                statusReconhecimento.className = 'alert alert-danger';
-            }
+            stream = await navigator.mediaDevices.getUserMedia({ video: true });
+            video.srcObject = stream;
+            video.style.display = 'block';
+            cameraActive = true;
         } catch (err) {
-            console.error("Erro ao listar dispositivos:", err);
+            resultDiv.innerHTML = '<span style="color:red;">Erro ao acessar a câmera: ' + err.message + '</span>';
         }
     }
-    
-    // Função para trocar de câmera
-    async function trocarCamera() {
-        if (availableCameras.length <= 1) {
-            alert('Apenas uma câmera disponível.');
-            return;
-        }
-        
-        // Avançar para a próxima câmera
-        currentCameraIndex = (currentCameraIndex + 1) % availableCameras.length;
-        
-        // Parar a câmera atual
+
+    // Parar câmera
+    function stopCamera() {
         if (stream) {
             stream.getTracks().forEach(track => track.stop());
-        }
-        
-        // Iniciar a nova câmera
-        await iniciarCameraEspecifica(currentCameraIndex);
-    }
-    
-    // Iniciar câmera específica pelo índice
-    async function iniciarCameraEspecifica(index) {
-        try {
-            console.log(`Iniciando câmera ${index}...`);
-            
-            if (availableCameras.length === 0) {
-                throw new Error("Nenhuma câmera física disponível no dispositivo");
-            }
-            
-            if (index >= availableCameras.length) {
-                console.warn(`Índice de câmera ${index} inválido. Usando câmera 0.`);
-                index = 0;
-            }
-            
-            // Obter o ID da câmera
-            const cameraId = availableCameras[index].deviceId;
-            console.log(`Usando câmera: ${availableCameras[index].label || 'Sem rótulo'} (${cameraId.substring(0, 8)}...)`);
-            
-            // Verificar se é uma câmera virtual
-            if (isCameraVirtual(availableCameras[index].label)) {
-                throw new Error(`Câmera virtual detectada (${availableCameras[index].label}). O sistema requer uma câmera física.`);
-            }
-            
-            // Configurar constraints específicas para esta câmera
-            const constraints = {
-                video: {
-                    deviceId: { exact: cameraId },
-                    width: { ideal: 640 },
-                    height: { ideal: 480 }
-                },
-                audio: false
-            };
-            
-            // Acessar a câmera
-            stream = await navigator.mediaDevices.getUserMedia(constraints);
-            
-            // Configurar o elemento de vídeo
-            video.srcObject = stream;
-            
-            // Esperar o vídeo carregar os metadados
-            video.onloadedmetadata = function() {
-                video.play().then(() => {
-                    console.log("Vídeo iniciado com sucesso");
-                    statusReconhecimento.innerHTML = `
-                        <i class="fas fa-camera me-2"></i>
-                        Câmera ativa! Posicione seu rosto para identificação...
-                    `;
-                    // Iniciar reconhecimento facial após confirmação de que o vídeo está rodando
-                    setTimeout(() => {
-                        console.log("Iniciando reconhecimento facial");
-                        iniciarReconhecimentoFacial();
-                    }, 1000);
-                }).catch(err => {
-                    console.error("Erro ao iniciar vídeo:", err);
-                    statusReconhecimento.innerHTML = `
-                        <div class="alert alert-danger">
-                            <i class="fas fa-exclamation-triangle me-2"></i>
-                            <strong>Erro ao iniciar vídeo:</strong><br>
-                            ${err.message}<br>
-                            <button class="btn btn-primary mt-2" onclick="iniciarCamera()">
-                                Tentar Novamente
-                            </button>
-                        </div>
-                    `;
-                });
-            };
-            
-            video.onerror = function(err) {
-                console.error("Erro no elemento de vídeo:", err);
-            };
-            
-        } catch (err) {
-            console.error('Erro ao acessar câmera específica:', err);
-            statusReconhecimento.innerHTML = `
-                <div class="alert alert-danger">
-                    <i class="fas fa-exclamation-triangle me-2"></i>
-                    <strong>Erro ao acessar câmera:</strong><br>
-                    ${err.message}<br>
-                    <button class="btn btn-primary mt-2" onclick="iniciarCamera()">
-                        Tentar Novamente
-                    </button>
-                </div>
-            `;
-        }
-    }
-    
-    // Atualizar a função iniciarCamera para usar a listarCamerasDisponiveis
-    async function iniciarCamera() {
-        try {
-            console.log("Iniciando acesso à câmera...");
-            
-            // Forçar a parar câmeras ativas antes de iniciar
-            if (stream) {
-                console.log("Parando stream de câmera existente");
-                stream.getTracks().forEach(track => {
-                    track.stop();
-                    console.log("Track parado:", track.kind);
-                });
-            }
-            
-            // Listar câmeras disponíveis
-            await listarCamerasDisponiveis();
-            
-            // Se não tiver câmeras, mostrar erro
-            if (availableCameras.length === 0) {
-                throw new Error("Nenhuma câmera encontrada no dispositivo");
-            }
-            
-            // Usar a câmera atual (por padrão a primeira)
-            await iniciarCameraEspecifica(currentCameraIndex);
-            
-        } catch (err) {
-            console.error('Erro ao acessar a câmera:', err);
-            alert(`Erro ao acessar a câmera: ${err.message}\n\nVerifique se sua câmera está conectada e se as permissões foram concedidas no navegador.`);
-            
-            // Exibir instruções para permitir a câmera
-            const statusReconhecimento = document.getElementById('statusReconhecimento');
-            statusReconhecimento.innerHTML = `
-                <i class="fas fa-exclamation-triangle me-2"></i>
-                <strong>Erro ao acessar a câmera</strong><br>
-                Verifique se:<br>
-                1. Sua câmera está conectada e funcionando<br>
-                2. Você concedeu permissão para o navegador acessar a câmera<br>
-                3. Nenhum outro aplicativo está usando a câmera<br><br>
-                <button class="btn btn-primary" onclick="iniciarCamera()">Tentar Novamente</button>
-            `;
-            statusReconhecimento.className = 'alert alert-danger';
+            stream = null;
+            cameraActive = false;
         }
     }
 
-    // Reconhecimento facial contínuo
-    function iniciarReconhecimentoFacial() {
-        let tentativas = 0;
-        const statusReconhecimento = document.getElementById('statusReconhecimento');
-        const diagnosticoCamera = document.getElementById('diagnosticoCamera');
-        const dicas = document.getElementById('dicas');
-        
-        // Atualizar dicas periodicamente
-        const dicasRotativas = [
-            "<i class='fas fa-lightbulb me-2'></i> Posicione seu rosto dentro do guia amarelo",
-            "<i class='fas fa-lightbulb me-2'></i> Olhe diretamente para a câmera",
-            "<i class='fas fa-lightbulb me-2'></i> Mantenha o rosto bem iluminado",
-            "<i class='fas fa-lightbulb me-2'></i> Evite ambientes muito escuros",
-            "<i class='fas fa-lightbulb me-2'></i> Não use óculos escuros ou chapéus",
-            "<i class='fas fa-lightbulb me-2'></i> Fique a aproximadamente 50cm da câmera"
-        ];
-        
-        let dicaAtual = 0;
-        const rotacionarDicas = setInterval(() => {
-            dicas.innerHTML = dicasRotativas[dicaAtual];
-            dicaAtual = (dicaAtual + 1) % dicasRotativas.length;
-        }, 3000);
-        
-        const intervalo = setInterval(async () => {
-            if (!stream) {
-                clearInterval(intervalo);
-                return;
-            }
+    // Iniciar reconhecimento ao clicar
+    btnIniciar.addEventListener('click', function() {
+        if (!cameraActive) {
+            resultDiv.innerHTML = '<span style="color:red;">Câmera não está ativa!</span>';
+            return;
+        }
+        btnIniciar.disabled = true;
+        reconhecimentoAtivo = true;
+        resultDiv.innerHTML = '<span style="color:#007bff;">Posicione seu rosto na frente da câmera.</span>';
+        faceGuide.style.borderColor = '#ffe066';
+        reconhecimentoInterval = setInterval(capturarReconhecer, 2000);
+    });
 
-            tentativas++;
-            
-            // Atualizar mensagem a cada 3 tentativas (6 segundos)
-            if (tentativas % 3 === 0) {
-                statusReconhecimento.innerHTML = `
-                    <i class="fas fa-spinner fa-spin me-2"></i>
-                    Tentando reconhecer seu rosto... (${Math.floor(tentativas/3)} tentativas)
-                `;
-                statusReconhecimento.className = 'alert alert-warning';
-            }
-
-            // Após 10 tentativas (20 segundos), registrar nova face automaticamente
-            if (tentativas >= 10) {
-                clearInterval(intervalo);
-                capturarNovaFaceAutomaticamente();
-                return;
-            }
-
-            canvas.width = video.videoWidth;
-            canvas.height = video.videoHeight;
-            canvas.getContext('2d').drawImage(video, 0, 0);
-
-            // Verificação da qualidade da imagem de vídeo
+    // Fluxo de reconhecimento/cadastro
+    async function capturarReconhecer() {
+        if (!stream || !cameraActive || !reconhecimentoAtivo) return;
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        canvas.getContext('2d').drawImage(video, 0, 0);
+        canvas.toBlob(async function(blob) {
+            resultDiv.innerHTML = '<span style="color:#007bff;">Processando imagem...</span>';
+            const formData = new FormData();
+            formData.append('face_image', blob, 'face.jpg');
             try {
-                const ctx = canvas.getContext('2d');
-                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-                const brightness = calcularBrilhoMedio(imageData.data);
-                const contrast = calcularContraste(imageData.data);
-                
-                diagnosticoCamera.innerHTML = `
-                    Resolução: ${canvas.width}x${canvas.height}<br>
-                    Brilho: ${brightness.toFixed(1)}%<br>
-                    Contraste: ${contrast.toFixed(1)}%
-                `;
-                
-                // Aviso sobre qualidade da imagem
-                if (brightness < 25) {
-                    diagnosticoCamera.innerHTML += "<br><span style='color:red'>⚠️ Ambiente muito escuro</span>";
-                } else if (brightness > 90) {
-                    diagnosticoCamera.innerHTML += "<br><span style='color:red'>⚠️ Imagem superexposta</span>";
-                }
-                
-                if (contrast < 30) {
-                    diagnosticoCamera.innerHTML += "<br><span style='color:red'>⚠️ Baixo contraste</span>";
+                const response = await fetch('/recepcao/api/verificar-face/', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await response.json();
+                if (data.success && data.faces_detected && data.faces_detected.length > 0 && data.faces_detected[0].visitante_id) {
+                    // Visitante reconhecido
+                    const nome = data.faces_detected[0].nome || 'usuário';
+                    resultDiv.innerHTML = '';
+                    faceGuide.style.borderColor = '#28a745'; // verde
+                    reconhecimentoAtivo = false;
+                    clearInterval(reconhecimentoInterval);
+                    mostrarModalSucesso(nome, () => {
+                        window.location.href = `/recepcao/totem/setor/?visitante_id=${data.faces_detected[0].visitante_id}`;
+                    });
+                } else if (data.success && data.faces_detected && data.faces_detected.length === 0) {
+                    // Nenhum rosto detectado
+                    resultDiv.innerHTML = `<span style=\"color:red;\">Nenhum rosto detectado. Tente novamente!</span>`;
+                    faceGuide.style.borderColor = '#dc3545'; // vermelho
+                    reconhecimentoAtivo = false;
+                    clearInterval(reconhecimentoInterval);
+                    setTimeout(() => {
+                        resultDiv.innerHTML = '<span style=\"color:#007bff;\">Posicione seu rosto na frente da câmera.</span>';
+                        faceGuide.style.borderColor = '#ffe066';
+                        reconhecimentoAtivo = true;
+                        btnIniciar.disabled = false;
+                    }, 2000);
+                } else {
+                    // Não reconhecido: cadastrar face e redirecionar para cadastro de visitante
+                    resultDiv.innerHTML = `<span style=\"color:orange;\">Rosto não reconhecido. Redirecionando para cadastro...</span>`;
+                    faceGuide.style.borderColor = '#ffe066';
+                    reconhecimentoAtivo = false;
+                    clearInterval(reconhecimentoInterval);
+                    const cadastroForm = new FormData();
+                    cadastroForm.append('face_image', blob, 'face.jpg');
+                    fetch('/recepcao/api/cadastro-rapido/', {
+                        method: 'POST',
+                        body: cadastroForm
+                    });
+                    setTimeout(() => {
+                        window.location.href = '/recepcao/cadastro-visitantes/';
+                    }, 1200);
                 }
             } catch (err) {
-                console.error("Erro ao analisar qualidade da imagem:", err);
+                resultDiv.innerHTML = `<span style=\"color:red;\">Erro ao enviar imagem: ${err.message}</span>`;
+                faceGuide.style.borderColor = '#dc3545';
+                reconhecimentoAtivo = false;
+                clearInterval(reconhecimentoInterval);
+                btnIniciar.disabled = false;
             }
-
-            canvas.toBlob(async function(blob) {
-                try {
-                    const formData = new FormData();
-                    formData.append('face_image', blob, 'face.jpg');
-                    formData.append('tolerance', faceTolerance); // Adicionar tolerância ao form data
-                    
-                    const response = await fetch('{% url "recepcao:verificar_face_api" %}', {
-                        method: 'POST',
-                        body: formData,
-                        headers: {
-                            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
-                        }
-                    });
-
-                    const data = await response.json();
-                    
-                    // Log para depuração
-                    console.log("Resposta da API:", data);
-                    
-                    // Exibir dados de resposta para diagnóstico
-                    if (data.message) {
-                        diagnosticoCamera.innerHTML += `<br>API: ${data.message}`;
-                        dicas.innerHTML = `<i class="fas fa-exclamation-circle me-2"></i> ${data.message}`;
-                    }
-                    
-                    if (data.diagnostico) {
-                        console.log("Diagnóstico:", data.diagnostico);
-                        
-                        // Atualizar dicas baseadas no diagnóstico
-                        if (data.diagnostico.brilho < 80) {
-                            dicas.innerHTML = `<i class="fas fa-lightbulb me-2"></i> Ambiente muito escuro! Procure um local mais iluminado`;
-                        } 
-                        else if (data.diagnostico.foco < 100) {
-                            dicas.innerHTML = `<i class="fas fa-camera me-2"></i> Imagem desfocada! Fique parado(a) e olhe para a câmera`;
-                        }
-                    }
-
-                    if (data.success && data.faces_detected && data.faces_detected.length > 0) {
-                        const face = data.faces_detected[0];
-                        diagnosticoCamera.innerHTML += `<br>Detectado: ${face.visitante_id ? 'Sim' : 'Não'}`;
-                        
-                        if (face.visitante_id) {
-                            // Log detalhado para depuração
-                            console.log("Visitante reconhecido!", face);
-                            console.log("Nome:", face.nome);
-                            console.log("ID:", face.visitante_id);
-                            
-                            // Parar o intervalo
-                            clearInterval(intervalo);
-                            
-                            // Salvar dados do visitante reconhecido
-                            visitanteReconhecido = face;
-                            
-                            // Exibir informações do visitante reconhecido
-                            const nomeVisitanteEl = document.getElementById('nomeVisitante');
-                            const cpfVisitanteEl = document.getElementById('cpfVisitante');
-                            const nomeVisitanteBemVindoEl = document.getElementById('nome-visitante');
-                            const mensagemBoasVindasEl = document.getElementById('mensagem-boas-vindas');
-
-                            if (nomeVisitanteEl) nomeVisitanteEl.textContent = face.nome;
-                            if (cpfVisitanteEl) cpfVisitanteEl.textContent = '';
-
-                            // Exibir mensagem de boas-vindas com o nome da pessoa
-                            if (nomeVisitanteBemVindoEl) nomeVisitanteBemVindoEl.textContent = face.nome;
-                            if (mensagemBoasVindasEl) mensagemBoasVindasEl.style.display = 'block';
-                            
-                            // Atualizar UI com resultado positivo
-                            statusReconhecimento.innerHTML = `
-                                <div class="alert alert-success">
-                                    <i class="fas fa-check-circle me-2"></i>
-                                    <strong>Rosto reconhecido!</strong><br>
-                                    Bem-vindo(a), ${face.nome}!
-                                </div>
-                            `;
-                            statusReconhecimento.className = 'alert alert-success';
-                            
-                            // Parar câmera
-                            pararCamera();
-                            
-                            // Mostrar próxima etapa após um breve atraso
-                            setTimeout(() => {
-                                console.log("Avançando para a etapa de seleção de setor...");
-                                mostrarEtapaSetor();
-                            }, 1500);
-                        }
-                    } else if (data.success && (!data.faces_detected || data.faces_detected.length === 0)) {
-                        // Nenhum rosto detectado
-                        diagnosticoCamera.innerHTML += `<br><span style='color:yellow'>⚠️ Nenhum rosto detectado</span>`;
-                    }
-                } catch (err) {
-                    console.error('Erro durante o processamento:', err);
-                    diagnosticoCamera.innerHTML += `<br><span style='color:red'>Erro: ${err.message}</span>`;
-                }
-            }, 'image/jpeg', 0.9);  // Usar qualidade 90% para reduzir tamanho
-        }, 2000);  // Verificar a cada 2 segundos
+        }, 'image/jpeg', 0.9);
     }
 
-    // Voltar para reconhecimento
-    btnVoltar.addEventListener('click', function() {
-        etapaSetor.style.display = 'none';
-        etapaReconhecimento.style.display = 'block';
-        visitanteReconhecido = null;
-        iniciarCamera();
-    });
+    // Botão de reiniciar câmera
+    document.getElementById('btnReiniciarCamera').addEventListener('click', startCamera);
 
-    // Nova visita
-    btnNovaVisita.addEventListener('click', function() {
-        etapaConfirmacao.style.display = 'none';
-        etapaReconhecimento.style.display = 'block';
-        visitanteReconhecido = null;
-        setor.value = '';
-        objetivo.value = '';
-        tipoSetor.value = '';
-        setor.disabled = false;
-        iniciarCamera();
-    });
+    // Iniciar câmera ao carregar
+    await startCamera();
 
-    // Funções auxiliares para mostrar/ocultar etapas
-    function mostrarEtapaSetor() {
-        console.log("Exibindo etapa de seleção de setor");
-        etapaReconhecimento.style.display = 'none';
-        etapaSetor.style.display = 'block';
-        etapaConfirmacao.style.display = 'none';
-        
-        // Log para verificar se o visitante foi reconhecido corretamente
-        if (visitanteReconhecido) {
-            console.log("Dados do visitante para a próxima etapa:", visitanteReconhecido);
-        } else {
-            console.warn("Aviso: Dados do visitante não estão disponíveis");
-        }
+    // Função para mostrar modal de sucesso
+    function mostrarModalSucesso(nome, callback) {
+        const modal = document.getElementById('modalSucesso');
+        const nomeSpan = document.getElementById('modalNomeVisitante');
+        nomeSpan.textContent = nome;
+        modal.classList.add('show');
+        modal.style.display = 'block';
+        modal.removeAttribute('aria-hidden');
+        setTimeout(() => {
+            modal.classList.remove('show');
+            modal.style.display = 'none';
+            modal.setAttribute('aria-hidden', 'true');
+            if (callback) callback();
+        }, 1200);
     }
-
-    function mostrarEtapaConfirmacao() {
-        console.log("Exibindo etapa de confirmação");
-        etapaReconhecimento.style.display = 'none';
-        etapaSetor.style.display = 'none';
-        etapaConfirmacao.style.display = 'block';
-    }
-
-    // Adicionar event listeners para os botões
-    btnReiniciarCamera.addEventListener('click', iniciarCamera);
-
-    // Iniciar o processo - Usando window.onload para garantir que tudo esteja carregado
-    window.onload = function() {
-        console.log("Página carregada, iniciando câmera...");
-        setTimeout(iniciarCamera, 500); // Pequeno atraso para garantir que a página esteja pronta
-    };
-
-    // Tornar funções acessíveis globalmente
-    window.iniciarCamera = iniciarCamera;
-    window.capturarNovaFaceAutomaticamente = capturarNovaFaceAutomaticamente;
-    window.trocarCamera = trocarCamera;
-    window.ajustarTolerancia = ajustarTolerancia;
-    
-    // Função para definir a tolerância do reconhecimento facial
-    function ajustarTolerancia(valor) {
-        faceTolerance = valor;
-        console.log(`Tolerância ajustada para: ${valor}`);
-    }
-
-    // Funções auxiliares para análise de qualidade da imagem
-    function calcularBrilhoMedio(data) {
-        let r, g, b, avg;
-        let colorSum = 0;
-        
-        for(let i = 0; i < data.length; i += 4) {
-            r = data[i];
-            g = data[i+1];
-            b = data[i+2];
-            
-            avg = Math.floor((r + g + b) / 3);
-            colorSum += avg;
-        }
-        
-        return colorSum / (data.length / 4) * (100/255);
-    }
-
-    function calcularContraste(data) {
-        // Simplificação: usar desvio padrão do brilho como medida de contraste
-        let r, g, b, avg;
-        let colorSum = 0;
-        const pixels = [];
-        
-        for(let i = 0; i < data.length; i += 4) {
-            r = data[i];
-            g = data[i+1];
-            b = data[i+2];
-            
-            avg = Math.floor((r + g + b) / 3);
-            pixels.push(avg);
-            colorSum += avg;
-        }
-        
-        const mean = colorSum / pixels.length;
-        let variance = 0;
-        
-        for(let i = 0; i < pixels.length; i++) {
-            variance += Math.pow(pixels[i] - mean, 2);
-        }
-        
-        const stdDev = Math.sqrt(variance / pixels.length) * (100/128);
-        return stdDev;
-    }
-
-    // Função para parar a câmera de forma segura
-    function pararCamera() {
-        try {
-            // Parar todas as tracks do stream
-            if (stream) {
-                stream.getTracks().forEach(track => track.stop());
-                stream = null;
-            }
-            
-            // Limpar o elemento de vídeo
-            if (video) {
-                video.srcObject = null;
-            }
-            
-            console.log('Câmera parada com sucesso');
-        } catch (error) {
-            console.error('Erro ao parar a câmera:', error);
-        }
-    }
-
-    // Evento de clique para parar o reconhecimento
-    $('#btn-parar-reconhecimento').on('click', function() {
-        // Parar a câmera imediatamente
-        pararCamera();
-        
-        // Fazer chamada AJAX para notificar o backend
-        $.ajax({
-            url: '{% url "recepcao:parar_reconhecimento_api" %}',
-            method: 'POST',
-            success: function(response) {
-                if (response.success) {
-                    // Redirecionar para a home da recepção
-                    window.location.href = '{% url "recepcao:home_recepcao" %}';
-                } else {
-                    console.error('Erro ao parar reconhecimento:', response.error);
-                    // Mesmo em caso de erro, redirecionar
-                    window.location.href = '{% url "recepcao:home_recepcao" %}';
-                }
-            },
-            error: function(xhr, status, error) {
-                console.error('Erro na requisição de parar reconhecimento:', error);
-                // Em caso de erro de requisição, redirecionar
-                window.location.href = '{% url "recepcao:home_recepcao" %}';
-            }
-        });
-    });
 });
 </script>
-{% endblock %}
-
-{% block extra_js_libraries %}
-<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 {% endblock %}

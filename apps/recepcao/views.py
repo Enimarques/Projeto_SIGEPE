@@ -243,9 +243,17 @@ def buscar_setores(request):
         }
         setores_data.append(setor_info)
     
+    if not setores_data:
+        return JsonResponse({
+            'success': False,
+            'setores': [],
+            'message': 'Nenhum setor encontrado para o tipo selecionado.'
+        })
+    
     return JsonResponse({
         'success': True,
-        'setores': setores_data
+        'setores': setores_data,
+        'message': 'Setores carregados com sucesso.'
     })
 
 @login_required(login_url='autenticacao:login_sistema')
@@ -1184,3 +1192,31 @@ def detalhes_departamento(request, departamento_id):
         'visitas': visitas,
     }
     return render(request, 'recepcao/detalhes_departamento.html', context)
+
+@login_required(login_url='autenticacao:login_sistema')
+def totem_selecionar_setor(request):
+    visitante_id = request.GET.get('visitante_id')
+    visitante = None
+    if visitante_id:
+        try:
+            visitante = Visitante.objects.get(id=visitante_id)
+        except Visitante.DoesNotExist:
+            visitante = None
+    if request.method == 'POST':
+        setor_id = request.POST.get('setor')
+        if visitante_id and setor_id:
+            try:
+                visitante = Visitante.objects.get(id=visitante_id)
+                setor = Setor.objects.get(id=setor_id)
+                visita = Visita.objects.create(
+                    visitante=visitante,
+                    setor=setor,
+                    objetivo='visita',  # objetivo padrão
+                    status='em_andamento',
+                    data_entrada=timezone.now(),
+                    localizacao=setor.localizacao
+                )
+                return redirect('recepcao:status_visita')
+            except Exception as e:
+                pass  # Trate o erro conforme necessário
+    return render(request, 'recepcao/totem_selecionar_setor.html', {'visitante_id': visitante_id, 'visitante': visitante})
