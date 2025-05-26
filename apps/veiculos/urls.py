@@ -27,4 +27,5 @@ urlpatterns = [
     path('desbloquear/<int:veiculo_id>/', views.desbloquear_veiculo, name='desbloquear_veiculo'),
     
     path('veiculo-info/', views.veiculo_info_json, name='veiculo_info_json'),
+    path('veiculo-info-por-placa/', views.veiculo_info_por_placa_json, name='veiculo_info_por_placa_json'),
 ]

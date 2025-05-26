@@ -1,15 +1,12 @@
-<button type="button" class="btn btn-outline-secondary btn-voltar d-inline-flex align-items-center" onclick="voltarUniversal(this)" aria-label="Voltar para a tela anterior">
-    <i class="fas fa-arrow-left me-2" aria-hidden="true"></i>
-    <span class="d-none d-sm-inline">Voltar</span>
+<button type="button" class="btn btn-voltar" onclick="voltarOuHome()" aria-label="Voltar">
+    <i class="fas fa-arrow-left me-2"></i>Voltar
 </button>
 <script>
-function voltarUniversal(btn) {
+function voltarOuHome() {
     if (window.history.length > 1) {
         window.history.back();
-    } else if (btn.dataset.fallback) {
-        window.location.href = btn.dataset.fallback;
     } else {
-        window.location.href = '/'; // fallback padrão
+        window.location.href = '/';
     }
 }
 </script> 

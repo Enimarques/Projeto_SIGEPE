@@ -21,6 +21,7 @@ from django.db.models import Count
 from apps.autenticacao.decorators import agente_guarita_or_admin_required
 from django.utils.timezone import localtime
 from apps.autenticacao.decorators import block_recepcionista
+from django.views.decorators.http import require_GET
 
 @block_recepcionista
 @agente_guarita_or_admin_required
@@ -370,4 +371,25 @@ def veiculo_info_json(request):
         }
         return JsonResponse(data)
     except Veiculo.DoesNotExist:
+        return JsonResponse({'erro': 'Veículo não encontrado'}, status=404)
+
+@require_GET
+@login_required(login_url='autenticacao:login_sistema')
+def veiculo_info_por_placa_json(request):
+    placa = request.GET.get('placa')
+    if not placa:
+        return JsonResponse({'erro': 'Placa não informada'}, status=400)
+    veiculo = Veiculo.objects.filter(placa__iexact=placa).order_by('-data_entrada').first()
+    if veiculo:
+        data = {
+            'placa': veiculo.placa,
+            'modelo': veiculo.modelo,
+            'cor': veiculo.get_cor_display() if hasattr(veiculo, 'get_cor_display') else veiculo.cor,
+            'tipo': veiculo.get_tipo_display() if hasattr(veiculo, 'get_tipo_display') else veiculo.tipo,
+            'nome_condutor': veiculo.nome_condutor,
+            'nome_passageiro': veiculo.nome_passageiro,
+            'observacoes': veiculo.observacoes,
+        }
+        return JsonResponse(data)
+    else:
         return JsonResponse({'erro': 'Veículo não encontrado'}, status=404)

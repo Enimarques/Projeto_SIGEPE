@@ -26,19 +26,19 @@
     <div class="card mb-4">
         <div class="card-body">
             <form method="get" class="row g-3">
-                <div class="col-md-3">
+                <div class="col-md-3 col-12">
                     <label for="data_inicio" class="form-label">Data Início</label>
                     <input type="date" class="form-control" id="data_inicio" name="data_inicio" value="{{ filtros.data_inicio|date:'Y-m-d' }}">
                 </div>
-                <div class="col-md-3">
+                <div class="col-md-3 col-12">
                     <label for="data_fim" class="form-label">Data Fim</label>
                     <input type="date" class="form-control" id="data_fim" name="data_fim" value="{{ filtros.data_fim|date:'Y-m-d' }}">
                 </div>
-                <div class="col-md-3">
+                <div class="col-md-3 col-12">
                     <label for="placa" class="form-label">Placa</label>
                     <input type="text" class="form-control" id="placa" name="placa" value="{{ filtros.placa }}" placeholder="Placa do veículo...">
                 </div>
-                <div class="col-md-3">
+                <div class="col-md-3 col-12">
                     <label for="status" class="form-label">Status</label>
                     <select class="form-select" id="status" name="status">
                         <option value="">Todos</option>

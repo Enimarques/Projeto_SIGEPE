@@ -114,6 +114,26 @@
         </div>
     </div>
 </div>
+<!-- Modal de alerta para placa não encontrada -->
+<div class="modal fade" id="placaNaoEncontradaModal" tabindex="-1" aria-labelledby="placaNaoEncontradaLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header bg-warning-subtle" style="background-color: #ff9800 !important;">
+        <h5 class="modal-title" id="placaNaoEncontradaLabel" style="color: #7a3a00;">
+          <i class="fas fa-exclamation-triangle me-2" style="color: #7a3a00;"></i>Placa não encontrada
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+      </div>
+      <div class="modal-body">
+        Nenhum veículo cadastrado com esta placa.<br>
+        Preencha os campos abaixo para realizar um novo cadastro.
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary" data-bs-dismiss="modal">OK</button>
+      </div>
+    </div>
+  </div>
+</div>
 {% endblock %}
 
 {% block extra_css %}
@@ -149,7 +169,45 @@ document.addEventListener('DOMContentLoaded', function() {
             e.target.value = value;
         }
     });
-    
+
+    // Autocomplete dos campos ao digitar placa
+    placaInput.addEventListener('blur', function(e) {
+        const placa = e.target.value.replace('-', '').toUpperCase();
+        console.log('Placa digitada:', placa);
+        if (placa.length === 7) {
+            fetch(`/veiculos/veiculo-info-por-placa/?placa=${placa}`)
+                .then(response => {
+                    console.log('Resposta AJAX:', response);
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('Dados recebidos:', data);
+                    if (!data.erro) {
+                        document.getElementById('{{ form.modelo.id_for_label }}').value = data.modelo || '';
+                        document.getElementById('{{ form.cor.id_for_label }}').value = data.cor || '';
+                        document.getElementById('{{ form.tipo.id_for_label }}').value = data.tipo || '';
+                        document.getElementById('{{ form.nome_condutor.id_for_label }}').value = data.nome_condutor || '';
+                        document.getElementById('{{ form.nome_passageiro.id_for_label }}').value = data.nome_passageiro || '';
+                        document.getElementById('{{ form.observacoes.id_for_label }}').value = data.observacoes || '';
+                    } else {
+                        // Limpa os campos se não encontrar
+                        document.getElementById('{{ form.modelo.id_for_label }}').value = '';
+                        document.getElementById('{{ form.cor.id_for_label }}').value = '';
+                        document.getElementById('{{ form.tipo.id_for_label }}').value = '';
+                        document.getElementById('{{ form.nome_condutor.id_for_label }}').value = '';
+                        document.getElementById('{{ form.nome_passageiro.id_for_label }}').value = '';
+                        document.getElementById('{{ form.observacoes.id_for_label }}').value = '';
+                        // Exibe modal Bootstrap
+                        var modal = new bootstrap.Modal(document.getElementById('placaNaoEncontradaModal'));
+                        modal.show();
+                    }
+                })
+                .catch(error => {
+                    console.error('Erro na requisição AJAX:', error);
+                });
+        }
+    });
+
     // Adiciona classes de validação aos campos
     const form = document.querySelector('form');
     form.addEventListener('submit', function(e) {

@@ -28,7 +28,7 @@ class VeiculoAdmin(admin.ModelAdmin):
     
     fieldsets = (
         ('Informações do Veículo', {
-            'fields': ('placa', 'tipo', 'modelo', 'cor')
+            'fields': ('placa', 'tipo', 'modelo', 'cor', 'nome_condutor', 'nome_passageiro')
         }),
         ('Visitante', {
             'fields': ('visitante',)

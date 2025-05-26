@@ -3,10 +3,23 @@
 
 {% block content %}
 <div class="container mt-4">
-    <h1 class="mb-4">Bem-vindos ao URUTAU</h1>
-    <h3 class="text-muted">Sistema de Gestão de Entrada e Saida de Pessoas da Câmara Municipal de Parauapebas</h3>
-    <br>
-    
+    <div class="card card-transparente-borda-preta mb-4 p-4 position-relative overflow-hidden">
+        <div class="video-bg-card-wrapper">
+            <video class="video-bg-card" autoplay loop muted playsinline>
+                <source src="{% static 'videos/background-technology.mp4' %}" type="video/mp4">
+                Seu navegador não suporta vídeo em HTML5.
+            </video>
+        </div>
+        <div class="row align-items-center mb-4 flex-column flex-md-row">
+            <div class="col-md-7 text-center text-md-start">
+                <h1 class="mb-3">Bem-vindos ao URUTAU</h1>
+                <h3 class="text-muted">Sistema de Gestão de Entrada e Saida de Pessoas da Câmara Municipal de Parauapebas</h3>
+            </div>
+            <div class="col-md-5 text-center mt-4 mt-md-0 d-flex justify-content-center">
+                <div class="imagem-circular-degrade"></div>
+            </div>
+        </div>
+    </div>
     <!-- Botão Voltar acima dos cards, alinhado à direita -->
     <div class="d-flex justify-content-end">
         {% include 'includes/botao_voltar.html' %}
