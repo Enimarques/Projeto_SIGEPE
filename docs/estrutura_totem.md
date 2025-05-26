@@ -14,20 +14,58 @@ Interface de totem para identificação de visitantes via reconhecimento facial,
   - Reiniciar Câmera
   - Iniciar Reconhecimento (só ativa o reconhecimento facial ao clicar)
 
+#### Exemplo de Estrutura HTML
+```html
+<div class="container-fluid bg-light vh-100">
+  <div class="d-flex justify-content-end"> <!-- Botão Voltar -->
+    <a href="..." class="btn btn-light btn-xs">Voltar para Recepção</a>
+  </div>
+  <div class="card ..."> <!-- Card Central -->
+    <h2>Posicione seu rosto para identificação</h2>
+    <div class="camera-area-totem">...</div>
+    <div class="status-mensagens">...</div>
+    <button>Iniciar Reconhecimento</button>
+  </div>
+</div>
+```
+
 ### Fluxo JS
 - Ao carregar, ativa a câmera.
 - Só inicia o reconhecimento facial ao clicar em "Iniciar Reconhecimento".
 - Envia frames para o backend apenas quando solicitado.
 - Mostra modal de sucesso ao reconhecer, ou mensagens de erro caso não detecte rosto.
+- **Principais funções:**
+  - `startCamera()`: ativa a webcam.
+  - `capturarReconhecer()`: captura frame e envia para API.
+  - `mostrarModalSucesso()`: exibe modal de boas-vindas.
 
-### CSS
+#### Dica de Acessibilidade
+- Use `aria-live="polite"` para mensagens dinâmicas.
+- Garanta contraste suficiente entre texto e fundo.
+- Botões grandes e fáceis de clicar.
+
+### CSS e Responsividade
 - Layout responsivo, card centralizado, área de vídeo com borda azul e guia oval amarelo.
 - Botões coloridos, acessíveis e com ícones.
+- Use media queries para adaptar o tamanho do card e vídeo em telas pequenas.
+
+#### Exemplo de CSS Responsivo
+```css
+@media (max-width: 600px) {
+  .camera-area-totem { width: 98vw; height: 60vw; }
+  .totem-video { width: 100%; height: 100%; }
+}
+```
 
 ### Integração Backend
 - **Endpoint `/recepcao/api/verificar-face/`**: Recebe imagem, retorna se o rosto foi reconhecido e dados do visitante.
 - **Endpoint `/recepcao/api/cadastro-rapido/`**: Cadastra rosto não reconhecido para posterior registro.
 - **Redirecionamento**: Após sucesso, avança para `/recepcao/totem/setor/?visitante_id=...`.
+
+#### Exemplo de chamada fetch
+```js
+fetch('/recepcao/api/verificar-face/', { method: 'POST', body: formData })
+```
 
 ---
 
@@ -45,6 +83,16 @@ Permitir ao visitante reconhecido escolher o setor/gabinete para registrar sua v
 - Recebe o visitante_id via query string.
 - Exibe dados do visitante e opções de setor/gabinete.
 - Ao selecionar e confirmar, envia para o backend registrar a visita.
+
+#### Exemplo de fluxo
+```js
+// Ao clicar em um setor
+document.querySelectorAll('.btn-setor').forEach(btn => {
+  btn.addEventListener('click', function() {
+    // Envia visitante_id e setor para o backend
+  });
+});
+```
 
 ### Integração Backend
 - **Endpoint para buscar dados do visitante**: Recebe visitante_id, retorna dados pessoais e foto.
@@ -79,4 +127,60 @@ Permitir ao visitante reconhecido escolher o setor/gabinete para registrar sua v
 
 ---
 
-> **Dica:** Para manutenção, mantenha o JS modular e os endpoints REST bem documentados. Use mensagens claras para o usuário e garanta responsividade e acessibilidade visual. 
+## 6. Dicas de Manutenção e Segurança
+- Separe o JS customizado em arquivos próprios para facilitar manutenção.
+- Valide e sanitize todas as entradas do usuário no backend.
+- Use autenticação e autorização nas APIs.
+- Garanta que endpoints só aceitem métodos HTTP corretos (POST para envio de imagens, GET para busca de dados).
+- Sempre trate erros com mensagens amigáveis e claras para o usuário.
+- Teste responsividade e acessibilidade em diferentes dispositivos.
+
+---
+
+## 7. Diagramas de Fluxo (Frontend e Backend)
+
+### Fluxo de Reconhecimento Facial (Frontend → Backend)
+
+```mermaid
+sequenceDiagram
+    participant Usuário
+    participant Totem (Frontend)
+    participant API Django (Backend)
+    participant Banco de Dados
+
+    Usuário->>Totem (Frontend): Clica em Iniciar Reconhecimento
+    Totem (Frontend)->>Usuário: Ativa câmera e mostra vídeo
+    loop Até reconhecimento ou erro
+        Totem (Frontend)->>API Django (Backend): Envia imagem da câmera (POST /verificar-face/)
+        API Django (Backend)->>Banco de Dados: Busca rosto/visitante
+        Banco de Dados-->>API Django (Backend): Retorna resultado
+        API Django (Backend)-->>Totem (Frontend): Retorna JSON (reconhecido/não reconhecido)
+        alt Reconhecido
+            Totem (Frontend)->>Usuário: Mostra modal de sucesso
+            Totem (Frontend)->>Usuário: Redireciona para seleção de setor
+        else Não reconhecido
+            Totem (Frontend)->>Usuário: Mostra mensagem de erro
+        end
+    end
+```
+
+### Fluxo de Registro de Visita (Setor)
+
+```mermaid
+sequenceDiagram
+    participant Usuário
+    participant Totem (Frontend)
+    participant API Django (Backend)
+    participant Banco de Dados
+
+    Usuário->>Totem (Frontend): Seleciona setor/gabinete
+    Totem (Frontend)->>API Django (Backend): Envia visitante_id e setor (POST /registrar-visita/)
+    API Django (Backend)->>Banco de Dados: Registra visita
+    Banco de Dados-->>API Django (Backend): Confirmação
+    API Django (Backend)-->>Totem (Frontend): Retorna sucesso
+    Totem (Frontend)->>Usuário: Mostra confirmação de visita
+```
+
+---
+
+> **Dica:** Você pode visualizar esses diagramas usando extensões Mermaid em editores como VSCode, Obsidian ou online em https://mermaid.live/
