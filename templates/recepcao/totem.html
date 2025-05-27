@@ -4,20 +4,17 @@
 {% block title %}Totem de Visitas{% endblock %}
 
 {% block content %}
-<div class="container-fluid vh-100 bg-light">
-    <!-- Botão fora do card, alinhado à direita -->
-    <div class="w-100 d-flex justify-content-end" style="max-width: 900px; margin: 2rem auto 0.5rem auto;">
-        <a href="{% url 'recepcao:home_recepcao' %}" class="btn btn-light btn-xs"
-           style="border-radius: 0.6rem; color: #444; border: 1px solid #ccc; font-weight: 500; font-size: 0.98rem; padding: 0.35rem 0.9rem;">
-            <i class="fas fa-arrow-left me-2"></i>Voltar para Recepção
-        </a>
+<div class="container my-4 d-flex flex-column align-items-center justify-content-center">
+    <!-- Botão Voltar padrão -->
+    <div class="w-100 d-flex justify-content-end mb-3">
+        {% include 'includes/botao_voltar.html' %}
     </div>
-    <!-- Card branco centralizado -->
-    <div class="d-flex flex-column align-items-center justify-content-center w-100" style="max-width: 420px; margin: 0 auto;">
+    <!-- Card centralizado -->
+    <div class="card shadow-lg p-4" style="max-width: 420px; width: 100%; border-radius: 1.5rem;">
         <h2 class="mb-3 mt-2 fw-bold text-primary text-center" style="font-size: 1.5rem;">
             <i class="fas fa-camera me-2"></i>Posicione seu rosto para identificação
         </h2>
-        <div class="camera-area-totem mb-3 position-relative mx-auto bg-white shadow-sm" style="border: 3px solid #007bff; border-radius: 1.5rem;">
+        <div class="camera-area-totem mb-3 position-relative mx-auto bg-white shadow-sm">
             <video id="video" autoplay playsinline class="rounded-4 border-0 totem-video" style="background:#222;"></video>
             <canvas id="canvas" style="display:none;"></canvas>
             <div id="faceGuide" class="face-guide-totem"></div>
