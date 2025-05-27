@@ -20,9 +20,10 @@ urlpatterns = [
     path('recepcao/', include('apps.recepcao.urls')),
     path('veiculos/', include('apps.veiculos.urls', namespace='veiculos')),
     path('main/', include('apps.main.urls', namespace='main')),
+    path('relatorios/', include('relatorios.urls')),
     
     # Home do sistema
-    path('', include('apps.main.urls', namespace='main')),
+    path('', include('apps.main.urls')),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)  # Para servir arquivos de mídia
 
 # Configuração para servir arquivos estáticos em desenvolvimento

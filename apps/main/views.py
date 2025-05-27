@@ -6,6 +6,8 @@ from django.contrib.auth.models import User, Group
 import psutil
 from django.http import JsonResponse
 import time
+import datetime
+from django.utils import timezone
 
 # Lista global para armazenar os últimos tempos de resposta
 ULTIMOS_TEMPOS = []
@@ -50,8 +52,27 @@ def metricas_sistema(request):
     cpu = psutil.cpu_percent(interval=0.5)
     mem = psutil.virtual_memory().percent
     tempo_resposta = get_tempo_resposta_medio()  # ms
+
+    # Tempo de atividade do sistema (uptime)
+    boot_time = datetime.datetime.fromtimestamp(psutil.boot_time())
+    now = datetime.datetime.now()
+    uptime_delta = now - boot_time
+    dias = uptime_delta.days
+    horas = uptime_delta.seconds // 3600
+    uptime_str = f"{dias}d {horas}h"
+
+    # Alertas nas últimas 24h
+    ultimas_24h = timezone.now() - datetime.timedelta(hours=24)
+    alertas_24h = Visita.objects.filter(status='cancelada', data_entrada__gte=ultimas_24h).count()
+
+    # Faces registradas
+    faces_registradas = Visitante.objects.filter(face_registrada=True).count()
+
     return JsonResponse({
         'cpu': cpu,
         'mem': mem,
-        'resp': tempo_resposta
+        'resp': tempo_resposta,
+        'uptime': uptime_str,
+        'alertas24h': alertas_24h,
+        'faces': faces_registradas,
     })

@@ -81,37 +81,75 @@
     </div>
 
     <!-- Card de Performance e Monitoramento do Reconhecimento Facial -->
-    <div class="row mb-4 justify-content-center">
-        <div class="col-xl-3 col-md-6 mb-4 d-flex justify-content-center">
-            <div class="stat-card d-flex flex-column justify-content-between position-relative no-hover" style="height: 130px; min-width: 200px; max-width: 200px; background: linear-gradient(135deg, #7b1fa2, #ce93d8); color: #fff; border-radius: 14px;">
-                <div class="d-flex align-items-start justify-content-between w-100">
-                    <i class="fas fa-microchip stat-icon mb-2" style="font-size:2rem; margin-top: 6px;"></i>
-                    <canvas id="cpuChart" width="36" height="36" style="position: absolute; top: 8px; right: 12px; z-index: 2;"></canvas>
-                </div>
-                <h3 id="cpuValue" class="mt-2" style="font-size:1.5rem; margin: 0 0 0.1rem 0; text-align:center; color:#fff;">--%</h3>
-                <p style="font-size:0.95rem; margin-bottom: 0.2rem; text-align:center; color:#fff;">Uso de CPU</p>
+    <div class="row justify-content-center mb-5">
+      <div class="col-xl-12 col-lg-12">
+        <div class="card card-monitoramento shadow-lg p-4 d-flex flex-column align-items-center" style="border-radius: 24px; background: linear-gradient(135deg, #e0eafc 0%, #cfd9df 100%); max-width: 100%;">
+          <div class="mb-3 w-100">
+            <h4 class="fw-bold mb-1" style="color: #1976d2;">Monitoramento do Sistema</h4>
+            <p class="text-muted mb-0" style="font-size: 1.05rem;">
+              Acompanhe em tempo real o uso de recursos do servidor responsável pelo reconhecimento facial e controle de acessos.
+            </p>
+          </div>
+          <div class="d-flex flex-row flex-wrap justify-content-center align-items-stretch gap-3 w-100">
+            <!-- Card CPU -->
+            <div class="stat-card-monitor flex-fill text-center p-3 mx-2" style="background: linear-gradient(135deg, #7b1fa2, #ce93d8); color: #fff; border-radius: 16px; min-width: 170px;">
+              <i class="fas fa-microchip stat-icon mb-2" style="font-size:2rem;"></i>
+              <h3 id="cpuValue" class="mt-2" style="font-size:1.5rem;">--%</h3>
+              <p style="font-size:0.95rem;">Uso de CPU</p>
             </div>
-        </div>
-        <div class="col-xl-3 col-md-6 mb-4 d-flex justify-content-center">
-            <div class="stat-card d-flex flex-column justify-content-between position-relative no-hover" style="height: 130px; min-width: 200px; max-width: 200px; background: linear-gradient(135deg, #1976d2, #90caf9); color: #fff; border-radius: 14px;">
-                <div class="d-flex align-items-start justify-content-between w-100">
-                    <i class="fas fa-memory stat-icon mb-2" style="font-size:2rem; margin-top: 6px;"></i>
-                    <canvas id="memChart" width="36" height="36" style="position: absolute; top: 8px; right: 12px; z-index: 2;"></canvas>
-                </div>
-                <h3 id="memValue" class="mt-2" style="font-size:1.5rem; margin: 0 0 0.1rem 0; text-align:center; color:#fff;">--%</h3>
-                <p style="font-size:0.95rem; margin-bottom: 0.2rem; text-align:center; color:#fff;">Uso de Memória</p>
+            <!-- Divisor -->
+            <div class="d-flex align-items-center px-1">
+              <div style="width:2px; height:60px; background:#e0e0e0;"></div>
             </div>
-        </div>
-        <div class="col-xl-3 col-md-6 mb-4 d-flex justify-content-center">
-            <div class="stat-card d-flex flex-column justify-content-between position-relative no-hover" style="height: 130px; min-width: 200px; max-width: 200px; background: linear-gradient(135deg, #ff6f00, #f48fb1); color: #fff; border-radius: 14px;">
-                <div class="d-flex align-items-start justify-content-between w-100">
-                    <i class="fas fa-tachometer-alt stat-icon mb-2" style="font-size:2rem; margin-top: 6px;"></i>
-                    <canvas id="respChart" width="36" height="36" style="position: absolute; top: 8px; right: 12px; z-index: 2;"></canvas>
-                </div>
-                <h3 id="respValue" class="mt-2" style="font-size:1.5rem; margin: 0 0 0.1rem 0; text-align:center; color:#fff;">--ms</h3>
-                <p style="font-size:0.95rem; margin-bottom: 0.2rem; text-align:center; color:#fff;">Resp. Média</p>
+            <!-- Card Memória -->
+            <div class="stat-card-monitor flex-fill text-center p-3 mx-2" style="background: linear-gradient(135deg, #1976d2, #90caf9); color: #fff; border-radius: 16px; min-width: 170px;">
+              <i class="fas fa-memory stat-icon mb-2" style="font-size:2rem;"></i>
+              <h3 id="memValue" class="mt-2" style="font-size:1.5rem;">--%</h3>
+              <p style="font-size:0.95rem;">Uso de Memória</p>
             </div>
+            <!-- Divisor -->
+            <div class="d-flex align-items-center px-1">
+              <div style="width:2px; height:60px; background:#e0e0e0;"></div>
+            </div>
+            <!-- Card Resposta -->
+            <div class="stat-card-monitor flex-fill text-center p-3 mx-2" style="background: linear-gradient(135deg, #ff6f00, #f48fb1); color: #fff; border-radius: 16px; min-width: 170px;">
+              <i class="fas fa-tachometer-alt stat-icon mb-2" style="font-size:2rem;"></i>
+              <h3 id="respValue" class="mt-2" style="font-size:1.5rem;">--ms</h3>
+              <p style="font-size:0.95rem;">Resp. Média</p>
+            </div>
+            <!-- Divisor -->
+            <div class="d-flex align-items-center px-1">
+              <div style="width:2px; height:60px; background:#e0e0e0;"></div>
+            </div>
+            <!-- Card Uptime -->
+            <div class="stat-card-monitor flex-fill text-center p-3 mx-2" style="background: linear-gradient(135deg, #00b09b, #96c93d); color: #fff; border-radius: 16px; min-width: 170px;">
+              <i class="fas fa-clock stat-icon mb-2" style="font-size:2rem;"></i>
+              <h3 id="uptimeValue" class="mt-2" style="font-size:1.5rem;">--</h3>
+              <p style="font-size:0.95rem;">Tempo de Atividade</p>
+            </div>
+            <!-- Divisor -->
+            <div class="d-flex align-items-center px-1">
+              <div style="width:2px; height:60px; background:#e0e0e0;"></div>
+            </div>
+            <!-- Card Alertas 24h -->
+            <div class="stat-card-monitor flex-fill text-center p-3 mx-2" style="background: linear-gradient(135deg, #ff512f, #dd2476); color: #fff; border-radius: 16px; min-width: 170px;">
+              <i class="fas fa-exclamation-triangle stat-icon mb-2" style="font-size:2rem;"></i>
+              <h3 id="alertas24hValue" class="mt-2" style="font-size:1.5rem;">--</h3>
+              <p style="font-size:0.95rem;">Alertas 24h</p>
+            </div>
+            <!-- Divisor -->
+            <div class="d-flex align-items-center px-1">
+              <div style="width:2px; height:60px; background:#e0e0e0;"></div>
+            </div>
+            <!-- Card Faces Registradas -->
+            <div class="stat-card-monitor flex-fill text-center p-3 mx-2" style="background: linear-gradient(135deg, #43cea2, #185a9d); color: #fff; border-radius: 16px; min-width: 170px;">
+              <i class="fas fa-user-check stat-icon mb-2" style="font-size:2rem;"></i>
+              <h3 id="facesValue" class="mt-2" style="font-size:1.5rem;">--</h3>
+              <p style="font-size:0.95rem;">Faces Registradas</p>
+            </div>
+          </div>
         </div>
+      </div>
     </div>
 
     <!-- Módulos do Sistema -->
@@ -210,6 +248,21 @@
                         </div>
                     </div>
                 </div>
+                <!-- Módulo de Relatórios -->
+                <div class="col-md-4 mb-4">
+                    <div class="card h-100">
+                        <div class="card-body text-center">
+                            <i class="fas fa-chart-bar fa-4x mb-3 text-info"></i>
+                            <h4 class="card-title">Relatórios e Analytics</h4>
+                            <p class="card-text">Visualize métricas, gráficos e exporte relatórios do sistema.</p>
+                            <div class="mt-4">
+                                <a href="/relatorios/" class="btn btn-info">
+                                    <i class="fas fa-chart-pie me-2"></i>Acessar Relatórios
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             {% endif %}
         {% endif %}
     </div>
@@ -276,6 +329,41 @@ setInterval(buscarMetricas, 10000);
     transform: none !important;
     filter: none !important;
     transition: none !important;
+}
+.card-monitoramento {
+  background: linear-gradient(135deg, #e0eafc 0%, #cfd9df 100%);
+  border-radius: 24px;
+  box-shadow: 0 4px 24px rgba(44, 62, 80, 0.08);
+  padding: 2rem 1.5rem;
+  margin-bottom: 2rem;
+}
+.stat-card-monitor {
+  min-width: 170px;
+  min-height: 130px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  box-shadow: 0 2px 8px rgba(44, 62, 80, 0.06);
+}
+@media (max-width: 991px) {
+  .card-monitoramento .d-flex.flex-row {
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+  .stat-card-monitor {
+    min-width: 140px;
+    margin-bottom: 1rem;
+  }
+}
+@media (max-width: 767px) {
+  .card-monitoramento {
+    padding: 1rem 0.5rem;
+  }
+  .stat-card-monitor {
+    min-width: 120px;
+    font-size: 0.95rem;
+  }
 }
 </style>
 {% endblock %}

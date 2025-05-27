@@ -36,6 +36,7 @@ INSTALLED_APPS = [
     'apps.autenticacao.apps.AutenticacaoConfig',
     'apps.recepcao.apps.RecepcaoConfig',
     'apps.veiculos.apps.VeiculosConfig',
+    'relatorios',
 ]
 
 MIDDLEWARE = [

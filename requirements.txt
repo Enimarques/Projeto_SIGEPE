@@ -63,4 +63,4 @@ openpyxl>=3.1.0,<4.0.0  # Geração de Excel
 xhtml2pdf>=0.2.13  # Conversão de HTML para PDF
 weasyprint>=60.2  # Geração de PDF a partir de HTML/CSS
 xlsxwriter>=3.2.0 # Geração de Excel
-xlwt>=2.0.0 # Geração de Excel
+xlwt>=1.3.0 # Geração de Excel

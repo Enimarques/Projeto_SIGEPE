@@ -1,0 +1,126 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Header/topo -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold">Relatórios e Analytics</h2>
+        <div>
+            <button class="btn btn-outline-primary me-2" id="btn-exportar-pdf">Exportar PDF</button>
+            <button class="btn btn-outline-success" id="btn-exportar-excel">Exportar Excel</button>
+        </div>
+    </div>
+
+    <!-- Cards de métricas -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-3">
+            <div class="card text-white h-100" style="background: linear-gradient(135deg, #43cea2 0%, #185a9d 100%);">
+                <div class="card-body">
+                    <h5 class="card-title">Acessos</h5>
+                    <h2 class="fw-bold" id="card-acessos">0</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white h-100" style="background: linear-gradient(135deg, #ff9966 0%, #ff5e62 100%);">
+                <div class="card-body">
+                    <h5 class="card-title">Visitantes únicos</h5>
+                    <h2 class="fw-bold" id="card-visitantes">0</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white h-100" style="background: linear-gradient(135deg, #f7971e 0%, #ffd200 100%);">
+                <div class="card-body">
+                    <h5 class="card-title">Alertas</h5>
+                    <h2 class="fw-bold" id="card-alertas">0</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white h-100" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
+                <div class="card-body">
+                    <h5 class="card-title">Tempo médio de resposta</h5>
+                    <h2 class="fw-bold" id="card-tempo">0s</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Gráficos -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-6">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">Distribuição de Eventos</h5>
+                    <canvas id="graficoPizza"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">Evolução ao Longo do Tempo</h5>
+                    <canvas id="graficoLinha"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabela de relatórios -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="card-title mb-0">Relatórios Detalhados</h5>
+                <div>
+                    <input type="date" class="form-control d-inline-block w-auto me-2" id="filtro-data">
+                    <select class="form-select d-inline-block w-auto me-2" id="filtro-tipo">
+                        <option value="">Tipo de Evento</option>
+                        <option value="acesso">Acesso</option>
+                        <option value="alerta">Alerta</option>
+                        <option value="visita">Visita</option>
+                    </select>
+                    <input type="text" class="form-control d-inline-block w-auto" placeholder="Usuário" id="filtro-usuario">
+                </div>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead>
+                        <tr>
+                            <th>Data</th>
+                            <th>Tipo</th>
+                            <th>Usuário</th>
+                            <th>Descrição</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabela-relatorios">
+                        <!-- Dados dinâmicos -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Chart.js CDN -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="{% static 'relatorios/dashboard.js' %}"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    function getFiltrosURL() {
+        const data = document.getElementById('filtro-data').value;
+        const tipo = document.getElementById('filtro-tipo').value;
+        const usuario = document.getElementById('filtro-usuario').value;
+        const params = new URLSearchParams({ data, tipo, usuario });
+        return params.toString();
+    }
+    document.getElementById('btn-exportar-pdf').onclick = function() {
+        window.open('/relatorios/exportar/pdf/?' + getFiltrosURL(), '_blank');
+    };
+    document.getElementById('btn-exportar-excel').onclick = function() {
+        window.open('/relatorios/exportar/excel/?' + getFiltrosURL(), '_blank');
+    };
+});
+</script>
+{% endblock %} 
