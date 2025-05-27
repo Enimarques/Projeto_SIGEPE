@@ -236,6 +236,16 @@ document.addEventListener('DOMContentLoaded', async function() {
     let reconhecimentoAtivo = false;
     let reconhecimentoInterval = null;
 
+    // Função para redimensionar a imagem capturada do vídeo
+    function resizeImageFromVideo(video, width, height) {
+        const canvasResize = document.createElement('canvas');
+        canvasResize.width = width;
+        canvasResize.height = height;
+        const ctx = canvasResize.getContext('2d');
+        ctx.drawImage(video, 0, 0, width, height);
+        return canvasResize;
+    }
+
     // Iniciar câmera
     async function startCamera() {
         try {
@@ -273,10 +283,9 @@ document.addEventListener('DOMContentLoaded', async function() {
     // Fluxo de reconhecimento/cadastro
     async function capturarReconhecer() {
         if (!stream || !cameraActive || !reconhecimentoAtivo) return;
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
-        canvas.getContext('2d').drawImage(video, 0, 0);
-        canvas.toBlob(async function(blob) {
+        // Redimensiona ANTES de enviar (480x360 pode ser ajustado para 320x240 se quiser mais leve)
+        const resizedCanvas = resizeImageFromVideo(video, 480, 360);
+        resizedCanvas.toBlob(async function(blob) {
             resultDiv.innerHTML = '<span style="color:#007bff;">Processando imagem...</span>';
             const formData = new FormData();
             formData.append('face_image', blob, 'face.jpg');
@@ -331,7 +340,7 @@ document.addEventListener('DOMContentLoaded', async function() {
                 clearInterval(reconhecimentoInterval);
                 btnIniciar.disabled = false;
             }
-        }, 'image/jpeg', 0.9);
+        }, 'image/jpeg', 0.8);
     }
 
     // Botão de reiniciar câmera
