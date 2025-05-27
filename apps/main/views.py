@@ -3,6 +3,22 @@ from apps.recepcao.models import Visita, Visitante, Assessor
 from apps.veiculos.models import Veiculo
 from apps.autenticacao.services.auth_service import AuthenticationService
 from django.contrib.auth.models import User, Group
+import psutil
+from django.http import JsonResponse
+import time
+
+# Lista global para armazenar os últimos tempos de resposta
+ULTIMOS_TEMPOS = []
+
+def registrar_tempo_resposta(tempo):
+    ULTIMOS_TEMPOS.append(tempo)
+    if len(ULTIMOS_TEMPOS) > 100:
+        ULTIMOS_TEMPOS.pop(0)
+
+def get_tempo_resposta_medio():
+    if ULTIMOS_TEMPOS:
+        return round(sum(ULTIMOS_TEMPOS) / len(ULTIMOS_TEMPOS), 2)
+    return 0
 
 def home_sistema(request):
     user = request.user
@@ -29,3 +45,13 @@ def home_sistema(request):
         context['is_assessor'] = is_assessor
 
     return render(request, 'main/home_sistema.html', context)
+
+def metricas_sistema(request):
+    cpu = psutil.cpu_percent(interval=0.5)
+    mem = psutil.virtual_memory().percent
+    tempo_resposta = get_tempo_resposta_medio()  # ms
+    return JsonResponse({
+        'cpu': cpu,
+        'mem': mem,
+        'resp': tempo_resposta
+    })

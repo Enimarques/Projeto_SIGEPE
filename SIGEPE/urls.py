@@ -19,6 +19,7 @@ urlpatterns = [
     # Apps principais
     path('recepcao/', include('apps.recepcao.urls')),
     path('veiculos/', include('apps.veiculos.urls', namespace='veiculos')),
+    path('main/', include('apps.main.urls', namespace='main')),
     
     # Home do sistema
     path('', include('apps.main.urls', namespace='main')),
