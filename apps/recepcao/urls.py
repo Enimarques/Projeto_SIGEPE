@@ -31,6 +31,7 @@ urlpatterns = [
     path('api/cadastro-rapido/', views_face.cadastro_rapido_api, name='cadastro_rapido_api'),
     path('api/registrar-visita/', views_face.registrar_visita_api, name='registrar_visita_api'),
     path('api/parar-reconhecimento/', views_face.parar_reconhecimento_api, name='parar_reconhecimento_api'),
+    path('api/reload-encodings/', views_face.reload_encodings_api, name='reload_encodings_api'),
     
     # URLs do totem
     path('totem/', views.totem_visitas, name='totem_visitas'),
@@ -46,7 +47,9 @@ urlpatterns = [
     path('gabinetes/', views.home_gabinetes, name='home_gabinetes'),
     path('gabinetes/<int:gabinete_id>/', views.detalhes_gabinete, name='detalhes_gabinete'),
     path('gabinetes/<int:gabinete_id>/editar/', views.editar_gabinete, name='editar_gabinete'),
+    path('gabinetes/<int:gabinete_id>/tabela/', views.visitas_tabela_gabinete, name='tabela_visitas_gabinete'),
     path('departamentos/', views.home_departamentos, name='home_departamentos'),
+    path('departamentos/<int:departamento_id>/tabela/', views.visitas_tabela_departamento, name='tabela_visitas_departamento'),
     path('departamentos/<int:departamento_id>/', views.detalhes_departamento, name='detalhes_departamento'),
     path('recepcao/verificar_face_api/', verificar_face_api, name='verificar_face_api'),
 ]

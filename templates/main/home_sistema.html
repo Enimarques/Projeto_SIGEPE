@@ -20,9 +20,8 @@
             </div>
         </div>
     </div>
-    <!-- Botão Voltar acima dos cards, alinhado à direita -->
-    <div class="d-flex justify-content-end">
-        {% include 'includes/botao_voltar.html' %}
+  
+    
     </div>
 
     <!-- Dashboard -->
@@ -95,6 +94,7 @@
             <div class="stat-card-monitor flex-fill text-center p-3 mx-2" style="background: linear-gradient(135deg, #7b1fa2, #ce93d8); color: #fff; border-radius: 16px; min-width: 170px;">
               <i class="fas fa-microchip stat-icon mb-2" style="font-size:2rem;"></i>
               <h3 id="cpuValue" class="mt-2" style="font-size:1.5rem;">--%</h3>
+              <canvas id="cpuChart" width="80" height="80" style="margin:0 auto;display:block;"></canvas>
               <p style="font-size:0.95rem;">Uso de CPU</p>
             </div>
             <!-- Divisor -->
@@ -105,6 +105,7 @@
             <div class="stat-card-monitor flex-fill text-center p-3 mx-2" style="background: linear-gradient(135deg, #1976d2, #90caf9); color: #fff; border-radius: 16px; min-width: 170px;">
               <i class="fas fa-memory stat-icon mb-2" style="font-size:2rem;"></i>
               <h3 id="memValue" class="mt-2" style="font-size:1.5rem;">--%</h3>
+              <canvas id="memChart" width="80" height="80" style="margin:0 auto;display:block;"></canvas>
               <p style="font-size:0.95rem;">Uso de Memória</p>
             </div>
             <!-- Divisor -->
@@ -115,6 +116,7 @@
             <div class="stat-card-monitor flex-fill text-center p-3 mx-2" style="background: linear-gradient(135deg, #ff6f00, #f48fb1); color: #fff; border-radius: 16px; min-width: 170px;">
               <i class="fas fa-tachometer-alt stat-icon mb-2" style="font-size:2rem;"></i>
               <h3 id="respValue" class="mt-2" style="font-size:1.5rem;">--ms</h3>
+              <canvas id="respChart" width="80" height="80" style="margin:0 auto;display:block;"></canvas>
               <p style="font-size:0.95rem;">Resp. Média</p>
             </div>
             <!-- Divisor -->

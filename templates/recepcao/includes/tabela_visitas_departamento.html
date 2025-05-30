@@ -1,0 +1,58 @@
+<div class="table-responsive">
+    <table class="table table-hover">
+        <thead>
+            <tr>
+                <th>Visitante</th>
+                <th>Data/Hora Entrada</th>
+                <th>Data/Hora Saída</th>
+                <th>Status</th>
+                <th>Tipo</th>
+                <th>Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for visita in visitas %}
+            <tr>
+                <td>
+                    {% if visita.visitante.foto %}
+                        <img src="{{ visita.visitante.foto.url }}" alt="{{ visita.visitante.nome_completo }}" class="visitante-foto-tabela">
+                    {% else %}
+                        <img src="https://ui-avatars.com/api/?name={{ visita.visitante.nome_completo|urlencode }}&background=1976d2&color=fff&size=64" class="visitante-foto-tabela" alt="Avatar">
+                    {% endif %}
+                    <a href="#" class="visitante-nome-tabela" 
+                       data-bs-toggle="modal" 
+                       data-bs-target="#visitanteModal"
+                       data-visitante-nome="{{ visita.visitante.nome_completo }}"
+                       data-visitante-telefone="{{ visita.visitante.telefone }}"
+                       data-visitante-email="{{ visita.visitante.email }}"
+                       data-visitante-nascimento="{{ visita.visitante.data_nascimento|date:'d/m/Y' }}"
+                       data-visitante-objetivo="{{ visita.get_objetivo_display }}"
+                       data-visitante-foto="{% if visita.visitante.foto %}{{ visita.visitante.foto.url }}{% endif %}">
+                        {{ visita.visitante.nome_completo }}
+                    </a>
+                    <div style="font-size:0.92rem;color:#888;">ID: {{ visita.visitante.id }}</div>
+                </td>
+                <td>{{ visita.data_entrada|date:"d/m/Y H:i" }}</td>
+                <td>{{ visita.data_saida|date:"d/m/Y H:i"|default:"-" }}</td>
+                <td>
+                    <span class="badge status-{{ visita.status }}">
+                        {{ visita.get_status_display }}
+                    </span>
+                </td>
+                <td>{{ visita.get_objetivo_display }}</td>
+                <td>
+                    <button class="btn-detalhes-visita" data-bs-toggle="modal" data-bs-target="#visitanteModal"
+                        data-visitante-nome="{{ visita.visitante.nome_completo }}"
+                        data-visitante-telefone="{{ visita.visitante.telefone }}"
+                        data-visitante-email="{{ visita.visitante.email }}"
+                        data-visitante-nascimento="{{ visita.visitante.data_nascimento|date:'d/m/Y' }}"
+                        data-visitante-objetivo="{{ visita.get_objetivo_display }}"
+                        data-visitante-foto="{% if visita.visitante.foto %}{{ visita.visitante.foto.url }}{% endif %}">
+                        <i class="fas fa-info-circle"></i> Detalhes
+                    </button>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div> 

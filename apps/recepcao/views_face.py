@@ -70,125 +70,92 @@ def verificar_face_api(request):
     """API para verificar face em uma imagem"""
     if request.method == 'POST':
         try:
-            # Adicionar logs para depuração
+            import time
+            start_time = time.time()
             print(f"Recebendo solicitação de verificação facial")
             print(f"Content-Type: {request.content_type}")
             print(f"Tamanho dos dados: {len(request.body)} bytes")
-            
-            # Obter tolerância personalizada (se fornecida)
             tolerance = 0.6  # Valor padrão
+            max_attempts = 5
+            timeout = 5  # segundos
             try:
                 tolerance_param = request.POST.get('tolerance')
                 if tolerance_param:
                     tolerance = float(tolerance_param)
                     print(f"Usando tolerância personalizada: {tolerance}")
+                attempts_param = request.POST.get('max_attempts')
+                if attempts_param:
+                    max_attempts = int(attempts_param)
+                timeout_param = request.POST.get('timeout')
+                if timeout_param:
+                    timeout = float(timeout_param)
             except (ValueError, TypeError) as e:
-                print(f"Erro ao processar tolerância: {e}, usando valor padrão")
-            
-            # Decodifica a imagem do POST
+                print(f"Erro ao processar parâmetros: {e}, usando valores padrão")
             face_image = request.FILES.get('face_image')
             if not face_image:
                 print("ERROR: Nenhuma imagem encontrada no request")
-                return JsonResponse({
-                    'success': False,
-                    'error': 'Nenhuma imagem enviada'
-                })
-            
+                return JsonResponse({'success': False, 'error': 'Nenhuma imagem enviada'})
             print(f"Imagem recebida: {face_image.name}, tamanho: {face_image.size} bytes")
-            
-            # Converte a imagem para numpy array
             nparr = np.frombuffer(face_image.read(), np.uint8)
             img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
-            
             if img is None:
                 print("ERROR: Falha ao decodificar imagem")
-                return JsonResponse({
-                    'success': False,
-                    'error': 'Falha ao decodificar imagem. O arquivo pode estar corrompido.'
-                })
-                
+                return JsonResponse({'success': False, 'error': 'Falha ao decodificar imagem. O arquivo pode estar corrompido.'})
             print(f"Dimensões da imagem: {img.shape}")
-            
-            # Verifica se a imagem é válida
+            if len(face_manager.known_face_encodings) == 0:
+                return JsonResponse({'success': False, 'error': 'Nenhum rosto cadastrado no sistema. Cadastre pelo menos um visitante com foto clara.'})
             if img.size == 0 or img.shape[0] == 0 or img.shape[1] == 0:
                 print("ERROR: Imagem inválida ou vazia")
-                return JsonResponse({
-                    'success': False,
-                    'error': 'Imagem inválida ou vazia'
-                })
-            
-            # Verificar se a imagem tem rostos antes de tentar identificá-los
-            # Converter para RGB para o face_recognition
-            rgb_img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-            
-            # Garantir que a imagem esteja no formato correto
+                return JsonResponse({'success': False, 'error': 'Imagem inválida ou vazia'})
+            # Pré-processamento: equalização de histograma
+            gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+            gray = cv2.equalizeHist(gray)
+            img_eq = cv2.cvtColor(gray, cv2.COLOR_GRAY2BGR)
+            rgb_img = cv2.cvtColor(img_eq, cv2.COLOR_BGR2RGB)
             if rgb_img.dtype != np.uint8:
                 rgb_img = rgb_img.astype(np.uint8)
-            
-            # Normalizar a imagem para garantir que os valores estejam entre 0 e 255
             if rgb_img.max() > 1.0:
                 rgb_img = rgb_img.astype(np.float32) / 255.0
                 rgb_img = (rgb_img * 255).astype(np.uint8)
-            
             print(f"Tipo de dados da imagem: {rgb_img.dtype}")
             print(f"Valores mínimos e máximos: {rgb_img.min()}, {rgb_img.max()}")
-            
-            # Tentar diferentes modelos de detecção facial
-            face_locations = face_recognition.face_locations(rgb_img, model="hog")
-            
+            # Apenas modelo HOG, limitar tentativas e timeout
+            elapsed = 0
+            faces_detected = []
+            while elapsed < timeout:
+                face_locations = face_recognition.face_locations(rgb_img, model="hog")
+                if face_locations:
+                    break
+                time.sleep(0.2)
+                elapsed = time.time() - start_time
             if not face_locations:
-                # Tentar com o modelo CNN, que às vezes é mais preciso, mas mais lento
-                try:
-                    print("Tentando modelo CNN para detecção facial...")
-                    face_locations = face_recognition.face_locations(rgb_img, model="cnn")
-                except Exception as e:
-                    print(f"Erro ao tentar modelo CNN: {e}")
-            
-            # Intensificar debug quando não encontra faces
-            if not face_locations:
-                print("INFO: Nenhum rosto detectado na imagem")
-                
-                # Analisar a qualidade da imagem
                 avg_brightness = np.mean(rgb_img)
                 print(f"Brilho médio da imagem: {avg_brightness}/255")
-                
                 img_blur = cv2.GaussianBlur(rgb_img, (11, 11), 0)
                 laplacian_var = cv2.Laplacian(img_blur, cv2.CV_64F).var()
                 print(f"Valor de foco (variância Laplaciana): {laplacian_var}")
-                
                 return JsonResponse({
-                    'success': True,
+                    'success': False,
                     'faces_detected': [],
-                    'message': 'Nenhum rosto detectado. Tente novamente com melhor iluminação e posicionamento.',
+                    'message': f'Nenhum rosto detectado após {max_attempts} tentativas. Tente novamente com melhor iluminação e posicionamento.',
                     'diagnostico': {
                         'brilho': float(avg_brightness),
                         'foco': float(laplacian_var),
                         'dimensoes': img.shape
                     }
                 })
-                
             print(f"Rostos detectados: {len(face_locations)}")
-            
-            # Ajustar tolerância baseado nas condições da imagem
             adjusted_tolerance = tolerance
             avg_brightness = np.mean(rgb_img)
-            if avg_brightness < 80:  # Imagem escura
-                adjusted_tolerance = min(1.0, tolerance * 1.2)  # Aumentar tolerância em 20%
+            if avg_brightness < 80:
+                adjusted_tolerance = min(1.0, tolerance * 1.2)
                 print(f"Imagem escura (brilho: {avg_brightness}), aumentando tolerância para {adjusted_tolerance}")
-            
-            # Detecta e identifica rostos com tolerância personalizada
-            face_locations, face_ids = face_manager.identify_face(img, tolerance=adjusted_tolerance)
-            
+            face_locations, face_ids = face_manager.identify_face(img_eq, tolerance=adjusted_tolerance, max_attempts=max_attempts)
             if not face_ids or all(id is None for id in face_ids):
                 print("AVISO: Nenhum visitante reconhecido nas faces detectadas")
-            
-            # Prepara a resposta
             faces_detected = []
             for loc, face_id in zip(face_locations, face_ids):
-                face_info = {
-                    'location': loc,
-                    'visitante_id': face_id
-                }
+                face_info = {'location': loc, 'visitante_id': face_id}
                 if face_id:
                     try:
                         visitante = Visitante.objects.get(id=face_id)
@@ -200,28 +167,22 @@ def verificar_face_api(request):
                 else:
                     print("INFO: Rosto não reconhecido")
                     face_info['nome'] = 'Visitante Não Identificado'
-                    
                 faces_detected.append(face_info)
-            
             response_data = {
                 'success': True,
                 'faces_detected': faces_detected,
-                'tolerance_used': adjusted_tolerance
+                'tolerance_used': adjusted_tolerance,
+                'processing_time': round(time.time() - start_time, 3)
             }
+            print(f"Tempo de processamento: {response_data['processing_time']}s")
             print(f"Resposta: {response_data}")
             return JsonResponse(response_data)
-            
         except Exception as e:
             import traceback
             error_details = traceback.format_exc()
             print(f"ERROR ao verificar face: {str(e)}")
             print(f"Detalhes do erro: {error_details}")
-            return JsonResponse({
-                'success': False,
-                'error': str(e),
-                'error_details': error_details
-            })
-    
+            return JsonResponse({'success': False, 'error': str(e), 'error_details': error_details})
     return JsonResponse({'success': False, 'error': 'Método não permitido'})
 
 @csrf_exempt
@@ -438,3 +399,14 @@ def parar_reconhecimento_api(request):
             'error': 'Falha ao interromper reconhecimento',
             'error_details': str(e)
         })
+
+@csrf_exempt
+def reload_encodings_api(request):
+    """Endpoint para recarregar manualmente os encodings faciais sem reiniciar o servidor."""
+    if request.method == 'POST':
+        try:
+            face_manager.reload_encodings()
+            return JsonResponse({'success': True, 'message': 'Encodings recarregados com sucesso.'})
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)})
+    return JsonResponse({'success': False, 'error': 'Método não permitido'})

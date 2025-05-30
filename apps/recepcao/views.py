@@ -24,6 +24,8 @@ from apps.autenticacao.decorators import admin_required
 from reportlab.pdfgen import canvas
 from openpyxl import Workbook
 from openpyxl.utils import get_column_letter
+from .face_recognition_manager import FaceRecognitionManager
+from django.template.loader import render_to_string
 
 # Contexto base para todas as views do app
 def get_base_context(title_suffix=''):
@@ -96,7 +98,7 @@ def cadastro_visitantes(request):
         'visitante': None,  
     })
     
-    return render(request, 'recepcao/cadastro_visitantes.html', context)
+    return render(request, 'toten_facial/cadastro_visitantes.html', context)
 
 @login_required(login_url='autenticacao:login_sistema')
 def detalhes_visitante(request, pk):
@@ -757,7 +759,7 @@ def totem_visitas(request):
     context = get_base_context('Totem de Visitas')
     context['Setor'] = Setor
     context['OBJETIVO_CHOICES'] = Visita.OBJETIVO_CHOICES
-    return render(request, 'recepcao/totem.html', context)
+    return render(request, 'toten_facial/reconhecimento_facial.html', context)
 
 @login_required(login_url='autenticacao:login_sistema')
 def upload_foto_visitante(request, visitante_id):
@@ -783,18 +785,26 @@ def upload_foto_visitante(request, visitante_id):
                 # Remove foto antiga se existir
                 if visitante.foto:
                     visitante.foto.delete()
-                
                 # Salva nova foto
                 visitante.foto = request.FILES['foto']
                 visitante.face_registrada = False  # Reset do status de reconhecimento
                 visitante.face_id = None
                 visitante.save()
                 logger.info('Foto salva com sucesso')
-                
+
+                # Reprocessar o encoding facial imediatamente
+                face_manager = FaceRecognitionManager()
+                try:
+                    face_manager.register_face(visitante.id)
+                    logger.info('Novo encoding facial gerado com sucesso')
+                except Exception as e:
+                    logger.error(f'Erro ao gerar novo encoding facial: {str(e)}')
+                    return JsonResponse({'success': False, 'message': f'Foto salva, mas houve erro ao processar o reconhecimento facial: {str(e)}'})
+
                 # Redireciona para o registro facial
                 return JsonResponse({
                     'success': True, 
-                    'message': 'Foto enviada com sucesso!',
+                    'message': 'Foto enviada e reconhecimento facial atualizado com sucesso!',
                     'redirect_url': reverse('recepcao:registrar_face', args=[visitante_id])
                 })
             except Exception as e:
@@ -859,7 +869,7 @@ def teste_camera(request):
 def totem_home(request):
     """Página inicial do totem com opções de iniciar ou finalizar visita"""
     context = get_base_context('Bem-vindo ao Totem')
-    return render(request, 'recepcao/totem_home.html', context)
+    return render(request, 'toten_facial/totem_home.html', context)
 
 @login_required(login_url='autenticacao:login_sistema')
 def totem_finalizar_visita(request):
@@ -869,36 +879,28 @@ def totem_finalizar_visita(request):
     # Se for uma requisição POST, processar o reconhecimento facial
     if request.method == 'POST':
         visitante_id = request.POST.get('visitante_id')
-        
         if visitante_id:
             try:
-                # Buscar visitas em andamento deste visitante
                 visitante = Visitante.objects.get(id=visitante_id)
                 visitas_ativas = Visita.objects.filter(
                     visitante=visitante,
                     status='em_andamento',
                     data_saida__isnull=True
                 )
-                
                 if visitas_ativas.exists():
-                    # Finalizar todas as visitas ativas deste visitante
                     for visita in visitas_ativas:
                         visita.data_saida = timezone.now()
                         visita.status = 'finalizada'
                         visita.save()
-                    
-                    context['sucesso'] = True
-                    context['visitante'] = visitante
-                    context['visitas_finalizadas'] = visitas_ativas.count()
-                    return render(request, 'recepcao/totem_visita_finalizada.html', context)
+                    messages.success(request, f'Visita finalizada com sucesso para {visitante.nome_completo}!')
+                    return redirect('recepcao:totem_home')
                 else:
                     context['erro'] = 'Não foi encontrada nenhuma visita em andamento para este visitante.'
             except Visitante.DoesNotExist:
                 context['erro'] = 'Visitante não encontrado.'
             except Exception as e:
                 context['erro'] = f'Erro ao finalizar visita: {str(e)}'
-    
-    return render(request, 'recepcao/totem_finalizar_visita.html', context)
+    return render(request, 'toten_facial/totem_finalizar_visita.html', context)
 
 @login_required
 def home_gabinetes(request):
@@ -1219,4 +1221,44 @@ def totem_selecionar_setor(request):
                 return redirect('recepcao:status_visita')
             except Exception as e:
                 pass  # Trate o erro conforme necessário
-    return render(request, 'recepcao/totem_selecionar_setor.html', {'visitante_id': visitante_id, 'visitante': visitante})
+    return render(request, 'toten_facial/totem_selecionar_setor.html', {'visitante_id': visitante_id, 'visitante': visitante})
+
+@login_required(login_url='autenticacao:login_sistema')
+def visitas_tabela_departamento(request, departamento_id):
+    departamento = get_object_or_404(Setor, id=departamento_id, tipo='departamento')
+    visitas = Visita.objects.filter(setor=departamento).order_by('-data_entrada')
+    # Filtros
+    data_inicio = request.GET.get('data_inicio')
+    data_fim = request.GET.get('data_fim')
+    status = request.GET.get('status')
+    objetivo = request.GET.get('objetivo')
+    if data_inicio:
+        visitas = visitas.filter(data_entrada__date__gte=data_inicio)
+    if data_fim:
+        visitas = visitas.filter(data_entrada__date__lte=data_fim)
+    if status:
+        visitas = visitas.filter(status=status)
+    if objetivo:
+        visitas = visitas.filter(objetivo=objetivo)
+    html = render_to_string('recepcao/includes/tabela_visitas_departamento.html', {'visitas': visitas})
+    return JsonResponse({'html': html})
+
+@login_required(login_url='autenticacao:login_sistema')
+def visitas_tabela_gabinete(request, gabinete_id):
+    gabinete = get_object_or_404(Setor, id=gabinete_id, tipo='gabinete')
+    visitas = Visita.objects.filter(setor=gabinete).order_by('-data_entrada')
+    # Filtros
+    data_inicio = request.GET.get('data_inicio')
+    data_fim = request.GET.get('data_fim')
+    status = request.GET.get('status')
+    objetivo = request.GET.get('objetivo')
+    if data_inicio:
+        visitas = visitas.filter(data_entrada__date__gte=data_inicio)
+    if data_fim:
+        visitas = visitas.filter(data_entrada__date__lte=data_fim)
+    if status:
+        visitas = visitas.filter(status=status)
+    if objetivo:
+        visitas = visitas.filter(objetivo=objetivo)
+    html = render_to_string('recepcao/includes/tabela_visitas_gabinete.html', {'visitas': visitas})
+    return JsonResponse({'html': html})

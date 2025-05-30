@@ -407,58 +407,34 @@
         </div>
     </div>
 
-    <div class="row">
-        <!-- Informações do Gabinete -->
-        <div class="col-md-4 gabinete-container">
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="card-title mb-0">
-                        <span class="status-indicator {% if gabinete.esta_aberto %}status-aberto{% else %}status-fechado{% endif %}"></span>
-                        {{ gabinete.nome_vereador }}
-                    </h5>
+    <!-- Card de informações do gabinete (horizontal) -->
+    <div class="card card-depto-horizontal mb-3" style="margin-top: 0.5rem; background: linear-gradient(135deg, #e0eafc 0%, #cfd9df 100%); box-shadow: 0 4px 24px rgba(44,62,80,0.10); border-radius: 18px;">
+        <div class="card-body d-flex flex-wrap align-items-center gap-4 justify-content-between py-3" style="padding-top: 12px; padding-bottom: 12px;">
+            <div class="d-flex align-items-center gap-3 flex-grow-1">
+                <span class="status-indicator {% if gabinete.esta_aberto %}status-aberto{% else %}status-fechado{% endif %}"></span>
+                <div class="gabinete-icon" style="height:60px;width:60px;min-width:60px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#b2cfff 0%,#e0eafc 100%);border-radius:10px;">
+                    <i class="fas fa-building" style="font-size:2rem;color:#608cb8d2;opacity:0.9;"></i>
                 </div>
-                <div class="card-body">
-                    <div class="gabinete-icon">
-                        <i class="fas fa-building"></i>
-                    </div>
-                    {% if user.is_authenticated and user.assessor and user.assessor.departamento_id == gabinete.id %}
-                    <div class="mb-3 text-end">
-                        <a href="{% url 'recepcao:editar_gabinete' gabinete.id %}" class="btn btn-outline-primary">
-                            <i class="fas fa-edit me-1"></i> Editar
-                        </a>
-                    </div>
-                    {% endif %}
-                    <p class="card-text">
-                        <i class="fas fa-envelope info-icon"></i>
-                        <strong>Email:</strong> {{ gabinete.email_vereador }}<br>
-                        <i class="fas fa-map-marker-alt info-icon"></i>
-                        <strong>Localização:</strong> {{ gabinete.get_localizacao_display }}<br>
-                        <i class="fas fa-user info-icon"></i>
-                        <strong>Responsável:</strong> {{ gabinete.nome_responsavel }}<br>
-                        <i class="fas fa-clock info-icon"></i>
-                        <strong>Horário:</strong> {{ gabinete.horario_abertura|time:"H:i" }} - {{ gabinete.horario_fechamento|time:"H:i" }}
-                    </p>
-                    <div class="assessor-info">
-                        <h5 class="assessor-title">Assessor Responsável</h5>
-                        <div class="assessor-card">
-                            <p class="card-text">
-                                <i class="fas fa-user-tie info-icon"></i>
-                                <strong>Nome:</strong> {{ gabinete.nome_responsavel }}<br>
-                                <i class="fas fa-envelope info-icon"></i>
-                                <strong>Email:</strong> {{ gabinete.email }}<br>
-                                <i class="fas fa-phone info-icon"></i>
-                                <strong>Telefone:</strong> {{ gabinete.telefone }}<br>
-                                <i class="fas fa-clock info-icon"></i>
-                                <strong>Horário:</strong> {{ gabinete.horario_entrada|time:"H:i" }} - {{ gabinete.horario_saida|time:"H:i" }}
-                            </p>
-                        </div>
-                    </div>
+                <div>
+                    <div class="fw-bold" style="font-size:1.22rem; color:#222;">{{ gabinete.nome_vereador }}</div>
+                    <div class="text-muted" style="font-size:0.99rem;">Gabinete</div>
                 </div>
             </div>
+            <div class="d-flex align-items-center gap-4 flex-wrap" style="font-size:1.07rem;">
+                <div class="d-flex align-items-center gap-2"><i class="fas fa-user info-icon" style="color:#1976d2;"></i> <span>{% if gabinete.nome_responsavel %}{{ gabinete.nome_responsavel }}{% else %}<span style="color:#222;">Não informado</span>{% endif %}</span></div>
+                <span style="color:#222; font-size:1.2rem;">|</span>
+                <div class="d-flex align-items-center gap-2"><i class="fas fa-envelope info-icon" style="color:#1976d2;"></i> <span>{% if gabinete.email_vereador %}{{ gabinete.email_vereador }}{% else %}<span style="color:#222;">Não informado</span>{% endif %}</span></div>
+                <span style="color:#222; font-size:1.2rem;">|</span>
+                <div class="d-flex align-items-center gap-2"><i class="fas fa-map-marker-alt info-icon" style="color:#1976d2;"></i> <span>{% if gabinete.get_localizacao_display %}{{ gabinete.get_localizacao_display }}{% else %}<span style="color:#222;">Não informado</span>{% endif %}</span></div>
+                <span style="color:#222; font-size:1.2rem;">|</span>
+                <div class="d-flex align-items-center gap-2"><i class="fas fa-clock info-icon" style="color:#1976d2;"></i> <span>{% if gabinete.horario_abertura and gabinete.horario_fechamento %}{{ gabinete.horario_abertura|time:'H:i' }} - {{ gabinete.horario_fechamento|time:'H:i' }}{% else %}<span style="color:#222;">Não informado</span>{% endif %}</span></div>
+            </div>
         </div>
+    </div>
 
-        <!-- Visitas -->
-        <div class="col-md-8">
+    <!-- Card de visitas -->
+    <div class="row">
+        <div class="col-12">
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h5 class="card-title mb-0">
@@ -499,56 +475,45 @@
                                     {% endfor %}
                                 </select>
                             </div>
-                            <div class="col-md-2 d-flex align-items-end">
-                                <button type="submit" class="btn btn-primary w-100">
-                                    <i class="fas fa-filter me-2"></i>Filtrar
-                                </button>
-                            </div>
                         </form>
                     </div>
 
-                    <!-- Tabela de Visitas -->
-                    <div class="table-responsive">
-                        <table class="table table-hover">
-                            <thead>
-                                <tr>
-                                    <th>Visitante</th>
-                                    <th>Data/Hora Entrada</th>
-                                    <th>Data/Hora Saída</th>
-                                    <th>Status</th>
-                                    <th>Tipo</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for visita in visitas %}
-                                <tr>
-                                    <td>
-                                        <span class="status-indicator {% if visita.status == 'em_andamento' %}active{% endif %}"></span>
-                                        <a href="#" class="text-primary" 
-                                           data-bs-toggle="modal" 
-                                           data-bs-target="#visitanteModal"
-                                           data-visitante-nome="{{ visita.visitante.nome_completo }}"
-                                           data-visitante-telefone="{{ visita.visitante.telefone }}"
-                                           data-visitante-email="{{ visita.visitante.email }}"
-                                           data-visitante-nascimento="{{ visita.visitante.data_nascimento|date:'d/m/Y' }}"
-                                           data-visitante-objetivo="{{ visita.get_objetivo_display }}"
-                                           data-visitante-foto="{% if visita.visitante.foto %}{{ visita.visitante.foto.url }}{% endif %}">
-                                            {{ visita.visitante.nome_completo }}
-                                        </a>
-                                    </td>
-                                    <td>{{ visita.data_entrada|date:"d/m/Y H:i" }}</td>
-                                    <td>{{ visita.data_saida|date:"d/m/Y H:i"|default:"-" }}</td>
-                                    <td>
-                                        <span class="badge status-{{ visita.status }}">
-                                            {{ visita.get_status_display }}
-                                        </span>
-                                    </td>
-                                    <td>{{ visita.get_objetivo_display }}</td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
+                    <!-- Tabela de Visitas (AJAX) -->
+                    <div id="tabela-visitas">
+                        {% include 'recepcao/includes/tabela_visitas_gabinete.html' with visitas=visitas %}
                     </div>
+
+                    <div id="spinner-visitas" style="display:none;text-align:center;padding:2rem;">
+                        <div class="spinner-border text-primary" role="status"><span class="visually-hidden">Carregando...</span></div>
+                    </div>
+
+                    <script>
+                    const formFiltros = document.querySelector('.filtros-container form');
+                    const tabelaVisitas = document.getElementById('tabela-visitas');
+                    const spinnerVisitas = document.getElementById('spinner-visitas');
+                    let urlTabela = window.location.pathname;
+                    if (!urlTabela.endsWith('/')) urlTabela += '/';
+                    urlTabela += 'tabela/';
+
+                    function atualizarTabelaVisitas() {
+                        const formData = new FormData(formFiltros);
+                        const params = new URLSearchParams(formData).toString();
+                        spinnerVisitas.style.display = 'block';
+                        tabelaVisitas.style.opacity = '0.5';
+                        fetch(urlTabela + '?' + params)
+                            .then(resp => resp.json())
+                            .then(data => {
+                                tabelaVisitas.innerHTML = data.html;
+                                spinnerVisitas.style.display = 'none';
+                                tabelaVisitas.style.opacity = '1';
+                            });
+                    }
+
+                    // Atualiza ao mudar qualquer campo
+                    formFiltros.querySelectorAll('input,select').forEach(el => {
+                        el.addEventListener('change', atualizarTabelaVisitas);
+                    });
+                    </script>
 
                     <!-- Paginação -->
                     {% if visitas.has_other_pages %}

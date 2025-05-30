@@ -184,3 +184,68 @@ sequenceDiagram
 ---
 
 > **Dica:** Você pode visualizar esses diagramas usando extensões Mermaid em editores como VSCode, Obsidian ou online em https://mermaid.live/
+
+# Estrutura DEV - Templates do Totem Facial (SIGEPE)
+
+## 1. Organização dos Templates
+
+A partir de 2024, todos os templates do fluxo do Totem Facial foram movidos para a pasta dedicada:
+
+```
+templates/toten_facial/
+├── totem.html                  # Tela principal do totem (reconhecimento facial)
+├── totem_home.html             # Tela inicial do totem (escolha: fazer/finalizar visita)
+├── totem_selecionar_setor.html # Seleção de setor/gabinete após reconhecimento
+├── cadastro_visitantes.html    # Cadastro de visitante (caso não reconhecido)
+├── totem_finalizar_visita.html # Finalização de visita via reconhecimento facial
+├── totem_visita_finalizada.html# Confirmação de visita finalizada
+```
+
+- **Todos os arquivos do fluxo do totem estão centralizados nesta pasta.**
+- Não há mais duplicidade com a pasta `templates/recepcao`.
+
+## 2. Padrão Visual e Usabilidade
+
+- **Layout coluna única, card centralizado, largura máxima 480px**
+- **Fundo gradiente azul/roxo** para profundidade
+- **Elementos grandes, touch-friendly** (inputs, botões, selects)
+- **Fonte grande (18px+)** para leitura confortável em tablets
+- **Espaçamento generoso** e contraste alto
+- **Responsivo para tablets** (media queries)
+- **Sem scroll horizontal**
+- **Stepper/indicador de etapas** no topo das telas multi-etapas
+- **Feedback visual claro** (mensagens, cores, loading)
+
+## 3. Boas Práticas de Manutenção
+
+- **Sempre criar novos templates do totem dentro de `toten_facial/`**
+- **Reutilizar o bloco de CSS base** (copiar de `totem.html` para novos arquivos)
+- **Evitar includes/extensões cruzadas com outras pastas**
+- **Testar em tablets reais e emuladores**
+- **Usar nomes de arquivos e variáveis claros e consistentes**
+- **Manter o padrão de acessibilidade** (labels, contraste, foco visível)
+
+## 4. Integração com Backend
+
+- As rotas e APIs continuam sob o prefixo `/recepcao/` (ex: `/recepcao/api/verificar-face/`)
+- Os templates apenas mudaram de pasta, não de URL
+- As views Django já foram atualizadas para renderizar os templates do novo diretório
+
+## 5. Como Expandir
+
+- Para adicionar novas etapas ou telas, crie o arquivo em `toten_facial/` e siga o padrão visual
+- Para alterar o visual, edite o bloco `<style>` dos templates do totem
+- Para integrações JS, mantenha o padrão de feedback visual e acessibilidade
+
+## 6. Checklist para DEV
+
+- [ ] Novo template criado em `toten_facial/`
+- [ ] CSS copiado do padrão do totem
+- [ ] Testado em tablet (responsividade, touch)
+- [ ] Sem includes/extensões cruzadas
+- [ ] Feedback visual e acessibilidade ok
+- [ ] Integração com backend testada
+
+---
+
+**Dúvidas ou sugestões? Fale com o time de Frontend/UX!**

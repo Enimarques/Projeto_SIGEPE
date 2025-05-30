@@ -22,7 +22,7 @@ urlpatterns = [
     path('main/', include('apps.main.urls', namespace='main')),
     path('relatorios/', include('relatorios.urls')),
     
-    # Home do sistema
+    # Home do sistema (sem namespace duplicado)
     path('', include('apps.main.urls')),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)  # Para servir arquivos de mídia
 

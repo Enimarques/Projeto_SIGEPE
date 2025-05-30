@@ -1,0 +1,45 @@
+<div class="table-responsive">
+    <table class="table table-hover">
+        <thead>
+            <tr>
+                <th>Visitante</th>
+                <th>Data/Hora Entrada</th>
+                <th>Data/Hora Saída</th>
+                <th>Status</th>
+                <th>Tipo</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for visita in visitas %}
+            <tr>
+                <td>
+                    <span class="status-indicator {% if visita.status == 'em_andamento' %}active{% endif %}"></span>
+                    <a href="#" class="text-primary" 
+                       data-bs-toggle="modal" 
+                       data-bs-target="#visitanteModal"
+                       data-visitante-nome="{{ visita.visitante.nome_completo }}"
+                       data-visitante-telefone="{{ visita.visitante.telefone }}"
+                       data-visitante-email="{{ visita.visitante.email }}"
+                       data-visitante-nascimento="{{ visita.visitante.data_nascimento|date:'d/m/Y' }}"
+                       data-visitante-objetivo="{{ visita.get_objetivo_display }}"
+                       data-visitante-foto="{% if visita.visitante.foto %}{{ visita.visitante.foto.url }}{% endif %}">
+                        {{ visita.visitante.nome_completo }}
+                    </a>
+                </td>
+                <td>{{ visita.data_entrada|date:"d/m/Y H:i" }}</td>
+                <td>{{ visita.data_saida|date:"d/m/Y H:i"|default:"-" }}</td>
+                <td>
+                    {% if visita.status == 'em_andamento' %}
+                        <span class="badge bg-primary">{{ visita.get_status_display }}</span>
+                    {% elif visita.status == 'finalizada' %}
+                        <span class="badge bg-success">{{ visita.get_status_display }}</span>
+                    {% else %}
+                        <span class="badge bg-danger">{{ visita.get_status_display }}</span>
+                    {% endif %}
+                </td>
+                <td>{{ visita.get_objetivo_display }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div> 

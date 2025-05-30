@@ -129,7 +129,7 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # Configurações específicas para reconhecimento facial
 FACE_RECOGNITION_SETTINGS = {
-    'MIN_FACE_CONFIDENCE': 0.6,  # Confiança mínima para reconhecimento
+    'MIN_FACE_CONFIDENCE': 0.5,  # Confiança mínima para reconhecimento (ajustado de 0.6 para 0.5)
     'FRAME_RESIZE_FACTOR': 0.25,  # Fator de redimensionamento para performance
     'MAX_CONCURRENT_RECOGNITIONS': 5,  # Máximo de rostos simultâneos
     'PHOTOS_SUBDIR': 'fotos_visitantes',  # Subdiretório para fotos

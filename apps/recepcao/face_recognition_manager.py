@@ -6,6 +6,7 @@ from datetime import datetime
 from django.conf import settings
 from django.db import connection
 from .models import Visitante
+import concurrent.futures
 
 class FaceRecognitionManager:
     def __init__(self, tolerance=0.6):
@@ -13,6 +14,12 @@ class FaceRecognitionManager:
         self.known_face_ids = []
         self.tolerance = tolerance  # Tolerância para reconhecimento (menor = mais preciso)
         self.enabled = settings.FACE_RECOGNITION_SETTINGS.get('ENABLED', True)
+        # Não é mais necessário carregar modelos manualmente
+        # O pacote face_recognition_models já fornece os modelos necessários
+        # via face_recognition
+        # self.shape_predictor = dlib.shape_predictor(LANDMARKS_MODEL)
+        # self.face_rec_model = dlib.face_recognition_model_v1(RECOGNITION_MODEL)
+        # self.cnn_face_detector = dlib.cnn_face_detection_model_v1(CNN_DETECTOR_MODEL)
         
         # Verifica se a tabela existe antes de carregar as faces
         if self.table_exists('recepcao_visitante'):
@@ -164,74 +171,60 @@ class FaceRecognitionManager:
             print(traceback.format_exc())
             raise
 
-    def identify_face(self, frame, tolerance=None):
-        """Identifica rostos em um frame de vídeo"""
+    def identify_face(self, frame, tolerance=None, max_attempts=5):
+        """Identifica rostos em um frame de vídeo. Usa apenas modelo HOG. Limita tentativas."""
         if not self.enabled:
             print("Reconhecimento facial desabilitado. Retornando sem identificação...")
             return [], []
-            
         if tolerance is None:
             tolerance = self.tolerance
-            
         try:
-            # Para diagnosticar problemas, vamos verificar o frame
+            import time
+            start_time = time.time()
             if frame is None:
                 print("ERRO: Frame vazio recebido para identificação")
                 return [], []
-                
             print(f"Processando frame para identificação. Dimensões: {frame.shape}")
-            
             if len(self.known_face_encodings) == 0:
                 print("AVISO: Nenhuma face conhecida cadastrada no sistema")
                 return [], []
-                
-            # Reduz o tamanho do frame para processamento mais rápido
             small_frame = cv2.resize(frame, (0, 0), fx=0.25, fy=0.25)
-            
-            # Converte de BGR (OpenCV) para RGB (face_recognition)
             rgb_small_frame = cv2.cvtColor(small_frame, cv2.COLOR_BGR2RGB)
-
-            # Detecta todos os rostos no frame
-            print("Detectando faces no frame...")
-            face_locations = face_recognition.face_locations(rgb_small_frame)
-            
+            print("Detectando faces no frame (modelo HOG)...")
+            attempts = 0
+            face_locations = []
+            while attempts < max_attempts and not face_locations:
+                face_locations = face_recognition.face_locations(rgb_small_frame, model="hog")
+                attempts += 1
             if not face_locations:
-                print("Nenhum rosto detectado no frame")
+                print(f"Nenhum rosto detectado no frame após {attempts} tentativas")
                 return [], []
-                
             print(f"Rostos detectados: {len(face_locations)}")
-            
-            # Gerar encodings para os rostos detectados
             face_encodings = face_recognition.face_encodings(rgb_small_frame, face_locations)
             print(f"Encodings gerados: {len(face_encodings)}")
-
             face_ids = []
-            for face_encoding in face_encodings:
-                # Procura por correspondências
-                matches = face_recognition.compare_faces(
-                    self.known_face_encodings, 
-                    face_encoding, 
-                    tolerance=tolerance
-                )
-                
-                # Calcular distâncias para debug
-                if self.known_face_encodings:
-                    distances = face_recognition.face_distance(self.known_face_encodings, face_encoding)
-                    min_distance = min(distances) if len(distances) > 0 else 1.0
-                    min_index = np.argmin(distances) if len(distances) > 0 else -1
-                    print(f"Melhor correspondência: distância={min_distance:.4f} (tolerância={tolerance})")
-                
-                # Verificar se houve correspondência
+            def compare_encoding(face_encoding):
+                matches = face_recognition.compare_faces(self.known_face_encodings, face_encoding, tolerance=tolerance)
+                distances = face_recognition.face_distance(self.known_face_encodings, face_encoding) if self.known_face_encodings else []
+                min_distance = min(distances) if len(distances) > 0 else 1.0
+                min_index = np.argmin(distances) if len(distances) > 0 else -1
                 if True in matches:
                     first_match_index = matches.index(True)
                     face_id = self.known_face_ids[first_match_index]
                     print(f"Rosto reconhecido: ID={face_id}, distância={distances[first_match_index]:.4f}")
-                    face_ids.append(face_id)
+                    return face_id
                 else:
                     print(f"Rosto não reconhecido. Melhor correspondência: {min_distance:.4f} (acima da tolerância {tolerance})")
-                    face_ids.append(None)
-
-            # Retorna as localizações e IDs dos rostos (ajustados para o tamanho original do frame)
+                    return None
+            # Multiprocessing para acelerar se houver muitos encodings
+            if len(self.known_face_encodings) > 20:
+                with concurrent.futures.ProcessPoolExecutor() as executor:
+                    results = list(executor.map(compare_encoding, face_encodings))
+                face_ids = results
+            else:
+                for face_encoding in face_encodings:
+                    face_ids.append(compare_encoding(face_encoding))
+            print(f"Tempo de processamento identify_face: {round(time.time() - start_time, 3)}s")
             return [(loc[0]*4, loc[1]*4, loc[2]*4, loc[3]*4) for loc in face_locations], face_ids
         except Exception as e:
             import traceback
@@ -270,3 +263,10 @@ class FaceRecognitionManager:
         except Exception as e:
             print(f"ERRO ao desenhar caixas faciais: {str(e)}")
             return frame
+
+    def reload_encodings(self):
+        """Força o recarregamento dos encodings do banco de dados."""
+        self.known_face_encodings = []
+        self.known_face_ids = []
+        self.load_known_faces()
+        print(f"Encodings recarregados manualmente. Total: {len(self.known_face_encodings)}")
