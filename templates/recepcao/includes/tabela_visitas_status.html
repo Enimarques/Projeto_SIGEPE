@@ -1,0 +1,58 @@
+{% if visitas %}
+<div class="table-responsive">
+    <table class="table table-hover">
+        <thead>
+            <tr>
+                <th>Visitante</th>
+                <th>Setor</th>
+                <th>Localização</th>
+                <th>Objetivo</th>
+                <th>Entrada</th>
+                <th>Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for visita in visitas %}
+            <tr>
+                <td>
+                    <div class="d-flex align-items-center">
+                        {% if visita.visitante.foto %}
+                        <img src="{{ visita.visitante.foto.url }}" alt="{{ visita.visitante.nome_completo }}" 
+                             class="rounded-circle me-2" style="width: 40px; height: 40px; object-fit: cover;">
+                        {% else %}
+                        <i class="fas fa-user-circle fa-2x me-2 text-muted"></i>
+                        {% endif %}
+                        <div>{{ visita.visitante.nome_completo }}</div>
+                    </div>
+                </td>
+                <td>{% if visita.setor.tipo == 'gabinete' %}{{ visita.setor.nome_vereador }}{% else %}{{ visita.setor.nome_local }}{% endif %}</td>
+                <td>{{ visita.get_localizacao_display }}</td>
+                <td>{{ visita.get_objetivo_display|default:"-" }}</td>
+                <td>
+                    {{ visita.data_entrada|date:"d/m/Y" }}<br>
+                    <small class="text-muted">{{ visita.data_entrada|time:"H:i" }}</small>
+                </td>
+                <td>
+                    <div class="btn-group">
+                        <form method="post" action="{% url 'recepcao:finalizar_visita' visita.id %}">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-outline-success btn-sm me-2">
+                                <i class="fas fa-sign-out-alt me-1"></i>Finalizar Visita
+                            </button>
+                        </form>
+                        <a href="{% url 'recepcao:gerar_etiqueta' visita.id %}" class="btn btn-outline-primary btn-sm">
+                            <i class="fas fa-tag me-1"></i>Gerar Etiqueta
+                        </a>
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div class="text-center py-5">
+    <i class="fas fa-clipboard-list fa-3x text-muted mb-3"></i>
+    <p class="lead text-muted">Nenhuma visita encontrada com os filtros aplicados.</p>
+</div>
+{% endif %} 

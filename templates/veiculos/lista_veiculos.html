@@ -25,7 +25,7 @@
     <!-- Filtros -->
     <div class="card mb-4">
         <div class="card-body">
-            <form method="get" class="row g-3">
+            <form method="get" class="row g-3" id="formFiltros">
                 <div class="col-md-3 col-12">
                     <label for="data_inicio" class="form-label">Data Início</label>
                     <input type="date" class="form-control" id="data_inicio" name="data_inicio" value="{{ filtros.data_inicio|date:'Y-m-d' }}">
@@ -48,8 +48,11 @@
                     </select>
                 </div>
                 <div class="col-12 text-end">
-                    <button type="submit" class="btn btn-primary">
+                    <button type="button" class="btn btn-primary" id="btnFiltrar">
                         <i class="fas fa-filter me-2"></i>Filtrar
+                    </button>
+                    <button type="button" class="btn btn-secondary" id="btnLimpar">
+                        <i class="fas fa-times me-2"></i>Limpar
                     </button>
                 </div>
             </form>
@@ -65,95 +68,19 @@
             </a>
         </div>
         <div class="card-body">
-            <div class="table-responsive">
-                <table class="table table-striped">
-                    <thead>
-                        <tr>
-                            <th>Placa</th>
-                            <th>Modelo</th>
-                            <th>Tipo</th>
-                            <th>Status</th>
-                            <th>Data Entrada</th>
-                            <th>Ações</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for veiculo in page_obj %}
-                        <tr>
-                            <td>{{ veiculo.placa }}</td>
-                            <td>{{ veiculo.modelo }}</td>
-                            <td>{{ veiculo.get_tipo_display }}</td>
-                            <td>
-                                {% if veiculo.bloqueado %}
-                                    <span class="badge bg-danger">Bloqueado</span>
-                                {% elif veiculo.data_saida %}
-                                    <span class="badge bg-secondary">Saída Realizada</span>
-                                {% else %}
-                                    <span class="badge bg-success">No Estacionamento</span>
-                                {% endif %}
-                            </td>
-                            <td>{{ veiculo.data_entrada|date:"d/m/Y H:i" }}</td>
-                            <td>
-                                <div class="btn-group" style="gap: 0.5rem;">
-                                    <a href="{% url 'veiculos:historico_veiculo' veiculo.id %}" class="btn btn-sm btn-info" title="Histórico">
-                                        <i class="fas fa-history"></i>
-                                    </a>
-                                    {% if not veiculo.bloqueado %}
-                                    <a href="{% url 'veiculos:bloquear_veiculo' veiculo.id %}" class="btn btn-sm btn-warning" title="Bloquear">
-                                        <i class="fas fa-ban"></i>
-                                    </a>
-                                    {% else %}
-                                    <a href="{% url 'veiculos:desbloquear_veiculo' veiculo.id %}" class="btn btn-sm btn-success" title="Desbloquear">
-                                        <i class="fas fa-check"></i>
-                                    </a>
-                                    {% endif %}
-                                    <!-- Botão Registrar Saída -->
-                                    {% if not veiculo.data_saida and not veiculo.bloqueado %}
-                                    <a href="{% url 'veiculos:registro_saida' %}?veiculo_id={{ veiculo.id }}" class="btn btn-sm" style="background-color: #388e3c; color: white;" title="Registrar Saída">
-                                        <i class="fas fa-sign-out-alt"></i> Registrar Saída
-                                    </a>
-                                    {% endif %}
-                                </div>
-                            </td>
-                        </tr>
-                        {% empty %}
-                        <tr>
-                            <td colspan="6" class="text-center">Nenhum veículo encontrado</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+            <!-- Loading overlay -->
+            <div id="loading-overlay" style="display: none;">
+                <div class="d-flex justify-content-center align-items-center" style="height: 200px;">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Carregando...</span>
+                    </div>
+                </div>
             </div>
 
-            {% if page_obj.paginator.num_pages > 1 %}
-            <nav aria-label="Navegação de páginas">
-                <ul class="pagination justify-content-center">
-                    {% if page_obj.has_previous %}
-                    <li class="page-item">
-                        <a class="page-link" href="?page=1">&laquo; Primeira</a>
-                    </li>
-                    <li class="page-item">
-                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Anterior</a>
-                    </li>
-                    {% endif %}
-
-                    <li class="page-item active">
-                        <span class="page-link">
-                            Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}
-                        </span>
-                    </li>
-
-                    {% if page_obj.has_next %}
-                    <li class="page-item">
-                        <a class="page-link" href="?page={{ page_obj.next_page_number }}">Próxima</a>
-                    </li>
-                    <li class="page-item">
-                        <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">Última &raquo;</a>
-                    </li>
-                    {% endif %}
-                </ul>
-            </nav>
-            {% endif %}
+            <!-- Tabela de Veículos -->
+            <div id="tabela-container">
+                {% include 'veiculos/includes/tabela_lista_veiculos.html' %}
+            </div>
         </div>
     </div>
 </div>
@@ -161,23 +88,120 @@
 
 {% block extra_js %}
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const searchInput = document.getElementById('searchInput');
-        const table = document.getElementById('veiculosTable');
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Lista de veículos carregada');
+    
+    const form = document.getElementById('formFiltros');
+    const btnFiltrar = document.getElementById('btnFiltrar');
+    const btnLimpar = document.getElementById('btnLimpar');
+    const loadingOverlay = document.getElementById('loading-overlay');
+    const tabelaContainer = document.getElementById('tabela-container');
+    
+    // URL da view AJAX
+    const ajaxUrl = '{% url "veiculos:lista_veiculos_ajax" %}';
+    
+    function showLoading() {
+        loadingOverlay.style.display = 'block';
+        tabelaContainer.style.opacity = '0.5';
+    }
+    
+    function hideLoading() {
+        loadingOverlay.style.display = 'none';
+        tabelaContainer.style.opacity = '1';
+    }
+    
+    function atualizarTabela(page = 1) {
+        console.log('Atualizando tabela, página:', page);
+        showLoading();
         
-        if (searchInput && table) {
-            searchInput.addEventListener('keyup', function() {
-                const searchText = this.value.toLowerCase();
-                const rows = table.getElementsByTagName('tr');
-                
-                Array.from(rows).forEach(function(row, index) {
-                    if (index === 0) return; // Skip header row
+        const formData = new FormData(form);
+        if (page > 1) {
+            formData.append('page', page);
+        }
+        
+        const params = new URLSearchParams(formData);
+        
+        fetch(ajaxUrl + '?' + params.toString())
+            .then(response => {
+                console.log('Resposta recebida:', response.status);
+                if (!response.ok) {
+                    throw new Error('Erro na requisição: ' + response.status);
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Dados recebidos:', data);
+                if (data.success) {
+                    tabelaContainer.innerHTML = data.html;
                     
-                    const text = row.textContent.toLowerCase();
-                    row.style.display = text.includes(searchText) ? '' : 'none';
-                });
+                    // Reativar eventos de paginação
+                    ativarPaginacao();
+                } else {
+                    console.error('Erro nos dados:', data);
+                }
+            })
+            .catch(error => {
+                console.error('Erro na requisição:', error);
+                alert('Erro ao carregar dados. Tente novamente.');
+            })
+            .finally(() => {
+                hideLoading();
+            });
+    }
+    
+    function ativarPaginacao() {
+        const paginationLinks = document.querySelectorAll('.pagination a[data-page]');
+        paginationLinks.forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                const page = this.getAttribute('data-page');
+                atualizarTabela(page);
+            });
+        });
+    }
+    
+    // Eventos dos filtros
+    btnFiltrar.addEventListener('click', function(e) {
+        e.preventDefault();
+        console.log('Botão filtrar clicado');
+        atualizarTabela();
+    });
+    
+    btnLimpar.addEventListener('click', function(e) {
+        e.preventDefault();
+        console.log('Botão limpar clicado');
+        form.reset();
+        atualizarTabela();
+    });
+    
+    // Filtrar ao pressionar Enter nos campos de texto
+    const textInputs = form.querySelectorAll('input[type="text"], input[type="date"]');
+    textInputs.forEach(input => {
+        input.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                atualizarTabela();
+            }
+        });
+        
+        // Também filtrar ao mudar data
+        if (input.type === 'date') {
+            input.addEventListener('change', function() {
+                atualizarTabela();
             });
         }
     });
+    
+    // Filtrar ao mudar selects
+    const selects = form.querySelectorAll('select');
+    selects.forEach(select => {
+        select.addEventListener('change', function() {
+            atualizarTabela();
+        });
+    });
+    
+    // Ativar paginação inicial
+    ativarPaginacao();
+});
 </script>
 {% endblock %}

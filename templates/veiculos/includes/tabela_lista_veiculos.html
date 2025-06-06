@@ -1,0 +1,86 @@
+<div class="table-responsive">
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Placa</th>
+                <th>Modelo</th>
+                <th>Tipo</th>
+                <th>Status</th>
+                <th>Data Entrada</th>
+                <th>Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for veiculo in page_obj %}
+            <tr>
+                <td>{{ veiculo.placa }}</td>
+                <td>{{ veiculo.modelo }}</td>
+                <td>{{ veiculo.get_tipo_display }}</td>
+                <td>
+                    {% if veiculo.bloqueado %}
+                        <span class="badge bg-danger">Bloqueado</span>
+                    {% elif veiculo.data_saida %}
+                        <span class="badge bg-secondary">Saída Realizada</span>
+                    {% else %}
+                        <span class="badge bg-success">No Estacionamento</span>
+                    {% endif %}
+                </td>
+                <td>{{ veiculo.data_entrada|date:"d/m/Y H:i" }}</td>
+                <td>
+                    <div class="btn-group" style="gap: 0.5rem;">
+                        {% if not veiculo.bloqueado %}
+                        <a href="{% url 'veiculos:bloquear_veiculo' veiculo.id %}" class="btn btn-sm btn-warning" title="Bloquear">
+                            <i class="fas fa-ban"></i>
+                        </a>
+                        {% else %}
+                        <a href="{% url 'veiculos:desbloquear_veiculo' veiculo.id %}" class="btn btn-sm btn-success" title="Desbloquear">
+                            <i class="fas fa-check"></i>
+                        </a>
+                        {% endif %}
+                        <!-- Botão Registrar Saída -->
+                        {% if not veiculo.data_saida and not veiculo.bloqueado %}
+                        <a href="{% url 'veiculos:registro_saida' %}?veiculo_id={{ veiculo.id }}" class="btn btn-sm" style="background-color: #388e3c; color: white;" title="Registrar Saída">
+                            <i class="fas fa-sign-out-alt"></i> Registrar Saída
+                        </a>
+                        {% endif %}
+                    </div>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="6" class="text-center">Nenhum veículo encontrado</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% if page_obj.paginator.num_pages > 1 %}
+<nav aria-label="Navegação de páginas">
+    <ul class="pagination justify-content-center">
+        {% if page_obj.has_previous %}
+        <li class="page-item">
+            <a class="page-link" href="#" data-page="1">&laquo; Primeira</a>
+        </li>
+        <li class="page-item">
+            <a class="page-link" href="#" data-page="{{ page_obj.previous_page_number }}">Anterior</a>
+        </li>
+        {% endif %}
+
+        <li class="page-item active">
+            <span class="page-link">
+                Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}
+            </span>
+        </li>
+
+        {% if page_obj.has_next %}
+        <li class="page-item">
+            <a class="page-link" href="#" data-page="{{ page_obj.next_page_number }}">Próxima</a>
+        </li>
+        <li class="page-item">
+            <a class="page-link" href="#" data-page="{{ page_obj.paginator.num_pages }}">Última &raquo;</a>
+        </li>
+        {% endif %}
+    </ul>
+</nav>
+{% endif %} 

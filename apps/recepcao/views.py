@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib.admin.views.decorators import staff_member_required
-from django.http import JsonResponse, HttpResponse
+from django.http import JsonResponse, HttpResponse, Http404
 from django.contrib import messages
 from django.core.paginator import Paginator
 from django.utils import timezone
@@ -14,18 +14,16 @@ from .forms_departamento import SetorForm
 from .utils import gerar_etiqueta_pdf
 import base64
 import json
-import cv2
 from django.urls import reverse
 from datetime import datetime, timedelta
 from .forms_departamento import AlterarHorarioSetorForm
 from django.core.exceptions import PermissionDenied
-from .reconhecimento_facial import ReconhecimentoFacial
 from apps.autenticacao.decorators import admin_required
 from reportlab.pdfgen import canvas
 from openpyxl import Workbook
 from openpyxl.utils import get_column_letter
-from .face_recognition_manager import FaceRecognitionManager
 from django.template.loader import render_to_string
+from apps.veiculos.models import Veiculo
 
 # Contexto base para todas as views do app
 def get_base_context(title_suffix=''):
@@ -39,18 +37,23 @@ def home_recepcao(request):
     hoje = timezone.localtime().date()
     
     # Contagem de visitas
-    # Este comentário é importante para entender a lógica de contagem de visitas
     visitas_hoje = Visita.objects.filter(data_entrada__date=hoje).count()
-    visitas_em_andamento = Visita.objects.filter(data_saida__isnull=True).count()  # Removido filtro de data
+    visitas_em_andamento = Visita.objects.filter(data_saida__isnull=True).count()
     visitas_finalizadas_hoje = Visita.objects.filter(data_entrada__date=hoje, data_saida__isnull=False).count()
     total_visitantes = Visitante.objects.count()
+    
+    # Contagem de veículos
+    veiculos_no_estacionamento = Veiculo.objects.filter(status='presente').count()
+    total_veiculos_cadastrados = Veiculo.objects.count()
     
     context = get_base_context()
     context.update({
         'visitas_hoje': visitas_hoje,
         'visitas_em_andamento': visitas_em_andamento,
         'visitas_finalizadas_hoje': visitas_finalizadas_hoje,
-        'total_visitantes': total_visitantes
+        'total_visitantes': total_visitantes,
+        'veiculos_no_estacionamento': veiculos_no_estacionamento,
+        'total_veiculos_cadastrados': total_veiculos_cadastrados
     })
     return render(request, 'recepcao/home_recepcao.html', context)
 
@@ -88,7 +91,7 @@ def cadastro_visitantes(request):
         if form.is_valid():
             visitante = form.save()
             messages.success(request, 'Visitante cadastrado com sucesso!')
-            return redirect('recepcao:registrar_face', visitante_id=visitante.id)
+            return redirect('recepcao:detalhes_visitante', pk=visitante.id)
     else:
         form = VisitanteForm()
     
@@ -98,7 +101,7 @@ def cadastro_visitantes(request):
         'visitante': None,  
     })
     
-    return render(request, 'toten_facial/cadastro_visitantes.html', context)
+    return render(request, 'recepcao/cadastro_visitantes.html', context)
 
 @login_required(login_url='autenticacao:login_sistema')
 def detalhes_visitante(request, pk):
@@ -188,74 +191,73 @@ def registro_visitas(request):
 
 @login_required(login_url='autenticacao:login_sistema')
 def buscar_visitante(request):
-    cpf = request.GET.get('cpf')
-    print(f"[DEBUG] Requisição de busca de visitante recebida para CPF: {cpf}")
+    query = request.GET.get('query', None)
     
-    if not cpf:
-        print("[DEBUG] CPF não fornecido na requisição")
-        return JsonResponse({'success': False, 'message': 'CPF não fornecido'})
+    if not query or len(query) < 3:
+        return JsonResponse({'success': False, 'message': 'Digite ao menos 3 caracteres para buscar.'})
     
-    try:
-        print(f"[DEBUG] Buscando visitante com CPF: {cpf}")
-        visitante = Visitante.objects.get(CPF=cpf)
-        print(f"[DEBUG] Visitante encontrado: {visitante.nome_completo} (ID: {visitante.id})")
+    # Limpa o CPF de formatação para a busca no banco
+    cleaned_query = query.replace('.', '').replace('-', '')
+    
+    # Busca por nome ou por CPF
+    visitantes = Visitante.objects.filter(
+        Q(nome_completo__icontains=query) |
+        Q(CPF__icontains=cleaned_query)
+    ).order_by('nome_completo')[:10] # Limita a 10 resultados
+
+    if not visitantes.exists():
+        return JsonResponse({
+            'success': False,
+            'message': 'Nenhum visitante encontrado.'
+        })
+
+    # Prepara os dados para a resposta JSON
+    visitantes_data = []
+    for v in visitantes:
+        # Buscar a última visita do visitante
+        ultima_visita = Visita.objects.filter(visitante=v).order_by('-data_entrada').first()
         
-        resposta = {
-            'success': True,
-            'visitante': {
-                'id': visitante.id,
-                'nome_completo': visitante.nome_completo,
-                'telefone': visitante.telefone
-            }
+        visitante_data = {
+            'id': v.id,
+            'nome_completo': v.nome_completo,
+            'cpf': v.CPF, # Retorna o CPF formatado
+            'telefone': v.telefone,
+            'foto': v.foto.url if v.foto else None,
+            'ultima_visita': ultima_visita.data_entrada.strftime('%d/%m/%Y') if ultima_visita else None,
+            'total_visitas': Visita.objects.filter(visitante=v).count(),
+            'email': v.email if v.email else 'Não informado'
         }
-        print(f"[DEBUG] Resposta: {resposta}")
-        return JsonResponse(resposta)
-    except Visitante.DoesNotExist:
-        print(f"[DEBUG] Nenhum visitante encontrado com CPF: {cpf}")
-        return JsonResponse({
-            'success': False,
-            'message': 'Visitante não encontrado'
-        })
-    except Exception as e:
-        print(f"[DEBUG] Erro ao buscar visitante: {str(e)}")
-        return JsonResponse({
-            'success': False,
-            'message': f'Erro ao buscar visitante: {str(e)}'
-        })
+        visitantes_data.append(visitante_data)
+
+    return JsonResponse({'success': True, 'visitantes': visitantes_data})
 
 @login_required(login_url='autenticacao:login_sistema')
 def buscar_setores(request):
     tipo = request.GET.get('tipo', 'departamento')
-    setores = Setor.objects.filter(tipo=tipo)
     
-    # Ordenar os setores de acordo com o tipo
-    if tipo == 'gabinete':
-        setores = setores.order_by('nome_vereador')
-    else:
-        setores = setores.order_by('nome_local')
+    # Filtrar setores por tipo
+    setores = Setor.objects.filter(tipo=tipo).order_by('nome_vereador', 'nome_local')
     
-    setores_data = []
-    for setor in setores:
-        setor_info = {
-            'id': setor.id,
-            'tipo': setor.tipo,
-            'localizacao': setor.get_localizacao_display(),
-            'nome_vereador': setor.nome_vereador if setor.tipo == 'gabinete' else None,
-            'nome_local': setor.nome_local if setor.tipo == 'departamento' else None
-        }
-        setores_data.append(setor_info)
-    
-    if not setores_data:
+    if not setores.exists():
         return JsonResponse({
             'success': False,
-            'setores': [],
-            'message': 'Nenhum setor encontrado para o tipo selecionado.'
+            'message': f'Nenhum {tipo} encontrado.'
+        })
+    
+    # Preparar dados dos setores
+    setores_data = []
+    for setor in setores:
+        setores_data.append({
+            'id': setor.id,
+            'tipo': setor.tipo,
+            'nome_vereador': setor.nome_vereador if setor.tipo == 'gabinete' else None,
+            'nome_local': setor.nome_local if setor.tipo == 'departamento' else None,
+            'localizacao': setor.get_localizacao_display()
         })
     
     return JsonResponse({
         'success': True,
-        'setores': setores_data,
-        'message': 'Setores carregados com sucesso.'
+        'setores': setores_data
     })
 
 @login_required(login_url='autenticacao:login_sistema')
@@ -375,8 +377,17 @@ def status_visita(request):
     # Ordenar por data de entrada mais recente
     visitas = visitas.order_by('-data_entrada')
 
-    # Estatísticas
+    # Estatísticas principais para os cards conforme modelo de referência
     total_em_andamento = visitas.count()
+    total_visitantes = Visitante.objects.count()
+    
+    # Métricas de veículos
+    veiculos_no_estacionamento = Veiculo.objects.filter(
+        status='presente'
+    ).count()
+    total_veiculos_cadastrados = Veiculo.objects.count()
+    
+    # Estatísticas por localização (para gráficos ou outras visualizações se necessário)
     total_por_local = {
         'terreo': visitas.filter(localizacao='terreo').count(),
         'plenario': visitas.filter(localizacao='plenario').count(),
@@ -388,6 +399,9 @@ def status_visita(request):
     context.update({
         'visitas': visitas,
         'total_em_andamento': total_em_andamento,
+        'total_visitantes': total_visitantes,
+        'veiculos_no_estacionamento': veiculos_no_estacionamento,
+        'total_veiculos_cadastrados': total_veiculos_cadastrados,
         'total_por_local': total_por_local,
         'setores': Setor.objects.filter(ativo=True).order_by('nome_vereador', 'nome_local'),
         'localizacoes': dict(Visita.LOCALIZACAO_CHOICES),
@@ -593,314 +607,6 @@ def alterar_horario_departamento(request):
     })
     
     return render(request, 'recepcao/alterar_horario_departamento.html', context)
-
-@login_required(login_url='autenticacao:login_sistema')
-def registrar_face(request, visitante_id):
-    visitante = get_object_or_404(Visitante, id=visitante_id)
-    
-    if request.method == 'POST':
-        try:
-            # Obter a imagem do formulário
-            face_image = request.FILES.get('face_image')
-            if not face_image:
-                return JsonResponse({'success': False, 'message': 'Imagem não fornecida'})
-            
-            # Salvar a imagem temporariamente
-            import tempfile
-            import os
-            
-            temp_dir = tempfile.mkdtemp()
-            temp_path = os.path.join(temp_dir, 'face.jpg')
-            
-            with open(temp_path, 'wb+') as destination:
-                for chunk in face_image.chunks():
-                    destination.write(chunk)
-            
-            # Processar a face
-            reconhecimento = ReconhecimentoFacial()
-            face_id = reconhecimento.registrar_face(temp_path, visitante.id)
-            
-            # Limpar arquivos temporários
-            os.unlink(temp_path)
-            os.rmdir(temp_dir)
-            
-            if face_id:
-                visitante.face_id = face_id
-                visitante.save()
-                return JsonResponse({'success': True})
-            else:
-                return JsonResponse({'success': False, 'message': 'Não foi possível detectar uma face na imagem'})
-            
-        except Exception as e:
-            return JsonResponse({'success': False, 'message': str(e)})
-    
-    context = get_base_context('Registrar Face')
-    context.update({
-        'visitante': visitante
-    })
-    
-    return render(request, 'recepcao/registrar_face.html', context)
-
-@login_required(login_url='autenticacao:login_sistema')
-def verificar_face(request):
-    if request.method == 'POST':
-        cpf = request.POST.get('cpf')
-        try:
-            visitante = Visitante.objects.get(CPF=cpf)
-            reconhecimento = ReconhecimentoFacial()
-            
-            if reconhecimento.verificar_face(visitante.id):
-                return JsonResponse({
-                    'success': True,
-                    'visitante': {
-                        'id': visitante.id,
-                        'nome_completo': visitante.nome_completo,
-                        'cpf': visitante.CPF
-                    }
-                })
-            else:
-                return JsonResponse({
-                    'success': False,
-                    'message': 'Face não reconhecida. Por favor, tente novamente.'
-                })
-                
-            # reconhecimento = ReconhecimentoFacial()
-            
-            # if reconhecimento.verificar_face(visitante.id):
-            #     return JsonResponse({
-            #         'success': True,
-            #         'visitante': {
-            #             'id': visitante.id,
-            #             'nome_completo': visitante.nome_completo,
-            #             'cpf': visitante.CPF
-            #         }
-            #     })
-            # else:
-            #     return JsonResponse({
-            #         'success': False,
-            #         'message': 'Face não reconhecida. Por favor, tente novamente.'
-            #     })
-                
-            return JsonResponse({
-                'success': False,
-                'message': 'Reconhecimento facial desativado temporariamente'
-            })
-        except Visitante.DoesNotExist:
-            return JsonResponse({
-                'success': False,
-                'message': 'Visitante não encontrado.'
-            })
-        except Exception as e:
-            return JsonResponse({
-                'success': False,
-                'message': f'Erro ao verificar face: {str(e)}'
-            })
-            
-    return JsonResponse({'success': False, 'message': 'Método não permitido'})
-
-@login_required(login_url='autenticacao:login_sistema')
-def verificar_face_frame(request):
-    """Processa um frame para detecção facial e retorna os pontos detectados"""
-    if request.method == 'POST':
-        try:
-            # Obter o frame
-            frame_file = request.FILES.get('frame')
-            if not frame_file:
-                return JsonResponse({'success': False, 'message': 'Frame não fornecido'})
-            
-            # Salvar o frame temporariamente
-            import tempfile
-            import os
-            
-            temp_dir = tempfile.mkdtemp()
-            temp_path = os.path.join(temp_dir, 'frame.jpg')
-            
-            with open(temp_path, 'wb+') as destination:
-                for chunk in frame_file.chunks():
-                    destination.write(chunk)
-            
-            # Carregar o frame
-            frame = cv2.imread(temp_path)
-            
-            # Processar o frame
-            reconhecimento = ReconhecimentoFacial()
-            face_detected = reconhecimento.desenhar_face(frame)
-            
-            # Limpar arquivos temporários
-            os.unlink(temp_path)
-            os.rmdir(temp_dir)
-            
-            return JsonResponse({
-                'success': True,
-                'face_detected': face_detected,
-                'face_points': face_detected  # A função desenhar_face já desenha os pontos
-            })
-            
-            # Processar o frame
-            # reconhecimento = ReconhecimentoFacial()
-            # face_detected = reconhecimento.desenhar_face(temp_path)
-            
-            # Limpar arquivos temporários
-            # os.unlink(temp_path)
-            # os.rmdir(temp_dir)
-            
-            return JsonResponse({
-                'success': False,
-                'message': 'Reconhecimento facial desativado temporariamente'
-            })
-            
-        except Exception as e:
-            return JsonResponse({'success': False, 'message': str(e)})
-    
-    return JsonResponse({'success': False, 'message': 'Método não permitido'})
-
-@login_required(login_url='autenticacao:login_sistema')
-def totem_visitas(request):
-    context = get_base_context('Totem de Visitas')
-    context['Setor'] = Setor
-    context['OBJETIVO_CHOICES'] = Visita.OBJETIVO_CHOICES
-    return render(request, 'toten_facial/reconhecimento_facial.html', context)
-
-@login_required(login_url='autenticacao:login_sistema')
-def upload_foto_visitante(request, visitante_id):
-    """View para gerenciar o upload de fotos dos visitantes"""
-    import logging
-    logger = logging.getLogger(__name__)
-    
-    try:
-        visitante = Visitante.objects.get(id=visitante_id)
-    except Visitante.DoesNotExist:
-        logger.error(f'Visitante {visitante_id} não encontrado')
-        return JsonResponse({'success': False, 'message': 'Visitante não encontrado.'})
-    
-    if request.method == 'POST':
-        logger.info(f'Recebido POST para upload de foto do visitante {visitante_id}')
-        logger.info(f'Files no request: {request.FILES}')
-        logger.info(f'Content Type: {request.content_type}')
-        logger.info(f'Headers: {request.headers}')
-        
-        if 'foto' in request.FILES:
-            logger.info('Foto encontrada no request')
-            try:
-                # Remove foto antiga se existir
-                if visitante.foto:
-                    visitante.foto.delete()
-                # Salva nova foto
-                visitante.foto = request.FILES['foto']
-                visitante.face_registrada = False  # Reset do status de reconhecimento
-                visitante.face_id = None
-                visitante.save()
-                logger.info('Foto salva com sucesso')
-
-                # Reprocessar o encoding facial imediatamente
-                face_manager = FaceRecognitionManager()
-                try:
-                    face_manager.register_face(visitante.id)
-                    logger.info('Novo encoding facial gerado com sucesso')
-                except Exception as e:
-                    logger.error(f'Erro ao gerar novo encoding facial: {str(e)}')
-                    return JsonResponse({'success': False, 'message': f'Foto salva, mas houve erro ao processar o reconhecimento facial: {str(e)}'})
-
-                # Redireciona para o registro facial
-                return JsonResponse({
-                    'success': True, 
-                    'message': 'Foto enviada e reconhecimento facial atualizado com sucesso!',
-                    'redirect_url': reverse('recepcao:registrar_face', args=[visitante_id])
-                })
-            except Exception as e:
-                logger.error(f'Erro ao salvar foto: {str(e)}')
-                return JsonResponse({'success': False, 'message': f'Erro ao salvar foto: {str(e)}'})
-        else:
-            logger.error('Nenhuma foto encontrada no request')
-            return JsonResponse({'success': False, 'message': 'Nenhuma foto foi enviada.'})
-    
-    return render(request, 'recepcao/upload_foto.html', {'visitante': visitante})
-
-@login_required
-@staff_member_required
-def get_assessores_por_tipo(request):
-    """
-    Retorna uma lista de assessores filtrados por tipo de setor.
-    """
-    tipo = request.GET.get('tipo')
-    assessores = Assessor.objects.filter(
-        ativo=True,
-        departamento__tipo=tipo
-    ).order_by('nome_responsavel')
-    
-    data = [
-        {
-            'id': assessor.id,
-            'text': f"{assessor.nome_responsavel} ({assessor.get_funcao_display()})"
-        }
-        for assessor in assessores
-    ]
-    
-    return JsonResponse(data, safe=False)
-
-@login_required
-@staff_member_required
-def get_assessor_info(request):
-    """
-    Retorna as informações detalhadas de um assessor.
-    """
-    assessor_id = request.GET.get('assessor_id')
-    try:
-        assessor = Assessor.objects.get(id=assessor_id, ativo=True)
-        data = {
-            'email': assessor.email,
-            'funcao': assessor.funcao,
-            'horario_entrada': assessor.horario_entrada.strftime('%H:%M') if assessor.horario_entrada else '',
-            'horario_saida': assessor.horario_saida.strftime('%H:%M') if assessor.horario_saida else ''
-        }
-        return JsonResponse(data)
-    except Assessor.DoesNotExist:
-        return JsonResponse({'error': 'Assessor não encontrado'}, status=404)
-
-@login_required(login_url='autenticacao:login_sistema')
-def teste_camera(request):
-    """
-    Página simples para testar o acesso à câmera sem reconhecimento facial.
-    Útil para diagnóstico de problemas de câmera.
-    """
-    return render(request, 'recepcao/teste_camera.html')
-
-@login_required(login_url='autenticacao:login_sistema')
-def totem_home(request):
-    """Página inicial do totem com opções de iniciar ou finalizar visita"""
-    context = get_base_context('Bem-vindo ao Totem')
-    return render(request, 'toten_facial/totem_home.html', context)
-
-@login_required(login_url='autenticacao:login_sistema')
-def totem_finalizar_visita(request):
-    """Página para finalizar visita através do reconhecimento facial"""
-    context = get_base_context('Finalizar Visita')
-    
-    # Se for uma requisição POST, processar o reconhecimento facial
-    if request.method == 'POST':
-        visitante_id = request.POST.get('visitante_id')
-        if visitante_id:
-            try:
-                visitante = Visitante.objects.get(id=visitante_id)
-                visitas_ativas = Visita.objects.filter(
-                    visitante=visitante,
-                    status='em_andamento',
-                    data_saida__isnull=True
-                )
-                if visitas_ativas.exists():
-                    for visita in visitas_ativas:
-                        visita.data_saida = timezone.now()
-                        visita.status = 'finalizada'
-                        visita.save()
-                    messages.success(request, f'Visita finalizada com sucesso para {visitante.nome_completo}!')
-                    return redirect('recepcao:totem_home')
-                else:
-                    context['erro'] = 'Não foi encontrada nenhuma visita em andamento para este visitante.'
-            except Visitante.DoesNotExist:
-                context['erro'] = 'Visitante não encontrado.'
-            except Exception as e:
-                context['erro'] = f'Erro ao finalizar visita: {str(e)}'
-    return render(request, 'toten_facial/totem_finalizar_visita.html', context)
 
 @login_required
 def home_gabinetes(request):
@@ -1196,34 +902,6 @@ def detalhes_departamento(request, departamento_id):
     return render(request, 'recepcao/detalhes_departamento.html', context)
 
 @login_required(login_url='autenticacao:login_sistema')
-def totem_selecionar_setor(request):
-    visitante_id = request.GET.get('visitante_id')
-    visitante = None
-    if visitante_id:
-        try:
-            visitante = Visitante.objects.get(id=visitante_id)
-        except Visitante.DoesNotExist:
-            visitante = None
-    if request.method == 'POST':
-        setor_id = request.POST.get('setor')
-        if visitante_id and setor_id:
-            try:
-                visitante = Visitante.objects.get(id=visitante_id)
-                setor = Setor.objects.get(id=setor_id)
-                visita = Visita.objects.create(
-                    visitante=visitante,
-                    setor=setor,
-                    objetivo='visita',  # objetivo padrão
-                    status='em_andamento',
-                    data_entrada=timezone.now(),
-                    localizacao=setor.localizacao
-                )
-                return redirect('recepcao:status_visita')
-            except Exception as e:
-                pass  # Trate o erro conforme necessário
-    return render(request, 'toten_facial/totem_selecionar_setor.html', {'visitante_id': visitante_id, 'visitante': visitante})
-
-@login_required(login_url='autenticacao:login_sistema')
 def visitas_tabela_departamento(request, departamento_id):
     departamento = get_object_or_404(Setor, id=departamento_id, tipo='departamento')
     visitas = Visita.objects.filter(setor=departamento).order_by('-data_entrada')
@@ -1262,3 +940,228 @@ def visitas_tabela_gabinete(request, gabinete_id):
         visitas = visitas.filter(objetivo=objetivo)
     html = render_to_string('recepcao/includes/tabela_visitas_gabinete.html', {'visitas': visitas})
     return JsonResponse({'html': html})
+
+@login_required(login_url='autenticacao:login_sistema')
+def upload_foto_visitante(request, visitante_id):
+    """View para gerenciar o upload de fotos dos visitantes"""
+    import logging
+    logger = logging.getLogger(__name__)
+    
+    try:
+        visitante = Visitante.objects.get(id=visitante_id)
+    except Visitante.DoesNotExist:
+        logger.error(f'Visitante {visitante_id} não encontrado')
+        return JsonResponse({'success': False, 'message': 'Visitante não encontrado.'})
+    
+    if request.method == 'POST':
+        logger.info(f'Recebido POST para upload de foto do visitante {visitante_id}')
+        logger.info(f'Files no request: {request.FILES}')
+        
+        if 'foto' in request.FILES:
+            logger.info('Foto encontrada no request')
+            try:
+                # Remove foto antiga se existir
+                if visitante.foto:
+                    visitante.foto.delete()
+                # Salva nova foto
+                visitante.foto = request.FILES['foto']
+                visitante.save()
+                logger.info('Foto salva com sucesso')
+
+                return JsonResponse({
+                    'success': True, 
+                    'message': 'Foto enviada com sucesso!',
+                    'redirect_url': reverse('recepcao:detalhes_visitante', args=[visitante_id])
+                })
+            except Exception as e:
+                logger.error(f'Erro ao salvar foto: {str(e)}')
+                return JsonResponse({'success': False, 'message': f'Erro ao salvar foto: {str(e)}'})
+        else:
+            logger.error('Nenhuma foto encontrada no request')
+            return JsonResponse({'success': False, 'message': 'Nenhuma foto foi enviada.'})
+    
+    return render(request, 'recepcao/upload_foto.html', {'visitante': visitante})
+
+@login_required
+@staff_member_required
+def get_assessores_por_tipo(request):
+    """
+    Retorna uma lista de assessores filtrados por tipo de setor.
+    """
+    tipo = request.GET.get('tipo')
+    assessores = Assessor.objects.filter(
+        ativo=True,
+        departamento__tipo=tipo
+    ).order_by('nome_responsavel')
+    
+    data = [
+        {
+            'id': assessor.id,
+            'text': f"{assessor.nome_responsavel} ({assessor.get_funcao_display()})"
+        }
+        for assessor in assessores
+    ]
+    
+    return JsonResponse(data, safe=False)
+
+@login_required
+@staff_member_required
+def get_assessor_info(request):
+    """
+    Retorna as informações detalhadas de um assessor.
+    """
+    assessor_id = request.GET.get('assessor_id')
+    try:
+        assessor = Assessor.objects.get(id=assessor_id, ativo=True)
+        data = {
+            'email': assessor.email,
+            'funcao': assessor.funcao,
+            'horario_entrada': assessor.horario_entrada.strftime('%H:%M') if assessor.horario_entrada else '',
+            'horario_saida': assessor.horario_saida.strftime('%H:%M') if assessor.horario_saida else ''
+        }
+        return JsonResponse(data)
+    except Assessor.DoesNotExist:
+        return JsonResponse({'error': 'Assessor não encontrado'}, status=404)
+
+@login_required(login_url='autenticacao:login_sistema')
+def status_visita_ajax(request):
+    """
+    Retorna apenas a tabela de visitas filtrada via AJAX.
+    """
+    # Usar a mesma lógica da view principal
+    data = request.GET.get('data')
+    hora_inicio = request.GET.get('hora_inicio')
+    hora_fim = request.GET.get('hora_fim')
+    localizacao = request.GET.get('localizacao')
+    setor = request.GET.get('setor')
+
+    # Iniciar queryset com visitas não finalizadas e status em andamento
+    visitas = Visita.objects.filter(
+        data_saida__isnull=True,
+        status='em_andamento'
+    )
+
+    # Aplicar filtros
+    if data:
+        try:
+            data = datetime.strptime(data, '%Y-%m-%d').date()
+            visitas = visitas.filter(data_entrada__date=data)
+        except (ValueError, TypeError):
+            pass
+
+    if hora_inicio:
+        try:
+            hora_inicio = datetime.strptime(hora_inicio, '%H:%M').time()
+            visitas = visitas.filter(data_entrada__time__gte=hora_inicio)
+        except (ValueError, TypeError):
+            pass
+
+    if hora_fim:
+        try:
+            hora_fim = datetime.strptime(hora_fim, '%H:%M').time()
+            visitas = visitas.filter(data_entrada__time__lte=hora_fim)
+        except (ValueError, TypeError):
+            pass
+
+    if localizacao:
+        visitas = visitas.filter(localizacao=localizacao)
+
+    if setor:
+        visitas = visitas.filter(setor_id=setor)
+
+    # Ordenar por data de entrada mais recente
+    visitas = visitas.order_by('-data_entrada')
+
+    # Renderizar apenas a tabela
+    table_html = render_to_string(
+        'recepcao/includes/tabela_visitas_status.html',
+        {'visitas': visitas},
+        request=request
+    )
+
+    return JsonResponse({
+        'success': True,
+        'html': table_html,
+        'total_visitas': visitas.count()
+    })
+
+@login_required(login_url='autenticacao:login_sistema')
+def historico_visitas_ajax(request):
+    """
+    Retorna apenas a tabela do histórico de visitas filtrada via AJAX.
+    """
+    # Usar a mesma lógica da view principal
+    status = request.GET.get('status')
+    periodo = request.GET.get('periodo')
+    busca = request.GET.get('busca')
+    
+    # Query base
+    visitas = Visita.objects.all()
+    
+    # Aplicar filtros
+    if status:
+        if status == 'em_andamento':
+            visitas = visitas.filter(data_saida__isnull=True)
+        elif status == 'finalizada':
+            visitas = visitas.filter(data_saida__isnull=False)
+    
+    if periodo:
+        hoje = timezone.localtime().date()
+        if periodo == 'hoje':
+            visitas = visitas.filter(data_entrada__date=hoje)
+        elif periodo == 'semana':
+            inicio_semana = hoje - timedelta(days=hoje.weekday())
+            visitas = visitas.filter(data_entrada__date__gte=inicio_semana)
+        elif periodo == 'mes':
+            inicio_mes = hoje.replace(day=1)
+            visitas = visitas.filter(data_entrada__date__gte=inicio_mes)
+    
+    if busca:
+        visitas = visitas.filter(
+            Q(visitante__nome_completo__icontains=busca) |
+            Q(visitante__CPF__icontains=busca)
+        )
+    
+    # Ordenação
+    visitas = visitas.order_by('-data_entrada')
+    
+    # Paginação
+    paginator = Paginator(visitas, 10)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    
+    # Estatísticas
+    total_visitas = visitas.count()
+    visitas_em_andamento = visitas.filter(data_saida__isnull=True).count()
+    visitas_finalizadas = visitas.filter(data_saida__isnull=False).count()
+
+    # Renderizar apenas a tabela e estatísticas
+    table_html = render_to_string(
+        'recepcao/includes/tabela_historico_visitas.html',
+        {
+            'page_obj': page_obj,
+            'status_filtro': status,
+            'periodo_filtro': periodo,
+            'busca': busca,
+        },
+        request=request
+    )
+    
+    stats_html = render_to_string(
+        'recepcao/includes/stats_historico_visitas.html',
+        {
+            'total_visitas': total_visitas,
+            'visitas_em_andamento': visitas_em_andamento,
+            'visitas_finalizadas': visitas_finalizadas,
+        },
+        request=request
+    )
+
+    return JsonResponse({
+        'success': True,
+        'html': table_html,
+        'stats_html': stats_html,
+        'total_visitas': total_visitas,
+        'visitas_em_andamento': visitas_em_andamento,
+        'visitas_finalizadas': visitas_finalizadas,
+    })

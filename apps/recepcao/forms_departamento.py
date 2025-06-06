@@ -39,18 +39,8 @@ class AlterarHorarioSetorForm(forms.ModelForm):
 
 class SetorForm(forms.ModelForm):
     """
-    Formulário para criar/editar Setores com seleção de responsável
+    Formulário para criar/editar Setores
     """
-    nome_responsavel = forms.ModelChoiceField(
-        queryset=Assessor.objects.filter(ativo=True, departamento__isnull=False),
-        label='Responsável',
-        required=False,
-        empty_label="Selecione um responsável",
-        widget=forms.Select(attrs={
-            'class': 'form-control select2',
-            'data-placeholder': 'Selecione um responsável'
-        })
-    )
     
     class Meta:
         model = Setor
@@ -74,6 +64,10 @@ class SetorForm(forms.ModelForm):
             }),
             'localizacao': forms.Select(attrs={
                 'class': 'form-control'
+            }),
+            'nome_responsavel': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Nome do responsável'
             }),
             'funcao': forms.Select(attrs={
                 'class': 'form-control'
@@ -121,25 +115,8 @@ class SetorForm(forms.ModelForm):
         if hide_responsavel or (instance and instance.tipo == 'gabinete'):
             self.fields.pop('nome_responsavel', None)
         
-        # Se for edição, filtra os assessores pelo tipo do setor
-        if instance and 'nome_responsavel' in self.fields:
-            self.fields['nome_responsavel'].queryset = Assessor.objects.filter(
-                ativo=True,
-                departamento__isnull=False
-            ).order_by('nome_responsavel')
-            
-            # Se já existe um responsável, pré-seleciona ele
-            if instance.nome_responsavel:
-                try:
-                    assessor = Assessor.objects.get(
-                        nome_responsavel=instance.nome_responsavel,
-                        ativo=True
-                    )
-                    self.fields['nome_responsavel'].initial = assessor.id
-                except Assessor.DoesNotExist:
-                    pass
-            
-            # Mostra/esconde campos baseado no tipo
+        # Mostra/esconde campos baseado no tipo
+        if instance:
             if instance.tipo == 'gabinete':
                 self.fields['nome_vereador'].required = True
                 self.fields['email_vereador'].required = True
@@ -194,22 +171,6 @@ class SetorForm(forms.ModelForm):
                     )
         
         return cleaned_data
-        
-    def save(self, commit=True):
-        setor = super().save(commit=False)
-        assessor = self.cleaned_data.get('nome_responsavel')
-        
-        if assessor:
-            setor.nome_responsavel = assessor.nome_responsavel
-            setor.email = assessor.email
-            setor.funcao = assessor.funcao
-            setor.horario_entrada = assessor.horario_entrada
-            setor.horario_saida = assessor.horario_saida
-            
-        if commit:
-            setor.save()
-            
-        return setor
 
     fieldsets = (
         ('Informações do Gabinete', {

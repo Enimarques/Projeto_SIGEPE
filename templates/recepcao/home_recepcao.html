@@ -5,266 +5,569 @@
 
 {% block extra_css %}
 <style>
-    .card-stat {
-        min-height: 140px;
-        border-radius: 16px;
+    /* Variáveis CSS para facilitar manutenção */
+    :root {
+        --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        --success-gradient: linear-gradient(135deg, #5cb85c, #28a745);
+        --info-gradient: linear-gradient(135deg, #6dd5ed, #2193b0);
+        --warning-gradient: linear-gradient(135deg, #f1c40f, #f39c12);
+        --danger-gradient: linear-gradient(135deg, #e67e22, #e74c3c);
+        --card-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        --card-shadow-hover: 0 16px 48px rgba(0, 0, 0, 0.15);
+        --border-radius: 16px;
+        --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
-    .acoes-rapidas-row {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 32px;
-        justify-content: center;
+
+    /* Layout principal */
+    .dashboard-container {
+        background: white;
+        min-height: 100vh;
+        padding: 2rem 0;
     }
-    .card-acao {
-        width: 340px;
-        height: 340px;
-        min-width: 200px;
-        max-width: 100%;
-        min-height: 200px;
-        max-height: 100%;
-        border-radius: 16px;
-        transition: box-shadow 0.2s;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        margin-bottom: 0;
+
+    .dashboard-header {
+        background: var(--primary-gradient);
+        border-radius: var(--border-radius);
+        padding: 2rem;
+        margin-bottom: 2rem;
+        color: white;
+        box-shadow: var(--card-shadow);
+        position: relative;
         overflow: hidden;
     }
-    .card-acao:hover {
-        box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+
+    .dashboard-header::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -50%;
+        width: 100%;
+        height: 200%;
+        background: rgba(255, 255, 255, 0.1);
+        transform: rotate(45deg);
+        z-index: 1;
     }
-    .card-acao .fa-3x {
-        font-size: 2.2rem;
+
+    .dashboard-header-content {
+        position: relative;
+        z-index: 2;
     }
-    @media (max-width: 991.98px) {
-        .acoes-rapidas-row {
-            gap: 20px;
-        }
-        .card-acao {
-            width: 220px;
-            height: 220px;
-            min-width: 140px;
-            min-height: 140px;
-        }
+
+    .time-widget {
+        background: rgba(255, 255, 255, 0.2);
+        backdrop-filter: blur(10px);
+        border-radius: 12px;
+        padding: 1rem;
+        border: 1px solid rgba(255, 255, 255, 0.3);
     }
-    @media (max-width: 767.98px) {
-        .acoes-rapidas-row {
-            flex-direction: column;
-            align-items: center;
-            gap: 16px;
-        }
-        .card-acao {
-            width: 100%;
-            max-width: 350px;
-            height: auto;
-            min-height: 120px;
-            padding: 16px 10px 10px 10px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-        }
-        .card-acao .fa-3x {
-            font-size: 1.5rem;
-        }
-    }
+
+    /* Cards de estatísticas conforme documentação */
     .stat-card {
         color: white;
         border-radius: 15px;
         padding: 25px;
-        margin-bottom: 25px;
         box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-        transition: all 0.3s ease;
-        border: none;
         height: 180px;
         display: flex;
         flex-direction: column;
-        justify-content: center;
         align-items: center;
+        justify-content: center;
         text-align: center;
+        transition: var(--transition);
+        position: relative;
+        overflow: hidden;
     }
+
     .stat-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+        transform: translateY(-8px);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.2);
     }
+
     .stat-card h3 {
         font-size: 2.5rem;
-        font-weight: 600;
-        margin-bottom: 10px;
-        text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        font-weight: 700;
+        margin: 0.5rem 0;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
     }
+
     .stat-card p {
-        font-size: 1.1rem;
+        font-size: 0.9rem;
         margin: 0;
         opacity: 0.9;
+        font-weight: 500;
     }
+
     .stat-icon {
         font-size: 2rem;
-        margin-bottom: 15px;
         opacity: 0.8;
+        color: white;
+        margin-bottom: 0.5rem;
     }
-    .stat-card-visitas-hoje {
-        background: linear-gradient(135deg, #6dd5ed, #2193b0);
-    }
+
+    /* Gradientes específicos conforme documentação */
     .stat-card-visitas-andamento {
         background: linear-gradient(135deg, #5cb85c, #28a745);
     }
-    .stat-card-total-visitas {
+
+    .stat-card-total-visitantes {
+        background: linear-gradient(135deg, #6dd5ed, #2193b0);
+    }
+
+    .stat-card-veiculos-estacionamento {
         background: linear-gradient(135deg, #f1c40f, #f39c12);
     }
-    .stat-card-visitas-mes {
+
+    .stat-card-total-veiculos {
         background: linear-gradient(135deg, #e67e22, #e74c3c);
     }
-    @media (max-width: 991.98px) {
+
+    /* Seção de ações rápidas */
+    .quick-actions {
+        background: #f8f9fa;
+        border-radius: var(--border-radius);
+        padding: 2rem;
+        box-shadow: var(--card-shadow);
+        margin-bottom: 2rem;
+        border: 1px solid #e9ecef;
+    }
+
+    .actions-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1.5rem;
+        margin-top: 1.5rem;
+    }
+
+    .action-card {
+        background: linear-gradient(135deg, #fff 0%, #f8fafc 100%);
+        border: 2px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 1.5rem;
+        text-align: center;
+        transition: var(--transition);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .action-card:hover {
+        transform: translateY(-4px);
+        border-color: #667eea;
+        box-shadow: var(--card-shadow);
+    }
+
+    .action-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background: var(--primary-gradient);
+        transform: scaleX(0);
+        transition: transform 0.3s ease;
+    }
+
+    .action-card:hover::before {
+        transform: scaleX(1);
+    }
+
+    .action-icon {
+        width: 80px;
+        height: 80px;
+        margin: 0 auto 1rem;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+        color: white;
+        transition: var(--transition);
+    }
+
+    .action-card:hover .action-icon {
+        transform: scale(1.1);
+    }
+
+    .action-card:nth-child(1) .action-icon { background: var(--primary-gradient); }
+    .action-card:nth-child(2) .action-icon { background: var(--success-gradient); }
+    .action-card:nth-child(3) .action-icon { background: var(--info-gradient); }
+    .action-card:nth-child(4) .action-icon { background: var(--warning-gradient); }
+    .action-card:nth-child(5) .action-icon { background: var(--danger-gradient); }
+    .action-card:nth-child(6) .action-icon { background: var(--primary-gradient); }
+
+    .action-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #2d3748;
+        margin-bottom: 0.5rem;
+    }
+
+    .action-description {
+        color: #718096;
+        font-size: 0.875rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .action-btn {
+        background: var(--primary-gradient);
+        border: none;
+        border-radius: 8px;
+        padding: 0.75rem 1.5rem;
+        color: white;
+        font-weight: 600;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition: var(--transition);
+        font-size: 0.875rem;
+    }
+
+    .action-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 24px rgba(102, 126, 234, 0.4);
+        color: white;
+    }
+
+    /* Seção de alertas e notificações */
+    .alerts-section {
+        background: #f8f9fa;
+        border-radius: var(--border-radius);
+        padding: 2rem;
+        box-shadow: var(--card-shadow);
+        margin-bottom: 2rem;
+        border: 1px solid #e9ecef;
+    }
+
+    .alert-item {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 1rem;
+        border-left: 4px solid #f56565;
+        background: #fed7d7;
+        border-radius: 0 8px 8px 0;
+        margin-bottom: 1rem;
+    }
+
+    .alert-item.warning {
+        border-left-color: #ed8936;
+        background: #feebc8;
+    }
+
+    .alert-item.info {
+        border-left-color: #4299e1;
+        background: #bee3f8;
+    }
+
+    /* Responsividade */
+    @media (max-width: 768px) {
+        .dashboard-container {
+            padding: 1rem 0;
+        }
+        
+        .dashboard-header {
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        
         .stat-card {
-            height: 140px;
-            padding: 16px 8px;
+            height: 150px;
+            padding: 20px;
         }
+        
         .stat-card h3 {
-            font-size: 1.7rem;
+            font-size: 2rem;
         }
+        
         .stat-icon {
-            font-size: 1.3rem;
+            font-size: 1.5rem;
+        }
+        
+        .actions-grid {
+            grid-template-columns: 1fr;
+            gap: 1rem;
+        }
+        
+        .action-icon {
+            width: 60px;
+            height: 60px;
+            font-size: 1.5rem;
         }
     }
-    @media (max-width: 575.98px) {
-        .stat-card {
-            height: auto;
-            padding: 10px 4px;
+
+    /* Animações */
+    @keyframes slideInUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
         }
-        .stat-card h3 {
-            font-size: 1.2rem;
+        to {
+            opacity: 1;
+            transform: translateY(0);
         }
-        .stat-icon {
-            font-size: 1rem;
-        }
+    }
+
+    .stat-card {
+        animation: slideInUp 0.6s ease forwards;
+    }
+
+    .stat-card:nth-child(1) { animation-delay: 0.1s; }
+    .stat-card:nth-child(2) { animation-delay: 0.2s; }
+    .stat-card:nth-child(3) { animation-delay: 0.3s; }
+    .stat-card:nth-child(4) { animation-delay: 0.4s; }
+
+    /* Loading skeleton */
+    .skeleton {
+        background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+        background-size: 200% 100%;
+        animation: loading 1.5s infinite;
+    }
+
+    @keyframes loading {
+        0% { background-position: 200% 0; }
+        100% { background-position: -200% 0; }
     }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="container-fluid py-4">
-    <div class="row mb-4">
-        <div class="col-md-12">
-            <h2 class="text-center">Gestão de Visitas</h2>
-            <p class="text-center text-muted">Visão geral das atividades do dia</p>
+<div class="dashboard-container">
+    <div class="container-fluid">
+        <!-- Header da Dashboard -->
+        <div class="dashboard-header">
+            <div class="dashboard-header-content">
+                <div class="row align-items-center">
+                    <div class="col-md-8">
+                        <h1 class="mb-2">
+                            <i class="fas fa-clipboard-check me-3"></i>
+                            Sistema de Gestão de Visitas
+                        </h1>
+                        <p class="mb-0 opacity-90">
+                            Bem-vindo ao painel de controle da recepção. Monitore e gerencie todas as visitas em tempo real.
+                        </p>
+                    </div>
+                    <div class="col-md-4 text-md-end">
+                        <div class="time-widget">
+                            <div class="d-flex align-items-center justify-content-md-end justify-content-center">
+                                <i class="fas fa-clock me-2"></i>
+                                <div>
+                                    <div class="fw-bold" id="current-time">--:--</div>
+                                    <small id="current-date">--/--/----</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
-    </div>
 
-    <div class="d-flex justify-content-end">
-        {% include 'includes/botao_voltar.html' %}
-    </div>
+        <!-- Cards de Estatísticas -->
+        <div class="row mb-4">
+            <div class="col-xl-3 col-md-6 mb-4">
+                <div class="stat-card stat-card-visitas-andamento">
+                    <i class="fas fa-clock stat-icon"></i>
+                    <h3 id="visitas-andamento">{{ visitas_em_andamento }}</h3>
+                    <p>Visitas em Andamento</p>
+                </div>
+            </div>
+            
+            <div class="col-xl-3 col-md-6 mb-4">
+                <div class="stat-card stat-card-total-visitantes">
+                    <i class="fas fa-users stat-icon"></i>
+                    <h3 id="total-visitantes">{{ total_visitantes }}</h3>
+                    <p>Visitantes Cadastrados</p>
+                </div>
+            </div>
+            
+            <div class="col-xl-3 col-md-6 mb-4">
+                <div class="stat-card stat-card-veiculos-estacionamento">
+                    <i class="fas fa-car stat-icon"></i>
+                    <h3 id="veiculos-estacionamento">{{ veiculos_no_estacionamento }}</h3>
+                    <p>Veículos no Estacionamento</p>
+                </div>
+            </div>
+            
+            <div class="col-xl-3 col-md-6 mb-4">
+                <div class="stat-card stat-card-total-veiculos">
+                    <i class="fas fa-car-side stat-icon"></i>
+                    <h3 id="total-veiculos">{{ total_veiculos_cadastrados }}</h3>
+                    <p>Veículos Cadastrados</p>
+                </div>
+            </div>
+        </div>
 
-    <!-- Cards de Estatísticas -->
-    <div class="row mb-4">
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="stat-card stat-card-visitas-hoje">
-                <i class="fas fa-calendar-day stat-icon"></i>
-                <h3>{{ visitas_hoje }}</h3>
-                <p>Visitas Registradas Hoje</p>
+        <!-- Alertas e Notificações -->
+        {% if visitas_em_andamento > 10 or veiculos_no_estacionamento > 15 %}
+        <div class="alerts-section">
+            <h5 class="mb-3">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                Alertas do Sistema
+            </h5>
+            {% if visitas_em_andamento > 10 %}
+            <div class="alert-item warning">
+                <i class="fas fa-exclamation-triangle"></i>
+                <div>
+                    <strong>Alto volume de visitas!</strong> 
+                    Existem {{ visitas_em_andamento }} visitas em andamento simultaneamente.
+                </div>
             </div>
-        </div>
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="stat-card stat-card-visitas-andamento">
-                <i class="fas fa-walking stat-icon"></i>
-                <h3>{{ visitas_em_andamento }}</h3>
-                <p>Visitas em Andamento</p>
+            {% endif %}
+            {% if veiculos_no_estacionamento > 15 %}
+            <div class="alert-item warning">
+                <i class="fas fa-car"></i>
+                <div>
+                    <strong>Estacionamento lotado!</strong> 
+                    Há {{ veiculos_no_estacionamento }} veículos no estacionamento.
+                </div>
             </div>
+            {% endif %}
         </div>
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="stat-card stat-card-total-visitas">
-                <i class="fas fa-check-circle stat-icon"></i>
-                <h3>{{ visitas_finalizadas_hoje }}</h3>
-                <p>Visitas Finalizadas Hoje</p>
-            </div>
-        </div>
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="stat-card stat-card-visitas-mes">
-                <i class="fas fa-users stat-icon"></i>
-                <h3>{{ total_visitantes }}</h3>
-                <p>Total de Visitantes Cadastrados</p>
-            </div>
-        </div>
-    </div>
+        {% endif %}
 
-    <!-- Divisor visual acima das ações rápidas -->
-    <hr class="my-4" />
+        <!-- Ações Rápidas -->
+        <div class="quick-actions">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h4 class="mb-0">
+                    <i class="fas fa-bolt me-2 text-primary"></i>
+                    Ações Rápidas
+                </h4>
+                <small class="text-muted">Acesse rapidamente as funcionalidades mais utilizadas</small>
+            </div>
 
-    <!-- Ações Rápidas -->
-    <div class="acoes-rapidas-row mt-2 mb-2">
-        <div class="card card-acao">
-            <div class="card-body text-center">
-                <div class="mb-3">
-                    <i class="fas fa-user-plus fa-3x text-primary"></i>
+            <div class="actions-grid">
+                <div class="action-card">
+                    <div class="action-icon">
+                        <i class="fas fa-user-plus"></i>
+                    </div>
+                    <div class="action-title">Novo Visitante</div>
+                    <div class="action-description">Cadastre um novo visitante no sistema</div>
+                    <a href="{% url 'recepcao:cadastro_visitantes' %}" class="action-btn">
+                        <i class="fas fa-plus"></i>
+                        Cadastrar Agora
+                    </a>
                 </div>
-                <h5 class="card-title">Cadastrar Visitante</h5>
-                <p class="card-text">Adicione um novo visitante</p>
-                <a href="{% url 'recepcao:cadastro_visitantes' %}" class="btn btn-primary">
-                    <i class="fas fa-plus-circle me-2"></i>Cadastrar
-                </a>
+
+                <div class="action-card">
+                    <div class="action-icon">
+                        <i class="fas fa-clipboard-check"></i>
+                    </div>
+                    <div class="action-title">Registrar Visita</div>
+                    <div class="action-description">Inicie uma nova visita para visitante cadastrado</div>
+                    <a href="{% url 'recepcao:registro_visitas' %}" class="action-btn">
+                        <i class="fas fa-play"></i>
+                        Iniciar Visita
+                    </a>
+                </div>
+
+                <div class="action-card">
+                    <div class="action-icon">
+                        <i class="fas fa-eye"></i>
+                    </div>
+                    <div class="action-title">Status das Visitas</div>
+                    <div class="action-description">Monitore todas as visitas em tempo real</div>
+                    <a href="{% url 'recepcao:status_visita' %}" class="action-btn">
+                        <i class="fas fa-monitor-heart-rate"></i>
+                        Ver Status
+                    </a>
+                </div>
+
+                <div class="action-card">
+                    <div class="action-icon">
+                        <i class="fas fa-search"></i>
+                    </div>
+                    <div class="action-title">Buscar Visitante</div>
+                    <div class="action-description">Encontre visitantes cadastrados rapidamente</div>
+                    <a href="{% url 'recepcao:lista_visitantes' %}" class="action-btn">
+                        <i class="fas fa-search"></i>
+                        Buscar
+                    </a>
+                </div>
+
+                <div class="action-card">
+                    <div class="action-icon">
+                        <i class="fas fa-history"></i>
+                    </div>
+                    <div class="action-title">Histórico Completo</div>
+                    <div class="action-description">Acesse o histórico completo de visitas</div>
+                    <a href="{% url 'recepcao:historico_visitas' %}" class="action-btn">
+                        <i class="fas fa-database"></i>
+                        Ver Histórico
+                    </a>
+                </div>
+
+                <div class="action-card">
+                    <div class="action-icon">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <div class="action-title">Relatórios</div>
+                    <div class="action-description">Gere relatórios detalhados do sistema</div>
+                    <a href="{% url 'recepcao:historico_visitas' %}?formato=excel" class="action-btn">
+                        <i class="fas fa-file-excel"></i>
+                        Gerar Relatório
+                    </a>
+                </div>
             </div>
         </div>
-        <div class="card card-acao">
-            <div class="card-body text-center">
-                <div class="mb-3">
-                    <i class="fas fa-clipboard-check fa-3x text-success"></i>
-                </div>
-                <h5 class="card-title">Nova Visita</h5>
-                <p class="card-text">Registre uma nova visita</p>
-                <a href="{% url 'recepcao:registro_visitas' %}" class="btn btn-success">
-                    <i class="fas fa-plus-circle me-2"></i>Registrar
-                </a>
-            </div>
-        </div>
-        <div class="card card-acao">
-            <div class="card-body text-center">
-                <div class="mb-3">
-                    <i class="fas fa-clipboard-list fa-3x text-info"></i>
-                </div>
-                <h5 class="card-title">Status das Visitas</h5>
-                <p class="card-text">Acompanhe as visitas em andamento</p>
-                <a href="{% url 'recepcao:status_visita' %}" class="btn btn-info text-white">
-                    <i class="fas fa-eye me-2"></i>Ver Status
-                </a>
-            </div>
-        </div>
-        <div class="card card-acao">
-            <div class="card-body text-center">
-                <div class="mb-3">
-                    <i class="fas fa-history fa-3x text-secondary"></i>
-                </div>
-                <h5 class="card-title">Histórico</h5>
-                <p class="card-text">Consulte o histórico de visitas</p>
-                <a href="{% url 'recepcao:historico_visitas' %}" class="btn btn-secondary">
-                    <i class="fas fa-search me-2"></i>Consultar
-                </a>
-            </div>
-        </div>
-        <div class="card card-acao">
-            <div class="card-body text-center">
-                <div class="mb-3">
-                    <i class="fas fa-users fa-3x text-warning"></i>
-                </div>
-                <h5 class="card-title">Visitantes Cadastrados</h5>
-                <p class="card-text">Visualize todos os visitantes</p>
-                <a href="{% url 'recepcao:lista_visitantes' %}" class="btn btn-warning text-dark">
-                    <i class="fas fa-list me-2"></i>Ver Lista
-                </a>
-            </div>
-        </div>
-        <div class="card card-acao">
-            <div class="card-body text-center">
-                <div class="mb-3">
-                    <i class="fas fa-desktop fa-3x text-info"></i>
-                </div>
-                <h5 class="card-title">Modo Totem</h5>
-                <p class="card-text">Acesse o modo totem</p>
-                <a href="{% url 'recepcao:totem_home' %}" class="btn btn-info btn-lg mb-2">
-                    <i class="fas fa-desktop me-2"></i>Modo Totem
-                </a>
-            </div>
+
+        <!-- Botão de voltar -->
+        <div class="d-flex justify-content-end">
+            {% include 'includes/botao_voltar.html' %}
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Atualização do relógio em tempo real
+    function updateTime() {
+        const now = new Date();
+        const timeString = now.toLocaleTimeString('pt-BR', { 
+            hour: '2-digit', 
+            minute: '2-digit' 
+        });
+        const dateString = now.toLocaleDateString('pt-BR');
+        
+        document.getElementById('current-time').textContent = timeString;
+        document.getElementById('current-date').textContent = dateString;
+    }
+
+    // Atualizar estatísticas a cada 30 segundos
+    function updateStats() {
+        fetch('{% url "recepcao:home_recepcao" %}')
+            .then(response => response.json())
+            .catch(error => console.log('Stats update disabled in demo'));
+    }
+
+    // Animação de contagem nos números
+    function animateNumbers() {
+        const numbers = document.querySelectorAll('.stat-number');
+        numbers.forEach(number => {
+            const target = parseInt(number.textContent);
+            let current = 0;
+            const increment = target / 30;
+            const timer = setInterval(() => {
+                current += increment;
+                if (current >= target) {
+                    current = target;
+                    clearInterval(timer);
+                }
+                number.textContent = Math.floor(current);
+            }, 50);
+        });
+    }
+
+    // Inicializar quando a página carregar
+    document.addEventListener('DOMContentLoaded', function() {
+        updateTime();
+        setInterval(updateTime, 1000); // Atualizar a cada segundo
+        
+        // Animação inicial dos números
+        setTimeout(animateNumbers, 500);
+        
+        // Atualizar estatísticas a cada 30 segundos
+        // setInterval(updateStats, 30000);
+    });
+</script>
 {% endblock %}

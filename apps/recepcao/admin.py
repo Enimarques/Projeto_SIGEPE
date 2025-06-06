@@ -14,42 +14,68 @@ from .utils import generate_password_token
 @admin.register(Setor)
 class SetorAdmin(admin.ModelAdmin):
     form = SetorForm
-    list_display = ('get_nome_display', 'tipo', 'localizacao', 'nome_responsavel', 'funcao', 'get_horario_trabalho', 'get_status_presenca', 'ativo', 'excluir_com_visitas')
+    list_display = ('get_nome_display', 'tipo', 'localizacao', 'get_nome_responsavel', 'funcao', 'get_horario_trabalho', 'get_status_presenca', 'ativo', 'excluir_com_visitas')
     list_filter = ('tipo', 'localizacao', 'ativo')
     search_fields = ('nome_vereador', 'nome_local', 'nome_responsavel', 'email')
     ordering = ['tipo', 'nome_vereador', 'nome_local']
     readonly_fields = ('data_criacao', 'data_atualizacao')
-    fieldsets = (
-        ('Informações do Setor', {
-            'fields': ('tipo', 'localizacao'),
-            'description': 'Informações básicas do setor'
-        }),
-        ('Informações do Gabinete', {
-            'fields': ('nome_vereador', 'email_vereador'),
-            'description': 'Preencha apenas se o tipo for Gabinete',
-            'classes': ('collapse',)
-        }),
-        ('Informações do Departamento', {
-            'fields': ('nome_local',),
-            'description': 'Preencha apenas se o tipo for Departamento',
-            'classes': ('collapse',)
-        }),
-        ('Horário de Funcionamento', {
-            'fields': ('horario_abertura', 'horario_fechamento'),
-            'description': 'Defina o horário de funcionamento do setor'
-        }),
-        ('Informações do Responsável', {
-            'fields': ('nome_responsavel', 'funcao', 'email', 'horario_entrada', 'horario_saida'),
-            'description': 'Selecione um assessor cadastrado como responsável'
-        }),
-        ('Status', {    
-            'fields': ('ativo',)
-        }),
-        ('Informações do Sistema', {
-            'fields': ('data_criacao', 'data_atualizacao'),
-            'classes': ('collapse',)
-        })
-    )
+
+    def get_fieldsets(self, request, obj=None):
+        """Retorna fieldsets dinamicamente baseado no tipo do setor"""
+        if obj and obj.tipo == 'gabinete':
+            # Para gabinetes, não mostra o campo nome_responsavel
+            return (
+                ('Informações do Setor', {
+                    'fields': ('tipo', 'localizacao'),
+                    'description': 'Informações básicas do setor'
+                }),
+                ('Informações do Gabinete', {
+                    'fields': ('nome_vereador', 'email_vereador'),
+                    'description': 'Informações do gabinete'
+                }),
+                ('Horário de Funcionamento', {
+                    'fields': ('horario_abertura', 'horario_fechamento'),
+                    'description': 'Defina o horário de funcionamento do setor'
+                }),
+                ('Informações do Assessor', {
+                    'fields': ('funcao', 'email', 'horario_entrada', 'horario_saida'),
+                    'description': 'Informações do assessor responsável'
+                }),
+                ('Status', {    
+                    'fields': ('ativo',)
+                }),
+                ('Informações do Sistema', {
+                    'fields': ('data_criacao', 'data_atualizacao'),
+                    'classes': ('collapse',)
+                })
+            )
+        else:
+            # Para departamentos, mostra todos os campos
+            return (
+                ('Informações do Setor', {
+                    'fields': ('tipo', 'localizacao'),
+                    'description': 'Informações básicas do setor'
+                }),
+                ('Informações do Departamento', {
+                    'fields': ('nome_local',),
+                    'description': 'Informações do departamento'
+                }),
+                ('Horário de Funcionamento', {
+                    'fields': ('horario_abertura', 'horario_fechamento'),
+                    'description': 'Defina o horário de funcionamento do setor'
+                }),
+                ('Informações do Responsável', {
+                    'fields': ('nome_responsavel', 'funcao', 'email', 'horario_entrada', 'horario_saida'),
+                    'description': 'Informações do responsável pelo departamento'
+                }),
+                ('Status', {    
+                    'fields': ('ativo',)
+                }),
+                ('Informações do Sistema', {
+                    'fields': ('data_criacao', 'data_atualizacao'),
+                    'classes': ('collapse',)
+                })
+            )
 
     class Media:
         css = {
@@ -63,16 +89,24 @@ class SetorAdmin(admin.ModelAdmin):
 
     def get_form(self, request, obj=None, **kwargs):
         form = super().get_form(request, obj, **kwargs)
-        if obj:
+        # Só tenta acessar o campo se ele existir no form
+        if obj and 'nome_responsavel' in form.base_fields:
             form.base_fields['nome_responsavel'].initial = obj.nome_responsavel
         return form
 
     def get_nome_display(self, obj):
         """Retorna o nome apropriado baseado no tipo do setor."""
-        if obj.tipo == 'GABINETE':
+        if obj.tipo == 'gabinete':
             return obj.nome_vereador
         return obj.nome_local
     get_nome_display.short_description = 'Nome'
+
+    def get_nome_responsavel(self, obj):
+        """Retorna o nome do responsável de forma segura."""
+        if obj.tipo == 'gabinete':
+            return obj.nome_vereador or 'Não definido'
+        return obj.nome_responsavel or 'Não definido'
+    get_nome_responsavel.short_description = 'Responsável'
 
     def get_horario_trabalho(self, obj):
         """Retorna o horário de trabalho formatado."""
@@ -282,97 +316,27 @@ class AssessorAdmin(admin.ModelAdmin):
 
 @admin.register(Visitante)
 class VisitanteAdmin(admin.ModelAdmin):
-    list_display = ('nome_completo', 'nome_social', 'CPF', 'data_nascimento')
+    list_display = ('nome_completo', 'CPF', 'telefone')
     search_fields = ('nome_completo', 'nome_social', 'CPF')
     list_filter = ('bairro', 'cidade')
-    readonly_fields = ('face_registrada', 'face_id')
-    actions = ['excluir_com_historico']
+    readonly_fields = ('data_cadastro', 'data_atualizacao')
 
-    def save_model(self, request, obj, form, change):
-        super().save_model(request, obj, form, change)
-        if not change:  # Se é um novo visitante
-            # Cria automaticamente uma visita para o novo visitante
-            Visita.objects.create(
-                visitante=obj,
-                data_entrada=now(),
-                status='em_andamento'
-            )
-
-    def has_delete_permission(self, request, obj=None):
-        """
-        Verifica se o usuário tem permissão para excluir um visitante.
-        Superusuários sempre podem excluir, mesmo que o visitante tenha histórico.
-        """
-        # Se for superusuário, permite excluir qualquer visitante
-        if request.user.is_superuser:
-            return True
-            
-        # Para usuários normais, verifica se o visitante possui visitas
-        if obj:
-            visitas = Visita.objects.filter(visitante=obj)
-            if visitas.exists():
-                # Se o visitante tiver visitas, adiciona uma mensagem de erro (apenas uma vez)
-                if not hasattr(request, '_visitante_delete_message_shown'):
-                    messages.error(request, "Você não pode excluir este visitante porque ele possui histórico de visitas. Apenas administradores podem fazer isso.")
-                    setattr(request, '_visitante_delete_message_shown', True)
-                return False
-                
-        # Para usuários normais sem visitas ou sem obj específico, segue a permissão padrão
-        return super().has_delete_permission(request, obj)
-
-    def excluir_com_historico(self, request, queryset):
-        """
-        Ação personalizada para excluir visitantes mesmo que tenham histórico de visitas.
-        Esta ação exclui primeiro todas as visitas associadas e depois o visitante.
-        """
-        if not request.user.is_superuser:
-            self.message_user(
-                request,
-                "Apenas superusuários podem excluir visitantes com histórico de visitas.",
-                level=messages.ERROR
-            )
-            return
-
-        visitantes_excluidos = 0
-        visitas_excluidas = 0
-        erros = 0
-
-        for visitante in queryset:
-            try:
-                with transaction.atomic():
-                    # Conta e exclui as visitas associadas
-                    visitas = Visita.objects.filter(visitante=visitante)
-                    num_visitas = visitas.count()
-                    visitas.delete()
-                    visitas_excluidas += num_visitas
-                    
-                    # Exclui o visitante
-                    nome_visitante = visitante.nome_completo
-                    visitante.delete()
-                    visitantes_excluidos += 1
-            except Exception as e:
-                erros += 1
-                self.message_user(
-                    request,
-                    f"Erro ao excluir {visitante.nome_completo}: {str(e)}",
-                    level=messages.ERROR
-                )
-
-        if visitantes_excluidos > 0:
-            self.message_user(
-                request,
-                f"{visitantes_excluidos} visitante(s) e {visitas_excluidas} visita(s) excluídos com sucesso.",
-                level=messages.SUCCESS
-            )
-        
-        if erros > 0:
-            self.message_user(
-                request,
-                f"{erros} visitante(s) não puderam ser excluídos. Verifique os erros acima.",
-                level=messages.WARNING
-            )
-    
-    excluir_com_historico.short_description = "Excluir visitantes selecionados e seu histórico de visitas"
+    fieldsets = (
+        ("Informações Pessoais", {
+            'fields': ('nome_completo', 'nome_social', 'CPF', 'data_nascimento', 'telefone', 'email')
+        }),
+        ("Endereço", {
+            'fields': ('logradouro', 'numero', 'complemento', 'bairro', 'cidade', 'estado', 'CEP'),
+            'classes': ('collapse',)
+        }),
+        ("Foto", {
+            'fields': ('foto',)
+        }),
+        ("Datas de Controle", {
+            'fields': ('data_cadastro', 'data_atualizacao'),
+            'classes': ('collapse',)
+        }),
+    )
 
 @admin.register(Visita)
 class VisitaAdmin(admin.ModelAdmin):

@@ -1,147 +1,209 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}URUTAU - Histórico de Veículos{% endblock %}
+{% block title %}Histórico de Veículos - URUTAU{% endblock %}
 
 {% block content %}
 <div class="container">
     <div class="row align-items-center mb-4">
         <div class="col-md-8">
             <h1 class="display-5 mb-0">Histórico de Veículos</h1>
-            <p class="lead text-muted">Registro completo de entradas e saídas</p>
+            <p class="lead text-muted">Registro completo de entrada e saída de veículos</p>
         </div>
         <div class="col-md-4 text-end">
-            <a href="{% url 'veiculos:home_veiculos' %}" class="btn btn-outline-primary">
-                <i class="fas fa-arrow-left me-2"></i>Voltar
-            </a>
+            <div class="btn-group">
+                <a href="{% url 'veiculos:exportar_historico_excel' %}" class="btn btn-outline-success">
+                    <i class="fas fa-file-excel me-2"></i>Excel
+                </a>
+                <a href="{% url 'veiculos:exportar_historico_pdf' %}" class="btn btn-outline-danger">
+                    <i class="fas fa-file-pdf me-2"></i>PDF
+                </a>
+            </div>
         </div>
     </div>
 
     <!-- Filtros -->
     <div class="card mb-4">
         <div class="card-body">
-            <form method="get" class="row g-3">
-                <div class="col-md-3">
+            <form method="get" class="row g-3" id="formFiltros">
+                <div class="col-md-3 col-12">
                     <label for="data_inicio" class="form-label">Data Início</label>
                     <input type="date" class="form-control" id="data_inicio" name="data_inicio" value="{{ filtros.data_inicio|date:'Y-m-d' }}">
                 </div>
-                <div class="col-md-3">
+                <div class="col-md-3 col-12">
                     <label for="data_fim" class="form-label">Data Fim</label>
                     <input type="date" class="form-control" id="data_fim" name="data_fim" value="{{ filtros.data_fim|date:'Y-m-d' }}">
                 </div>
-                <div class="col-md-3">
+                <div class="col-md-3 col-12">
                     <label for="placa" class="form-label">Placa</label>
                     <input type="text" class="form-control" id="placa" name="placa" value="{{ filtros.placa }}" placeholder="Placa do veículo...">
                 </div>
-                <div class="col-md-3">
+                <div class="col-md-3 col-12">
                     <label for="tipo" class="form-label">Tipo</label>
                     <select class="form-select" id="tipo" name="tipo">
                         <option value="">Todos</option>
                         <option value="carro" {% if filtros.tipo == 'carro' %}selected{% endif %}>Carro</option>
                         <option value="moto" {% if filtros.tipo == 'moto' %}selected{% endif %}>Moto</option>
+                        <option value="van" {% if filtros.tipo == 'van' %}selected{% endif %}>Van/Utilitário</option>
                         <option value="caminhao" {% if filtros.tipo == 'caminhao' %}selected{% endif %}>Caminhão</option>
-                        <option value="onibus" {% if filtros.tipo == 'onibus' %}selected{% endif %}>Ônibus</option>
+                        <option value="outro" {% if filtros.tipo == 'outro' %}selected{% endif %}>Outro</option>
                     </select>
                 </div>
                 <div class="col-12 text-end">
-                    <button type="submit" class="btn btn-primary">
+                    <button type="button" class="btn btn-primary" id="btnFiltrar">
                         <i class="fas fa-filter me-2"></i>Filtrar
+                    </button>
+                    <button type="button" class="btn btn-secondary" id="btnLimpar">
+                        <i class="fas fa-times me-2"></i>Limpar
                     </button>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- Botões de Exportação -->
-    <div class="row mb-4">
-        <div class="col text-end">
-            <div class="btn-group">
-                <a href="{% url 'veiculos:exportar_historico_pdf' %}" class="btn btn-outline-danger">
-                    <i class="fas fa-file-pdf me-2"></i>Exportar PDF
-                </a>
-                <a href="{% url 'veiculos:exportar_historico_excel' %}" class="btn btn-outline-success">
-                    <i class="fas fa-file-excel me-2"></i>Exportar Excel
-                </a>
-            </div>
-        </div>
-    </div>
-
-    <!-- Tabela de Histórico -->
+    <!-- Histórico de Veículos -->
     <div class="card">
         <div class="card-header d-flex justify-content-between align-items-center">
-            <h4 class="mb-0">Histórico de Movimentações</h4>
+            <h4 class="mb-0">Histórico de Veículos</h4>
             <a href="{% url 'veiculos:home_veiculos' %}" class="btn btn-secondary">
                 <i class="fas fa-arrow-left"></i> Voltar
             </a>
         </div>
         <div class="card-body">
-            <div class="table-responsive">
-                <table class="table table-striped">
-                    <thead>
-                        <tr>
-                            <th>Data</th>
-                            <th>Placa</th>
-                            <th>Modelo</th>
-                            <th>Tipo</th>
-                            <th>Evento</th>
-                            <th>Observações</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for registro in page_obj %}
-                        <tr>
-                            <td>{{ registro.data|date:"d/m/Y H:i" }}</td>
-                            <td>{{ registro.veiculo.placa }}</td>
-                            <td>{{ registro.veiculo.modelo }}</td>
-                            <td>{{ registro.veiculo.get_tipo_display }}</td>
-                            <td>
-                                {% if registro.tipo == 'entrada' %}
-                                    <span class="badge bg-success">Entrada</span>
-                                {% else %}
-                                    <span class="badge bg-danger">Saída</span>
-                                {% endif %}
-                            </td>
-                            <td>{{ registro.observacoes|default:"-" }}</td>
-                        </tr>
-                        {% empty %}
-                        <tr>
-                            <td colspan="6" class="text-center">Nenhum registro encontrado</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+            <!-- Loading overlay -->
+            <div id="loading-overlay" style="display: none;">
+                <div class="d-flex justify-content-center align-items-center" style="height: 200px;">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Carregando...</span>
+                    </div>
+                </div>
             </div>
 
-            {% if page_obj.paginator.num_pages > 1 %}
-            <nav aria-label="Navegação de páginas">
-                <ul class="pagination justify-content-center">
-                    {% if page_obj.has_previous %}
-                    <li class="page-item">
-                        <a class="page-link" href="?page=1">&laquo; Primeira</a>
-                    </li>
-                    <li class="page-item">
-                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Anterior</a>
-                    </li>
-                    {% endif %}
-
-                    <li class="page-item active">
-                        <span class="page-link">
-                            Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}
-                        </span>
-                    </li>
-
-                    {% if page_obj.has_next %}
-                    <li class="page-item">
-                        <a class="page-link" href="?page={{ page_obj.next_page_number }}">Próxima</a>
-                    </li>
-                    <li class="page-item">
-                        <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">Última &raquo;</a>
-                    </li>
-                    {% endif %}
-                </ul>
-            </nav>
-            {% endif %}
+            <!-- Tabela de Histórico -->
+            <div id="tabela-container">
+                {% include 'veiculos/includes/tabela_historico_veiculos.html' %}
+            </div>
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Histórico de veículos carregado');
+    
+    const form = document.getElementById('formFiltros');
+    const btnFiltrar = document.getElementById('btnFiltrar');
+    const btnLimpar = document.getElementById('btnLimpar');
+    const loadingOverlay = document.getElementById('loading-overlay');
+    const tabelaContainer = document.getElementById('tabela-container');
+    
+    // URL da view AJAX
+    const ajaxUrl = '{% url "veiculos:historico_veiculos_ajax" %}';
+    
+    function showLoading() {
+        loadingOverlay.style.display = 'block';
+        tabelaContainer.style.opacity = '0.5';
+    }
+    
+    function hideLoading() {
+        loadingOverlay.style.display = 'none';
+        tabelaContainer.style.opacity = '1';
+    }
+    
+    function atualizarTabela(page = 1) {
+        console.log('Atualizando tabela, página:', page);
+        showLoading();
+        
+        const formData = new FormData(form);
+        if (page > 1) {
+            formData.append('page', page);
+        }
+        
+        const params = new URLSearchParams(formData);
+        
+        fetch(ajaxUrl + '?' + params.toString())
+            .then(response => {
+                console.log('Resposta recebida:', response.status);
+                if (!response.ok) {
+                    throw new Error('Erro na requisição: ' + response.status);
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Dados recebidos:', data);
+                if (data.success) {
+                    tabelaContainer.innerHTML = data.html;
+                    
+                    // Reativar eventos de paginação
+                    ativarPaginacao();
+                } else {
+                    console.error('Erro nos dados:', data);
+                }
+            })
+            .catch(error => {
+                console.error('Erro na requisição:', error);
+                alert('Erro ao carregar dados. Tente novamente.');
+            })
+            .finally(() => {
+                hideLoading();
+            });
+    }
+    
+    function ativarPaginacao() {
+        const paginationLinks = document.querySelectorAll('.pagination a[data-page]');
+        paginationLinks.forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                const page = this.getAttribute('data-page');
+                atualizarTabela(page);
+            });
+        });
+    }
+    
+    // Eventos dos filtros
+    btnFiltrar.addEventListener('click', function(e) {
+        e.preventDefault();
+        console.log('Botão filtrar clicado');
+        atualizarTabela();
+    });
+    
+    btnLimpar.addEventListener('click', function(e) {
+        e.preventDefault();
+        console.log('Botão limpar clicado');
+        form.reset();
+        atualizarTabela();
+    });
+    
+    // Filtrar ao pressionar Enter nos campos de texto
+    const textInputs = form.querySelectorAll('input[type="text"], input[type="date"]');
+    textInputs.forEach(input => {
+        input.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                atualizarTabela();
+            }
+        });
+        
+        // Também filtrar ao mudar data
+        if (input.type === 'date') {
+            input.addEventListener('change', function() {
+                atualizarTabela();
+            });
+        }
+    });
+    
+    // Filtrar ao mudar selects
+    const selects = form.querySelectorAll('select');
+    selects.forEach(select => {
+        select.addEventListener('change', function() {
+            atualizarTabela();
+        });
+    });
+    
+    // Ativar paginação inicial
+    ativarPaginacao();
+});
+</script>
 {% endblock %} 

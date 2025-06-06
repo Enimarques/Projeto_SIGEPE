@@ -2,16 +2,20 @@
 Django settings for SIGEPE project.
 """
 
-from pathlib import Path
 import os
+from pathlib import Path
+import sys
 from django.utils.translation import gettext_lazy as _
+# import environ # Removendo ou comentando a importação de environ
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# Adiciona a pasta apps ao Python path
-import sys
+# Adicionar a pasta 'apps' ao sys.path
 sys.path.insert(0, str(BASE_DIR / 'apps'))
+
+# Quick-start development settings - unsuitable for production
+# See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'django-insecure-&#33ll&))(8!w+g_-qil#t#_@j02+b6r!ca!l8pfms4mqxk6(^'
@@ -37,7 +41,12 @@ INSTALLED_APPS = [
     'apps.recepcao.apps.RecepcaoConfig',
     'apps.veiculos.apps.VeiculosConfig',
     'relatorios',
+    'crispy_forms',
+    'crispy_bootstrap5',
 ]
+
+# Configuração para o ManifestStaticFilesStorage para cache-busting
+STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.ManifestStaticFilesStorage'
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -47,7 +56,6 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'apps.main.middleware.TempoRespostaMiddleware',
 ]
 
 ROOT_URLCONF = 'SIGEPE.urls'
@@ -126,23 +134,6 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 # Media files
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
-
-# Configurações específicas para reconhecimento facial
-FACE_RECOGNITION_SETTINGS = {
-    'MIN_FACE_CONFIDENCE': 0.5,  # Confiança mínima para reconhecimento (ajustado de 0.6 para 0.5)
-    'FRAME_RESIZE_FACTOR': 0.25,  # Fator de redimensionamento para performance
-    'MAX_CONCURRENT_RECOGNITIONS': 5,  # Máximo de rostos simultâneos
-    'PHOTOS_SUBDIR': 'fotos_visitantes',  # Subdiretório para fotos
-    'ENABLED': True,  # Reconhecimento facial ativado
-}
-
-# Cache para armazenar resultados do reconhecimento
-CACHES = {
-    'default': {
-        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
-        'LOCATION': 'facial-recognition',
-    }
-}
 
 # Logging
 LOGGING = {

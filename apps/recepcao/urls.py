@@ -1,6 +1,5 @@
 from django.urls import path
-from . import views, views_face
-from .views_face import verificar_face_api
+from . import views
 
 app_name = 'recepcao'
 
@@ -13,7 +12,9 @@ urlpatterns = [
     path('visitantes/<int:pk>/editar/', views.editar_visitante, name='editar_visitante'),
     path('visitas/registro/', views.registro_visitas, name='registro_visitas'),
     path('visitas/status/', views.status_visita, name='status_visita'),
+    path('visitas/status/ajax/', views.status_visita_ajax, name='status_visita_ajax'),
     path('visitas/historico/', views.historico_visitas, name='historico_visitas'),
+    path('visitas/historico/ajax/', views.historico_visitas_ajax, name='historico_visitas_ajax'),
     path('visitas/<int:visita_id>/finalizar/', views.finalizar_visita, name='finalizar_visita'),
     path('visitas/<int:pk>/excluir/', views.excluir_visita, name='excluir_visita'),
     path('visitas/<int:visita_id>/etiqueta/', views.gerar_etiqueta, name='gerar_etiqueta'),
@@ -22,23 +23,7 @@ urlpatterns = [
     path('setores/buscar/', views.buscar_setores, name='buscar_setores'),
     path('setores/<int:pk>/excluir/', views.excluir_setor, name='excluir_setor'),
     
-    # URLs para reconhecimento facial
     path('visitantes/<int:visitante_id>/upload-foto/', views.upload_foto_visitante, name='upload_foto_visitante'),
-    path('visitantes/<int:visitante_id>/registrar-face/', views_face.registrar_face, name='registrar_face'),
-    path('video-feed/', views_face.video_feed, name='video_feed'),
-    path('api/verificar-face/', views_face.verificar_face_api, name='verificar_face_api'),
-    path('teste-camera/', views.teste_camera, name='teste_camera'),
-    path('api/cadastro-rapido/', views_face.cadastro_rapido_api, name='cadastro_rapido_api'),
-    path('api/registrar-visita/', views_face.registrar_visita_api, name='registrar_visita_api'),
-    path('api/parar-reconhecimento/', views_face.parar_reconhecimento_api, name='parar_reconhecimento_api'),
-    path('api/reload-encodings/', views_face.reload_encodings_api, name='reload_encodings_api'),
-    
-    # URLs do totem
-    path('totem/', views.totem_visitas, name='totem_visitas'),
-    path('totem/home/', views.totem_home, name='totem_home'),
-    path('totem/finalizar-visita/', views.totem_finalizar_visita, name='totem_finalizar_visita'),
-    path('totem/setor/', views.totem_selecionar_setor, name='totem_selecionar_setor'),
-    
     path('visitantes/<int:pk>/excluir/', views.excluir_visitante, name='excluir_visitante'),
     
     # URLs para AJAX do admin
@@ -51,5 +36,4 @@ urlpatterns = [
     path('departamentos/', views.home_departamentos, name='home_departamentos'),
     path('departamentos/<int:departamento_id>/tabela/', views.visitas_tabela_departamento, name='tabela_visitas_departamento'),
     path('departamentos/<int:departamento_id>/', views.detalhes_departamento, name='detalhes_departamento'),
-    path('recepcao/verificar_face_api/', verificar_face_api, name='verificar_face_api'),
 ]

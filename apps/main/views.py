@@ -3,24 +3,6 @@ from apps.recepcao.models import Visita, Visitante, Assessor
 from apps.veiculos.models import Veiculo
 from apps.autenticacao.services.auth_service import AuthenticationService
 from django.contrib.auth.models import User, Group
-import psutil
-from django.http import JsonResponse
-import time
-import datetime
-from django.utils import timezone
-
-# Lista global para armazenar os últimos tempos de resposta
-ULTIMOS_TEMPOS = []
-
-def registrar_tempo_resposta(tempo):
-    ULTIMOS_TEMPOS.append(tempo)
-    if len(ULTIMOS_TEMPOS) > 100:
-        ULTIMOS_TEMPOS.pop(0)
-
-def get_tempo_resposta_medio():
-    if ULTIMOS_TEMPOS:
-        return round(sum(ULTIMOS_TEMPOS) / len(ULTIMOS_TEMPOS), 2)
-    return 0
 
 def home_sistema(request):
     user = request.user
@@ -47,32 +29,3 @@ def home_sistema(request):
         context['is_assessor'] = is_assessor
 
     return render(request, 'main/home_sistema.html', context)
-
-def metricas_sistema(request):
-    cpu = psutil.cpu_percent(interval=0.5)
-    mem = psutil.virtual_memory().percent
-    tempo_resposta = get_tempo_resposta_medio()  # ms
-
-    # Tempo de atividade do sistema (uptime)
-    boot_time = datetime.datetime.fromtimestamp(psutil.boot_time())
-    now = datetime.datetime.now()
-    uptime_delta = now - boot_time
-    dias = uptime_delta.days
-    horas = uptime_delta.seconds // 3600
-    uptime_str = f"{dias}d {horas}h"
-
-    # Alertas nas últimas 24h
-    ultimas_24h = timezone.now() - datetime.timedelta(hours=24)
-    alertas_24h = Visita.objects.filter(status='cancelada', data_entrada__gte=ultimas_24h).count()
-
-    # Faces registradas
-    faces_registradas = Visitante.objects.filter(face_registrada=True).count()
-
-    return JsonResponse({
-        'cpu': cpu,
-        'mem': mem,
-        'resp': tempo_resposta,
-        'uptime': uptime_str,
-        'alertas24h': alertas_24h,
-        'faces': faces_registradas,
-    })

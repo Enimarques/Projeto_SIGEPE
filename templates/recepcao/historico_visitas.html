@@ -38,195 +38,189 @@
                     </div>
                     <div class="col-md-2 d-flex align-items-end">
                         <div class="btn-group w-100">
-                            <button type="submit" class="btn btn-primary">
+                            <button type="button" class="btn btn-primary" id="btnFiltrar">
                                 <i class="fas fa-search"></i> Filtrar
                             </button>
-                            <a href="{% url 'recepcao:historico_visitas' %}" class="btn btn-secondary">
+                            <button type="button" class="btn btn-secondary" id="btnLimpar">
                                 <i class="fas fa-times"></i>
-                            </a>
+                            </button>
                         </div>
                     </div>
                 </div>
             </form>
 
             <!-- Estatísticas -->
-            <div class="row mb-4">
-                <div class="col-md-4">
-                    <div class="card bg-info text-white">
-                        <div class="card-body">
-                            <h5 class="card-title">Total de Visitas</h5>
-                            <p class="card-text h3">{{ total_visitas }}</p>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="card bg-warning text-white">
-                        <div class="card-body">
-                            <h5 class="card-title">Em Andamento</h5>
-                            <p class="card-text h3">{{ visitas_em_andamento }}</p>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="card bg-success text-white">
-                        <div class="card-body">
-                            <h5 class="card-title">Finalizadas</h5>
-                            <p class="card-text h3">{{ visitas_finalizadas }}</p>
-                        </div>
+            <div id="stats-container">
+                {% include 'recepcao/includes/stats_historico_visitas.html' %}
+            </div>
+
+            <!-- Loading overlay -->
+            <div id="loading-overlay" style="display: none;">
+                <div class="d-flex justify-content-center align-items-center" style="height: 200px;">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Carregando...</span>
                     </div>
                 </div>
             </div>
 
             <!-- Lista de Visitas -->
-            <div class="table-responsive">
-                <table class="table table-striped table-hover">
-                    <thead>
-                        <tr>
-                            <th>Visitante</th>
-                            <th>CPF</th>
-                            <th>Setor</th>
-                            <th>Data/Hora Entrada</th>
-                            <th>Data/Hora Saída</th>
-                            <th>Status</th>
-                            <th>Ações</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for visita in page_obj %}
-                        <tr>
-                            <td>
-                                <div class="d-flex align-items-center">
-                                    {% if visita.visitante.foto %}
-                                    <img src="{{ visita.visitante.foto.url }}" alt="{{ visita.visitante.nome_completo }}" 
-                                         class="rounded-circle me-2" style="width: 40px; height: 40px; object-fit: cover;">
-                                    {% else %}
-                                    <i class="fas fa-user-circle fa-2x me-2 text-muted"></i>
-                                    {% endif %}
-                                    <div>{{ visita.visitante.nome_completo }}</div>
-                                </div>
-                            </td>
-                            <td>{{ visita.visitante.CPF }}</td>
-                            <td>{% if visita.setor.tipo == 'gabinete' %}{{ visita.setor.nome_vereador }}{% else %}{{ visita.setor.nome_local }}{% endif %}</td>
-                            <td>{{ visita.data_entrada|date:"d/m/Y H:i" }}</td>
-                            <td>{{ visita.data_saida|date:"d/m/Y H:i"|default:"-" }}</td>
-                            <td>
-                                {% if visita.data_saida %}
-                                <span class="badge bg-success">Finalizada</span>
-                                {% else %}
-                                <span class="badge bg-warning">Em Andamento</span>
-                                {% endif %}
-                            </td>
-                            <td>
-                                {% if not visita.data_saida %}
-                                <a href="{% url 'recepcao:finalizar_visita' visita.id %}" class="btn btn-sm btn-success">
-                                    <i class="fas fa-check"></i> Finalizar
-                                </a>
-                                {% endif %}
-                                {% if user.is_superuser %}
-                                <a href="#" class="btn btn-sm btn-danger" onclick="confirmarExclusao('{% url 'recepcao:excluir_visita' visita.id %}')">
-                                    <i class="fas fa-trash"></i> Excluir
-                                </a>
-                                {% endif %}
-                            </td>
-                        </tr>
-                        {% empty %}
-                        <tr>
-                            <td colspan="7" class="text-center py-4">
-                                <div class="text-center">
-                                    <i class="fas fa-history fa-3x text-muted mb-3 d-block"></i>
-                                    <h5 class="text-muted">Nenhuma visita encontrada</h5>
-                                    {% if status_filtro or periodo_filtro or busca %}
-                                    <p class="mb-3">Tente remover alguns filtros</p>
-                                    <a href="{% url 'recepcao:historico_visitas' %}" class="btn btn-secondary">
-                                        <i class="fas fa-times me-2"></i>Limpar Filtros
-                                    </a>
-                                    {% else %}
-                                    <p class="mb-3">Registre uma nova visita</p>
-                                    <a href="{% url 'recepcao:registro_visitas' %}" class="btn btn-primary">
-                                        <i class="fas fa-plus-circle me-2"></i>Registrar Nova Visita
-                                    </a>
-                                    {% endif %}
-                                </div>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+            <div id="tabela-container">
+                {% include 'recepcao/includes/tabela_historico_visitas.html' %}
             </div>
-
-            <!-- Paginação -->
-            {% if page_obj.paginator.num_pages > 1 %}
-            <nav aria-label="Navegação de páginas" class="mt-4">
-                <ul class="pagination justify-content-center">
-                    {% if page_obj.has_previous %}
-                    <li class="page-item">
-                        <a class="page-link" href="?page=1&status={{ status_filtro|default:'' }}&periodo={{ periodo_filtro|default:'' }}&busca={{ busca|default:'' }}">
-                            <i class="fas fa-angle-double-left"></i>
-                        </a>
-                    </li>
-                    <li class="page-item">
-                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}&status={{ status_filtro|default:'' }}&periodo={{ periodo_filtro|default:'' }}&busca={{ busca|default:'' }}">
-                            <i class="fas fa-angle-left"></i>
-                        </a>
-                    </li>
-                    {% endif %}
-
-                    {% for num in page_obj.paginator.page_range %}
-                    {% if page_obj.number == num %}
-                    <li class="page-item active">
-                        <span class="page-link">{{ num }}</span>
-                    </li>
-                    {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
-                    <li class="page-item">
-                        <a class="page-link" href="?page={{ num }}&status={{ status_filtro|default:'' }}&periodo={{ periodo_filtro|default:'' }}&busca={{ busca|default:'' }}">
-                            {{ num }}
-                        </a>
-                    </li>
-                    {% endif %}
-                    {% endfor %}
-
-                    {% if page_obj.has_next %}
-                    <li class="page-item">
-                        <a class="page-link" href="?page={{ page_obj.next_page_number }}&status={{ status_filtro|default:'' }}&periodo={{ periodo_filtro|default:'' }}&busca={{ busca|default:'' }}">
-                            <i class="fas fa-angle-right"></i>
-                        </a>
-                    </li>
-                    <li class="page-item">
-                        <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}&status={{ status_filtro|default:'' }}&periodo={{ periodo_filtro|default:'' }}&busca={{ busca|default:'' }}">
-                            <i class="fas fa-angle-double-right"></i>
-                        </a>
-                    </li>
-                    {% endif %}
-                </ul>
-            </nav>
-            {% endif %}
         </div>
     </div>
 </div>
 
-<!-- Modal de Confirmação de Exclusão -->
-<div class="modal fade" id="confirmacaoModal" tabindex="-1" aria-labelledby="confirmacaoModalLabel" aria-hidden="true">
+<!-- Modal de confirmação de exclusão -->
+<div class="modal fade" id="modalConfirmacao" tabindex="-1" aria-labelledby="modalConfirmacaoLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="confirmacaoModalLabel">Confirmar Exclusão</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                <h5 class="modal-title" id="modalConfirmacaoLabel">Confirmar Exclusão</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                Tem certeza que deseja excluir esta visita?
+                Tem certeza que deseja excluir esta visita? Esta ação não pode ser desfeita.
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                <a href="#" id="btnConfirmarExclusao" class="btn btn-danger">Excluir</a>
+                <a href="#" class="btn btn-danger" id="btnConfirmarExclusao">Excluir</a>
             </div>
         </div>
     </div>
 </div>
+{% endblock %}
 
+{% block extra_js %}
 <script>
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Histórico de visitas carregado');
+    
+    const form = document.getElementById('formFiltros');
+    const btnFiltrar = document.getElementById('btnFiltrar');
+    const btnLimpar = document.getElementById('btnLimpar');
+    const loadingOverlay = document.getElementById('loading-overlay');
+    const tabelaContainer = document.getElementById('tabela-container');
+    const statsContainer = document.getElementById('stats-container');
+    
+    // URL da view AJAX
+    const ajaxUrl = '{% url "recepcao:historico_visitas_ajax" %}';
+    
+    function showLoading() {
+        loadingOverlay.style.display = 'block';
+        tabelaContainer.style.opacity = '0.5';
+        statsContainer.style.opacity = '0.5';
+    }
+    
+    function hideLoading() {
+        loadingOverlay.style.display = 'none';
+        tabelaContainer.style.opacity = '1';
+        statsContainer.style.opacity = '1';
+    }
+    
+    function atualizarTabela(page = 1) {
+        console.log('Atualizando tabela, página:', page);
+        showLoading();
+        
+        const formData = new FormData(form);
+        if (page > 1) {
+            formData.append('page', page);
+        }
+        
+        const params = new URLSearchParams(formData);
+        
+        fetch(ajaxUrl + '?' + params.toString())
+            .then(response => {
+                console.log('Resposta recebida:', response.status);
+                if (!response.ok) {
+                    throw new Error('Erro na requisição: ' + response.status);
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Dados recebidos:', data);
+                if (data.success) {
+                    tabelaContainer.innerHTML = data.html;
+                    statsContainer.innerHTML = data.stats_html;
+                    
+                    // Reativar eventos de paginação
+                    ativarPaginacao();
+                } else {
+                    console.error('Erro nos dados:', data);
+                }
+            })
+            .catch(error => {
+                console.error('Erro na requisição:', error);
+                alert('Erro ao carregar dados. Tente novamente.');
+            })
+            .finally(() => {
+                hideLoading();
+            });
+    }
+    
+    function ativarPaginacao() {
+        const paginationLinks = document.querySelectorAll('.pagination a[data-page]');
+        paginationLinks.forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                const page = this.getAttribute('data-page');
+                atualizarTabela(page);
+            });
+        });
+        
+        // Ativar botões de exclusão usando event delegation
+        const botoesExcluir = document.querySelectorAll('.btn-excluir');
+        botoesExcluir.forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                e.preventDefault();
+                const url = this.getAttribute('data-url');
+                confirmarExclusao(url);
+            });
+        });
+    }
+    
+    // Eventos dos filtros
+    btnFiltrar.addEventListener('click', function(e) {
+        e.preventDefault();
+        console.log('Botão filtrar clicado');
+        atualizarTabela();
+    });
+    
+    btnLimpar.addEventListener('click', function(e) {
+        e.preventDefault();
+        console.log('Botão limpar clicado');
+        form.reset();
+        atualizarTabela();
+    });
+    
+    // Filtrar ao pressionar Enter nos campos de texto
+    const textInputs = form.querySelectorAll('input[type="text"]');
+    textInputs.forEach(input => {
+        input.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                atualizarTabela();
+            }
+        });
+    });
+    
+    // Filtrar ao mudar selects
+    const selects = form.querySelectorAll('select');
+    selects.forEach(select => {
+        select.addEventListener('change', function() {
+            atualizarTabela();
+        });
+    });
+    
+    // Ativar paginação inicial
+    ativarPaginacao();
+});
+
+// Função global para confirmação de exclusão
 function confirmarExclusao(url) {
+    const modal = new bootstrap.Modal(document.getElementById('modalConfirmacao'));
     document.getElementById('btnConfirmarExclusao').href = url;
-    new bootstrap.Modal(document.getElementById('confirmacaoModal')).show();
+    modal.show();
 }
 </script>
 {% endblock %}

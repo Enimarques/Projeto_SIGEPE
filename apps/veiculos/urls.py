@@ -6,15 +6,16 @@ app_name = 'veiculos'
 urlpatterns = [
     # Home e Listagem
     path('', views.home_veiculos, name='home_veiculos'),
-    path('lista-veiculos/', views.ListaVeiculosView.as_view(), name='lista_veiculos'),
+    path('lista-veiculos/', views.lista_veiculos, name='lista_veiculos'),
+    path('lista-veiculos/ajax/', views.lista_veiculos_ajax, name='lista_veiculos_ajax'),
     
     # Registro de Entrada e Saída
     path('registro-entrada/', views.registro_entrada, name='registro_entrada'),
     path('registro-saida/', views.registro_saida, name='registro_saida'),
     
     # Histórico
-    path('historico/', views.HistoricoVeiculosView.as_view(), name='historico'),
-    path('historico/veiculo/<int:veiculo_id>/', views.historico_veiculo, name='historico_veiculo'),
+    path('historico/', views.historico_veiculos, name='historico'),
+    path('historico/ajax/', views.historico_veiculos_ajax, name='historico_veiculos_ajax'),
     path('historico/exportar-pdf/', views.exportar_historico_pdf, name='exportar_historico_pdf'),
     path('historico/exportar-excel/', views.exportar_historico_excel, name='exportar_historico_excel'),
     

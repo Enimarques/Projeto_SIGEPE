@@ -14,11 +14,14 @@
             <p class="lead text-muted">Informações completas e histórico de visitas</p>
         </div>
         <div class="col-md-4 text-end">
-            <a href="{% url 'recepcao:lista_visitantes' %}" class="btn btn-outline-primary me-2">
+            <a href="{% url 'recepcao:lista_visitantes' %}" class="btn btn-secondary">
                 <i class="fas fa-arrow-left me-2"></i>Voltar
             </a>
-            <a href="{% url 'recepcao:totem_visitas' %}" class="btn btn-primary">
-                <i class="fas fa-plus-circle me-2"></i>Nova Visita
+            <a href="{% url 'recepcao:editar_visitante' visitante.pk %}" class="btn btn-warning">
+                <i class="fas fa-edit me-2"></i>Editar
+            </a>
+            <a href="{% url 'recepcao:registro_visitas' %}?visitante={{ visitante.id }}" class="btn btn-success">
+                <i class="fas fa-plus me-2"></i>Nova Visita
             </a>
         </div>
     </div>
@@ -82,73 +85,6 @@
                             <p><strong>Estado:</strong> {{ visitante.get_estado_display }}</p>
                             <p><strong>Cidade:</strong> {{ visitante.cidade }}</p>
                             <p><strong>Bairro:</strong> {{ visitante.get_bairro_display }}</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Reconhecimento Facial -->
-    <div class="card mt-4">
-        <div class="card-header bg-primary text-white">
-            <h5 class="mb-0"><i class="fas fa-camera me-2"></i>Reconhecimento Facial</h5>
-        </div>
-        <div class="card-body">
-            <div class="row">
-                <div class="col-md-6">
-                    <div class="card">
-                        <div class="card-body">
-                            <h5 class="card-title">Status do Reconhecimento</h5>
-                            <div class="d-flex align-items-center mb-3">
-                                {% if visitante.face_registrada %}
-                                <div class="circular-photo-container small me-3">
-                                    <img src="{{ visitante.foto.url }}" alt="Foto" class="circular-photo">
-                                    <span class="badge bg-success position-absolute bottom-0 end-0">
-                                        <i class="fas fa-check-circle"></i>
-                                    </span>
-                                </div>
-                                <div>
-                                    <p class="mb-0 text-success">
-                                        <i class="fas fa-check-circle me-2"></i>Face registrada
-                                    </p>
-                                    <small class="text-muted">Pronto para reconhecimento</small>
-                                </div>
-                                {% else %}
-                                <div class="circular-photo-container small me-3 placeholder">
-                                    <i class="fas fa-user-circle"></i>
-                                </div>
-                                <div>
-                                    <p class="mb-0 text-warning">
-                                        <i class="fas fa-exclamation-circle me-2"></i>Face não registrada
-                                    </p>
-                                    <small class="text-muted">Tire uma foto para ativar o reconhecimento</small>
-                                </div>
-                                {% endif %}
-                            </div>
-                            <button type="button" class="btn btn-primary" id="btnIniciarCamera">
-                                <i class="fas fa-camera me-2"></i>{% if visitante.foto %}Atualizar{% else %}Tirar{% endif %} Foto
-                            </button>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-6">
-                    <div id="cameraContainer" class="mt-4" style="display: none;">
-                        <div class="position-relative">
-                            <video id="video" width="640" height="480" class="rounded" style="border: 2px solid #ccc;"></video>
-                            <div class="camera-overlay">
-                                <div class="face-guide"></div>
-                            </div>
-                        </div>
-                        <canvas id="canvas" style="display:none;"></canvas>
-                        <div id="cameraInfo" class="text-muted mt-2"></div>
-                        <div class="mt-3">
-                            <button type="button" class="btn btn-success me-2" id="btnCapturarFoto">
-                                <i class="fas fa-camera me-2"></i>Capturar Foto
-                            </button>
-                            <button type="button" class="btn btn-secondary" id="btnCancelar">
-                                <i class="fas fa-times me-2"></i>Cancelar
-                            </button>
                         </div>
                     </div>
                 </div>
@@ -284,166 +220,118 @@
     border: 2px dashed rgba(255, 255, 255, 0.5);
     border-radius: 50%;
 }
+
+.camera-overlay .face-guide {
+    /* Estilos do guia de rosto */
+}
 </style>
 {% endblock %}
 
 {% block extra_js %}
 <script>
-let stream = null;
-let currentCameraLabel = '';
-
-async function getPhysicalCamera() {
-    try {
-        // Primeiro solicita permissão para acessar as câmeras
-        await navigator.mediaDevices.getUserMedia({ video: true });
-        
-        // Lista todas as câmeras disponíveis
-        const devices = await navigator.mediaDevices.enumerateDevices();
-        const videoDevices = devices.filter(device => device.kind === 'videoinput');
-        
-        // Se não houver câmeras, lança erro
-        if (videoDevices.length === 0) {
-            throw new Error('Nenhuma câmera encontrada');
-        }
-
-        // Tenta obter uma câmera física
-        const physicalCamera = videoDevices.find(device => 
-            !device.label.toLowerCase().includes('virtual') && 
-            !device.label.toLowerCase().includes('obs') &&
-            !device.label.toLowerCase().includes('manycam') &&
-            !device.label.toLowerCase().includes('snap') &&
-            !device.label.toLowerCase().includes('droid') &&
-            !device.label.toLowerCase().includes('split')
-        );
-
-        if (!physicalCamera) {
-            throw new Error('Nenhuma câmera física encontrada. Por favor, desative suas câmeras virtuais.');
-        }
-
-        // Salva o nome da câmera
-        currentCameraLabel = physicalCamera.label || 'Câmera Principal';
-
-        // Atualiza o texto do botão
-        const btnCapturarFoto = document.getElementById('btnCapturarFoto');
-        if (btnCapturarFoto) {
-            btnCapturarFoto.innerHTML = `<i class="fas fa-camera me-2"></i>Capturar Foto (${currentCameraLabel})`;
-        }
-
-        // Configurações específicas para câmera física
-        const constraints = {
-            video: {
-                deviceId: { exact: physicalCamera.deviceId },
-                width: { ideal: 1280 },
-                height: { ideal: 720 },
-                frameRate: { ideal: 30 }
-            }
-        };
-
-        return await navigator.mediaDevices.getUserMedia(constraints);
-    } catch (error) {
-        console.error('Erro ao acessar câmera:', error);
-        throw error;
-    }
-}
-
-document.getElementById('btnIniciarCamera')?.addEventListener('click', async function() {
-    try {
-        stream = await getPhysicalCamera();
-        const video = document.getElementById('video');
-        video.srcObject = stream;
-        video.play();
-        document.getElementById('cameraContainer').style.display = 'block';
-        this.style.display = 'none';
-
-        // Adiciona informação da câmera abaixo do vídeo
-        const cameraInfo = document.getElementById('cameraInfo');
-        cameraInfo.innerHTML = `<i class="fas fa-video me-2"></i>Usando: ${currentCameraLabel}`;
-    } catch (err) {
-        console.error('Erro ao acessar a câmera:', err);
-        alert('Erro ao acessar a câmera física. Verifique se:\n\n1. Sua câmera está conectada\n2. Você concedeu permissão\n3. Todas as câmeras virtuais estão desativadas');
-    }
-});
-
-document.getElementById('btnCapturarFoto')?.addEventListener('click', function() {
-    if (!stream) {
-        alert('Câmera não está ativa. Por favor, reinicie a câmera.');
-        return;
-    }
-
+document.addEventListener('DOMContentLoaded', function() {
+    const btnIniciarCamera = document.getElementById('btnIniciarCamera');
+    const btnCapturarFoto = document.getElementById('btnCapturarFoto');
+    const btnCancelar = document.getElementById('btnCancelar');
+    const cameraContainer = document.getElementById('cameraContainer');
     const video = document.getElementById('video');
     const canvas = document.getElementById('canvas');
-    const context = canvas.getContext('2d');
+    const cameraInfo = document.getElementById('cameraInfo');
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+    let stream = null;
+    let currentCameraLabel = '';
 
-    // Configurar o canvas com as dimensões do vídeo
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-    
-    // Capturar o frame do vídeo
-    context.drawImage(video, 0, 0, canvas.width, canvas.height);
+    // Função para buscar apenas câmeras físicas
+    async function getPhysicalCamera() {
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        const videoDevices = devices.filter(d => d.kind === 'videoinput');
+        const physicalCamera = videoDevices.find(d => !/virtual|obs|manycam|droid/i.test(d.label));
+        
+        if (physicalCamera) {
+            currentCameraLabel = physicalCamera.label;
+            return { deviceId: { exact: physicalCamera.deviceId } };
+        } else if (videoDevices.length > 0) {
+            // Fallback para a primeira câmera se nenhuma física for identificada
+            currentCameraLabel = videoDevices[0].label;
+            return { deviceId: { exact: videoDevices[0].deviceId } };
+        }
+        throw new Error('Nenhuma câmera física encontrada.');
+    }
 
-    // Converter para blob e enviar
-    canvas.toBlob(function(blob) {
-        console.log('Convertendo imagem para blob...', blob);
-        const formData = new FormData();
-        formData.append('foto', blob, 'foto.jpg');
-        
-        // Adiciona o token CSRF
-        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
-        console.log('Token CSRF:', csrfToken);
-        
-        console.log('Enviando foto para o servidor...');
-        fetch('{% url "recepcao:upload_foto_visitante" visitante.id %}', {
-            method: 'POST',
-            body: formData,
-            headers: {
-                'X-CSRFToken': csrfToken,
-                'Accept': 'application/json'
-            },
-            credentials: 'same-origin'
-        })
-        .then(response => {
-            console.log('Resposta recebida:', response);
-            if (!response.ok) {
-                return response.text().then(text => {
-                    console.error('Erro detalhado:', text);
-                    throw new Error('Erro na resposta do servidor: ' + text);
-                });
-            }
-            return response.json();
-        })
-        .then(data => {
-            console.log('Dados recebidos:', data);
-            if (data.success) {
-                // Para a câmera antes de redirecionar
-                if (stream) {
-                    stream.getTracks().forEach(track => track.stop());
+    // Iniciar Câmera
+    btnIniciarCamera?.addEventListener('click', async function() {
+        this.disabled = true;
+        try {
+            const videoConstraints = await getPhysicalCamera();
+            stream = await navigator.mediaDevices.getUserMedia({ video: { ...videoConstraints, width: 640, height: 480 } });
+            video.srcObject = stream;
+            video.play();
+            cameraContainer.style.display = 'block';
+            cameraInfo.innerHTML = `<i class="fas fa-video me-2"></i>Usando: ${currentCameraLabel}`;
+        } catch (err) {
+            alert('Erro ao acessar a câmera: ' + err.message);
+            this.disabled = false;
+        }
+    });
+
+    // Capturar Foto
+    btnCapturarFoto?.addEventListener('click', function() {
+        this.disabled = true;
+        this.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Processando...';
+
+        if (!video || video.readyState < 3) {
+            alert('A câmera não está pronta. Tente novamente.');
+            this.disabled = false;
+            this.innerHTML = '<i class="fas fa-camera me-2"></i>Capturar Foto';
+            return;
+        }
+
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
+
+        canvas.toBlob(function(blob) {
+            const formData = new FormData();
+            formData.append('foto', blob, 'foto.jpg');
+
+            fetch("{% url 'recepcao:upload_foto_visitante' visitante.id %}", {
+                method: 'POST',
+                headers: { 'X-CSRFToken': csrfToken },
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Foto atualizada com sucesso!');
+                    // Recarrega a página para mostrar a nova foto e status
+                    location.reload();
+                } else {
+                    throw new Error(data.message || 'Erro desconhecido ao fazer upload.');
                 }
-                // Redireciona para a página de registro facial
-                window.location.href = data.redirect_url;
-            } else {
-                throw new Error(data.message || 'Erro ao salvar a foto');
-            }
-        })
-        .catch(error => {
-            console.error('Erro:', error);
-            alert('Erro ao enviar a foto: ' + error.message);
-        });
-    }, 'image/jpeg', 0.9); // Qualidade 0.9 para garantir boa imagem
-});
+            })
+            .catch(error => {
+                alert('Erro ao enviar a foto: ' + error.message);
+                btnCapturarFoto.disabled = false;
+                btnCapturarFoto.innerHTML = '<i class="fas fa-camera me-2"></i>Capturar Foto';
+            });
+        }, 'image/jpeg', 0.9);
+    });
 
-document.getElementById('btnCancelar')?.addEventListener('click', function() {
-    if (stream) {
-        stream.getTracks().forEach(track => track.stop());
-    }
-    document.getElementById('cameraContainer').style.display = 'none';
-    document.getElementById('btnIniciarCamera').style.display = 'block';
-});
+    // Cancelar
+    btnCancelar?.addEventListener('click', function() {
+        if (stream) {
+            stream.getTracks().forEach(track => track.stop());
+        }
+        cameraContainer.style.display = 'none';
+        btnIniciarCamera.disabled = false;
+    });
 
-// Limpar recursos quando a página for fechada
-window.addEventListener('beforeunload', function() {
-    if (stream) {
-        stream.getTracks().forEach(track => track.stop());
-    }
+    // Limpar ao sair da página
+    window.addEventListener('beforeunload', () => {
+        if (stream) {
+            stream.getTracks().forEach(track => track.stop());
+        }
+    });
 });
 </script>
 {% endblock %}

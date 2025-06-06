@@ -6,6 +6,8 @@ from django.core.exceptions import ValidationError
 from django.core.validators import RegexValidator
 import re
 from datetime import datetime, time
+import base64
+import numpy as np
 
 class Setor(models.Model):
     TIPO_CHOICES = [
@@ -43,7 +45,7 @@ class Setor(models.Model):
     horario_fechamento = models.TimeField('Horário de Fechamento', blank=True, null=True)
     
     # Campos específicos para Gabinete
-    nome_vereador = models.CharField('Nome do Vereador', max_length=100, blank=True, null=True)
+    nome_vereador = models.CharField(max_length=100, verbose_name="Nome do Vereador/Responsável")
     email_vereador = models.EmailField('E-mail do Vereador', max_length=255, blank=True, null=True)
     
     # Campos específicos para Departamento
@@ -66,10 +68,7 @@ class Setor(models.Model):
         ordering = ['tipo', 'localizacao']
 
     def __str__(self):
-        if self.tipo == 'gabinete':
-            return f'Gabinete do Vereador {self.nome_vereador}'
-        else:
-            return f'Departamento {self.nome_local}'
+        return f"{self.nome_local} - {self.nome_vereador}"
 
     def esta_aberto(self):
         if not self.horario_abertura or not self.horario_fechamento:
@@ -342,7 +341,8 @@ class Visitante(models.Model):
         ('outra_cidade', 'Outra cidade'),
     ]
 
-    nome_completo = models.CharField('Nome Completo', max_length=100)
+    # Dados Pessoais
+    nome_completo = models.CharField(max_length=255, verbose_name="Nome Completo")
     nome_social = models.CharField('Nome Social', max_length=100, blank=True, null=True)
     data_nascimento = models.DateField('Data de Nascimento')
     CPF = models.CharField(
@@ -367,37 +367,43 @@ class Visitante(models.Model):
         ]
     )
     email = models.EmailField('E-mail', blank=True, null=True)
+    
+    # Endereço
     estado = models.CharField('Estado', max_length=2, choices=ESTADOS_CHOICES)
     cidade = models.CharField('Cidade', max_length=100)
     bairro = models.CharField('Bairro', max_length=50, choices=BAIRROS_CHOICES, default='outros')
-    foto = models.ImageField('Foto', upload_to='visitantes/', blank=True, null=True)
-    face_id = models.CharField('Face ID', max_length=100, blank=True, null=True)
-    face_registrada = models.BooleanField('Face Registrada', default=False)
+    logradouro = models.CharField('Logradouro', max_length=100, blank=True, null=True)
+    numero = models.CharField('Número', max_length=10, blank=True, null=True)
+    complemento = models.CharField('Complemento', max_length=50, blank=True, null=True)
+    CEP = models.CharField('CEP', max_length=9, blank=True, null=True)
+
+    # Controle de Acesso e Biometria
+    foto = models.ImageField('Foto', upload_to='fotos_visitantes/', blank=True, null=True)
+
+    # Datas de Controle
+    data_cadastro = models.DateTimeField(auto_now_add=True, verbose_name="Data de Cadastro")
+    data_atualizacao = models.DateTimeField(auto_now=True, verbose_name="Última Atualização")
 
     class Meta:
-        verbose_name = 'Visitante'
+        verbose_name = "Visitante"
         verbose_name_plural = 'Visitantes'
         ordering = ['nome_completo']
 
     def __str__(self):
-        if self.nome_social:
-            return f"{self.nome_social} ({self.nome_completo})"
         return self.nome_completo
 
     def clean(self):
-        if not self.nome_completo:
-            raise ValidationError({'nome_completo': 'O nome completo é obrigatório.'})
-        if not self.CPF:
-            raise ValidationError({'CPF': 'O CPF é obrigatório.'})
-        if not self.telefone:
-            raise ValidationError({'telefone': 'O telefone é obrigatório.'})
-        if not self.cidade:
-            raise ValidationError({'cidade': 'A cidade é obrigatória.'})
-        if not self.bairro:
-            raise ValidationError({'bairro': 'O bairro é obrigatório.'})
+        super().clean()
+        if self.bairro and not self.cidade:
+            raise ValidationError({'cidade': 'A cidade é obrigatória se o bairro for informado.'})
+        if self.CEP and len(re.sub(r'[^0-9]', '', self.CEP)) != 8:
+            raise ValidationError({'CEP': 'O CEP deve conter 8 dígitos.'})
+        if self.bairro and not self.logradouro:
+            raise ValidationError({'logradouro': 'O logradouro é obrigatório.'})
 
 class Visita(models.Model):
     STATUS_CHOICES = [
+        ('agendada', 'Agendada'),
         ('em_andamento', 'Em Andamento'),
         ('finalizada', 'Finalizada'),
         ('cancelada', 'Cancelada')

@@ -31,56 +31,21 @@ if %PYTHON_MAJOR%==3 if %PYTHON_MINOR% LSS 9 (
     exit /b 1
 )
 
-:menu
-cls
-echo Escolha uma opcao de instalacao:
-echo 1. Instalacao Completa (Sistema + Reconhecimento Facial)
-echo 2. Instalacao Basica (Apenas Sistema)
-echo 3. Sair
 echo.
-set /p opcao="Digite o numero da opcao desejada: "
+echo Iniciando instalacao do sistema...
 
-if "%opcao%"=="1" goto completa
-if "%opcao%"=="2" goto basica
-if "%opcao%"=="3" exit
-echo.
-echo Opcao invalida! Por favor, escolha 1, 2 ou 3.
-timeout /t 2 > nul
-goto menu
+REM Backup do ambiente virtual existente
+if exist venv (
+    echo Fazendo backup do ambiente virtual existente...
+    ren venv venv_backup_%date:~-4,4%%date:~-10,2%%date:~-7,2%_%time:~0,2%%time:~3,2%%time:~6,2%
+)
 
-:completa
-echo.
-echo Iniciando instalacao completa...
-call instalar_face_recognition.bat
+echo Criando ambiente virtual...
+python -m venv venv
 if errorlevel 1 (
-    echo Falha na instalacao do reconhecimento facial.
-    echo Deseja continuar com a instalacao basica? (S/N)
-    choice /C SN /M ""
-    if errorlevel 2 exit /b 1
-)
-goto sistema
-
-:basica
-echo.
-echo Iniciando instalacao basica...
-
-:sistema
-REM Backup do ambiente atual se não foi feito pelo face_recognition
-if not exist venv_backup* (
-    if exist venv (
-        echo Fazendo backup do ambiente virtual existente...
-        ren venv venv_backup_%date:~-4,4%%date:~-10,2%%date:~-7,2%_%time:~0,2%%time:~3,2%%time:~6,2%
-    )
-)
-
-if not exist venv (
-    echo Criando ambiente virtual...
-    python -m venv venv
-    if errorlevel 1 (
-        echo Falha ao criar ambiente virtual.
-        pause
-        exit /b 1
-    )
+    echo Falha ao criar ambiente virtual.
+    pause
+    exit /b 1
 )
 
 echo Ativando ambiente virtual...

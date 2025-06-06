@@ -45,6 +45,10 @@ class VisitanteForm(forms.ModelForm):
             'estado', 
             'cidade',
             'bairro',
+            'logradouro',
+            'numero',
+            'complemento',
+            'CEP',
             'foto'
         ]
         widgets = {
@@ -73,6 +77,22 @@ class VisitanteForm(forms.ModelForm):
             }),
             'bairro': forms.Select(attrs={
                 'class': 'form-control'
+            }),
+            'logradouro': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Rua, Avenida, etc.'
+            }),
+            'numero': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Número'
+            }),
+            'complemento': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Apto, Bloco, etc. (Opcional)'
+            }),
+            'CEP': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': '00000-000'
             }),
             'foto': forms.FileInput(attrs={
                 'class': 'form-control'
@@ -230,15 +250,9 @@ class VisitaForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        tipo = self.data.get('tipo_setor', 'departamento')
-        setores = Setor.objects.filter(tipo=tipo)
         
-        # Ordenar os setores de acordo com o tipo
-        if tipo == 'gabinete':
-            setores = setores.order_by('nome_vereador')
-        else:
-            setores = setores.order_by('nome_local')
-            
+        # Carregar todos os setores para permitir filtragem via JavaScript
+        setores = Setor.objects.all().order_by('tipo', 'nome_vereador', 'nome_local')
         self.fields['setor'].queryset = setores
         self.fields['objetivo'].initial = 'outros'
         

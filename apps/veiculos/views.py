@@ -22,6 +22,7 @@ from apps.autenticacao.decorators import agente_guarita_or_admin_required
 from django.utils.timezone import localtime
 from apps.autenticacao.decorators import block_recepcionista
 from django.views.decorators.http import require_GET
+from django.template.loader import render_to_string
 
 @block_recepcionista
 @agente_guarita_or_admin_required
@@ -60,29 +61,116 @@ def home_veiculos(request):
 
 @login_required(login_url='autenticacao:login_sistema')
 def lista_veiculos(request):
-    veiculos = Veiculo.objects.all().order_by('-data_entrada')
+    # Obter filtros
+    data_inicio = request.GET.get('data_inicio')
+    data_fim = request.GET.get('data_fim')
+    placa = request.GET.get('placa')
+    status = request.GET.get('status')
+    
+    # Query base
+    veiculos = Veiculo.objects.all()
+    
+    # Aplicar filtros
+    if data_inicio:
+        try:
+            data_inicio_dt = datetime.strptime(data_inicio, '%Y-%m-%d').date()
+            veiculos = veiculos.filter(data_entrada__date__gte=data_inicio_dt)
+        except (ValueError, TypeError):
+            pass
+    
+    if data_fim:
+        try:
+            data_fim_dt = datetime.strptime(data_fim, '%Y-%m-%d').date()
+            veiculos = veiculos.filter(data_entrada__date__lte=data_fim_dt)
+        except (ValueError, TypeError):
+            pass
+    
+    if placa:
+        veiculos = veiculos.filter(placa__icontains=placa)
+    
+    if status:
+        if status == 'presente':
+            veiculos = veiculos.filter(data_saida__isnull=True, bloqueado=False)
+        elif status == 'saida':
+            veiculos = veiculos.filter(data_saida__isnull=False)
+        elif status == 'bloqueado':
+            veiculos = veiculos.filter(bloqueado=True)
+    
+    # Ordenar
+    veiculos = veiculos.order_by('-data_entrada')
     
     # Paginação
     paginator = Paginator(veiculos, 10)  # 10 veículos por página
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
     
-    return render(request, 'veiculos/lista_veiculos.html', {'page_obj': page_obj})
+    context = {
+        'page_obj': page_obj,
+        'filtros': {
+            'data_inicio': data_inicio,
+            'data_fim': data_fim,
+            'placa': placa,
+            'status': status,
+        }
+    }
+    
+    return render(request, 'veiculos/lista_veiculos.html', context)
 
 @login_required(login_url='autenticacao:login_sistema')
-def historico_veiculo(request, veiculo_id):
-    veiculo = get_object_or_404(Veiculo, pk=veiculo_id)
-    historico = HistoricoVeiculo.objects.filter(veiculo=veiculo).order_by('-data_entrada')
+def historico_veiculos(request):
+    """
+    View para histórico de veículos com filtros.
+    """
+    # Obter filtros
+    data_inicio = request.GET.get('data_inicio')
+    data_fim = request.GET.get('data_fim')
+    placa = request.GET.get('placa')
+    tipo = request.GET.get('tipo')
+    
+    # Query base
+    historicos = HistoricoVeiculo.objects.all()
+    
+    # Aplicar filtros
+    if data_inicio:
+        try:
+            data_inicio_dt = datetime.strptime(data_inicio, '%Y-%m-%d').date()
+            historicos = historicos.filter(data_entrada__date__gte=data_inicio_dt)
+        except (ValueError, TypeError):
+            pass
+    
+    if data_fim:
+        try:
+            data_fim_dt = datetime.strptime(data_fim, '%Y-%m-%d').date()
+            historicos = historicos.filter(data_entrada__date__lte=data_fim_dt)
+        except (ValueError, TypeError):
+            pass
+    
+    if placa:
+        historicos = historicos.filter(veiculo__placa__icontains=placa)
+    
+    if tipo:
+        historicos = historicos.filter(veiculo__tipo=tipo)
+    
+    # Ordenar
+    historicos = historicos.order_by('-data_entrada')
     
     # Paginação
-    paginator = Paginator(historico, 10)  # 10 registros por página
+    paginator = Paginator(historicos, 10)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
     
-    return render(request, 'veiculos/historico_veiculo.html', {
-        'veiculo': veiculo,
-        'page_obj': page_obj
-    })
+    context = {
+        'page_obj': page_obj,
+        'title': 'Histórico de Veículos',
+        'filtros': {
+            'data_inicio': data_inicio,
+            'data_fim': data_fim,
+            'placa': placa,
+            'tipo': tipo,
+        }
+    }
+    
+    return render(request, 'veiculos/historico.html', context)
 
 @login_required(login_url='autenticacao:login_sistema')
 def exportar_excel(request):
@@ -376,20 +464,162 @@ def veiculo_info_json(request):
 @require_GET
 @login_required(login_url='autenticacao:login_sistema')
 def veiculo_info_por_placa_json(request):
-    placa = request.GET.get('placa')
+    """
+    Retorna informações do veículo por placa em formato JSON.
+    Usado para busca via AJAX.
+    """
+    placa = request.GET.get('placa', '')
+    
     if not placa:
-        return JsonResponse({'erro': 'Placa não informada'}, status=400)
-    veiculo = Veiculo.objects.filter(placa__iexact=placa).order_by('-data_entrada').first()
-    if veiculo:
+        return JsonResponse({'error': 'Placa não informada'}, status=400)
+    
+    try:
+        veiculo = Veiculo.objects.get(placa__iexact=placa)
         data = {
+            'id': veiculo.id,
             'placa': veiculo.placa,
             'modelo': veiculo.modelo,
-            'cor': veiculo.get_cor_display() if hasattr(veiculo, 'get_cor_display') else veiculo.cor,
-            'tipo': veiculo.get_tipo_display() if hasattr(veiculo, 'get_tipo_display') else veiculo.tipo,
-            'nome_condutor': veiculo.nome_condutor,
-            'nome_passageiro': veiculo.nome_passageiro,
-            'observacoes': veiculo.observacoes,
+            'cor': veiculo.cor,
+            'tipo': veiculo.tipo,
+            'status': veiculo.get_status_display(),
+            'bloqueado': veiculo.bloqueado,
+            'motivo_bloqueio': veiculo.motivo_bloqueio,
+            'data_entrada': veiculo.data_entrada.strftime('%d/%m/%Y %H:%M') if veiculo.data_entrada else None,
+            'data_saida': veiculo.data_saida.strftime('%d/%m/%Y %H:%M') if veiculo.data_saida else None,
         }
         return JsonResponse(data)
-    else:
-        return JsonResponse({'erro': 'Veículo não encontrado'}, status=404)
+    except Veiculo.DoesNotExist:
+        return JsonResponse({'error': 'Veículo não encontrado'}, status=404)
+
+@login_required(login_url='autenticacao:login_sistema')
+def lista_veiculos_ajax(request):
+    """
+    Retorna apenas a tabela de veículos filtrada via AJAX.
+    """
+    # Usar a mesma lógica da view principal
+    data_inicio = request.GET.get('data_inicio')
+    data_fim = request.GET.get('data_fim')
+    placa = request.GET.get('placa')
+    status = request.GET.get('status')
+    
+    # Query base
+    veiculos = Veiculo.objects.all()
+    
+    # Aplicar filtros
+    if data_inicio:
+        try:
+            data_inicio_dt = datetime.strptime(data_inicio, '%Y-%m-%d').date()
+            veiculos = veiculos.filter(data_entrada__date__gte=data_inicio_dt)
+        except (ValueError, TypeError):
+            pass
+    
+    if data_fim:
+        try:
+            data_fim_dt = datetime.strptime(data_fim, '%Y-%m-%d').date()
+            veiculos = veiculos.filter(data_entrada__date__lte=data_fim_dt)
+        except (ValueError, TypeError):
+            pass
+    
+    if placa:
+        veiculos = veiculos.filter(placa__icontains=placa)
+    
+    if status:
+        if status == 'presente':
+            veiculos = veiculos.filter(data_saida__isnull=True, bloqueado=False)
+        elif status == 'saida':
+            veiculos = veiculos.filter(data_saida__isnull=False)
+        elif status == 'bloqueado':
+            veiculos = veiculos.filter(bloqueado=True)
+    
+    # Ordenar
+    veiculos = veiculos.order_by('-data_entrada')
+    
+    # Paginação
+    paginator = Paginator(veiculos, 10)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    # Renderizar apenas a tabela
+    table_html = render_to_string(
+        'veiculos/includes/tabela_lista_veiculos.html',
+        {
+            'page_obj': page_obj,
+            'filtros': {
+                'data_inicio': data_inicio,
+                'data_fim': data_fim,
+                'placa': placa,
+                'status': status,
+            }
+        },
+        request=request
+    )
+
+    return JsonResponse({
+        'success': True,
+        'html': table_html,
+        'total_veiculos': veiculos.count()
+    })
+
+@login_required(login_url='autenticacao:login_sistema')
+def historico_veiculos_ajax(request):
+    """
+    Retorna apenas a tabela do histórico de veículos filtrada via AJAX.
+    """
+    # Obter filtros
+    data_inicio = request.GET.get('data_inicio')
+    data_fim = request.GET.get('data_fim')
+    placa = request.GET.get('placa')
+    tipo = request.GET.get('tipo')
+    
+    # Query base
+    historicos = HistoricoVeiculo.objects.all()
+    
+    # Aplicar filtros
+    if data_inicio:
+        try:
+            data_inicio_dt = datetime.strptime(data_inicio, '%Y-%m-%d').date()
+            historicos = historicos.filter(data_entrada__date__gte=data_inicio_dt)
+        except (ValueError, TypeError):
+            pass
+    
+    if data_fim:
+        try:
+            data_fim_dt = datetime.strptime(data_fim, '%Y-%m-%d').date()
+            historicos = historicos.filter(data_entrada__date__lte=data_fim_dt)
+        except (ValueError, TypeError):
+            pass
+    
+    if placa:
+        historicos = historicos.filter(veiculo__placa__icontains=placa)
+    
+    if tipo:
+        historicos = historicos.filter(veiculo__tipo=tipo)
+    
+    # Ordenar
+    historicos = historicos.order_by('-data_entrada')
+    
+    # Paginação
+    paginator = Paginator(historicos, 10)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    # Renderizar apenas a tabela
+    table_html = render_to_string(
+        'veiculos/includes/tabela_historico_veiculos.html',
+        {
+            'page_obj': page_obj,
+            'filtros': {
+                'data_inicio': data_inicio,
+                'data_fim': data_fim,
+                'placa': placa,
+                'tipo': tipo,
+            }
+        },
+        request=request
+    )
+
+    return JsonResponse({
+        'success': True,
+        'html': table_html,
+        'total_historicos': historicos.count()
+    })

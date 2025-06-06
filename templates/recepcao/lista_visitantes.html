@@ -40,7 +40,7 @@
         </div>
         <div class="col-md-4 text-end">
             <a href="{% url 'recepcao:cadastro_visitantes' %}" class="btn btn-primary">
-                <i class="fas fa-plus-circle me-2"></i>Novo Visitante
+                <i class="fas fa-plus me-2"></i>Novo Visitante
             </a>
         </div>
     </div>
@@ -123,7 +123,7 @@
                             </td>
                             <td>
                                 <div class="btn-group">
-                                    <a href="{% url 'recepcao:totem_visitas' %}" class="btn btn-outline-success btn-sm">
+                                    <a href="{% url 'recepcao:registro_visitas' %}?visitante={{ visitante.id }}" class="btn btn-outline-success btn-sm">
                                         <i class="fas fa-clipboard-list me-1"></i>Nova Visita
                                     </a>
                                     <a href="{% url 'recepcao:detalhes_visitante' visitante.id %}" class="btn btn-outline-primary btn-sm">
