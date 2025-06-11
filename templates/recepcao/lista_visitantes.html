@@ -5,6 +5,42 @@
 
 {% block extra_css %}
 <style>
+    :root {
+        --primary-gradient: linear-gradient(135deg, #667eea 0%, #238b8b 100%);
+        --border-radius: 16px;
+        --card-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    }
+    .dashboard-header {
+        background: var(--primary-gradient);
+        border-radius: var(--border-radius);
+        padding: 2rem;
+        margin-bottom: 2rem;
+        color: white;
+        box-shadow: var(--card-shadow);
+        position: relative;
+        overflow: hidden;
+    }
+    .dashboard-header::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -50%;
+        width: 100%;
+        height: 200%;
+        background: rgba(255, 255, 255, 0.1);
+        transform: rotate(45deg);
+        z-index: 1;
+    }
+    .dashboard-header-content {
+        position: relative;
+        z-index: 2;
+    }
+    @media (max-width: 768px) {
+        .dashboard-header {
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+    }
     .circular-photo-container {
         width: 40px;
         height: 40px;
@@ -32,19 +68,20 @@
 {% endblock %}
 
 {% block content %}
-<div class="container">
-    <div class="row align-items-center mb-4">
-        <div class="col-md-8">
-            <h1 class="display-5 mb-0">Visitantes</h1>
-            <p class="lead text-muted">Lista completa de visitantes cadastrados</p>
+<div class="dashboard-header mb-4">
+    <div class="dashboard-header-content d-flex align-items-center justify-content-between">
+        <div>
+            <h1 class="page-title mb-1" style="font-size:2.2rem; font-weight:700; color:#fff;">
+                <i class="fas fa-user-check me-2"></i>Lista de Visitantes
+            </h1>
+            <div style="color:#f8f9fa; font-size:1.08rem; font-weight:400;">
+                Bem-vindo à lista de visitantes. Consulte, pesquise e gerencie todos os visitantes cadastrados no sistema.
+            </div>
         </div>
-        <div class="col-md-4 text-end">
-            <a href="{% url 'recepcao:cadastro_visitantes' %}" class="btn btn-primary">
-                <i class="fas fa-plus me-2"></i>Novo Visitante
-            </a>
-        </div>
+        <!-- Espaço para widget de relógio, se desejar -->
     </div>
-
+</div>
+<div class="container">
     <div class="d-flex justify-content-end mb-3">
         {% include 'includes/botao_voltar.html' %}
     </div>
@@ -82,7 +119,7 @@
                                 <div class="d-flex align-items-center">
                                     {% if visitante.foto %}
                                     <div class="circular-photo-container me-2">
-                                        <img src="{{ visitante.foto.url }}" alt="{{ visitante.nome_completo }}">
+                                        <img src="{{ visitante.get_foto_url|default:visitante.foto.url }}" alt="{{ visitante.nome_completo }}">
                                     </div>
                                     {% else %}
                                     <div class="circular-photo-container me-2">

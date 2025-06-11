@@ -375,14 +375,86 @@ class Visitante(models.Model):
     logradouro = models.CharField('Logradouro', max_length=100, blank=True, null=True)
     numero = models.CharField('Número', max_length=10, blank=True, null=True)
     complemento = models.CharField('Complemento', max_length=50, blank=True, null=True)
-    CEP = models.CharField('CEP', max_length=9, blank=True, null=True)
+    CEP = models.CharField(
+        'CEP',
+        max_length=9,
+        blank=True,
+        null=True,
+        validators=[
+            RegexValidator(
+                regex=r'^\d{5}-\d{3}$',
+                message='CEP deve estar no formato 00000-000'
+            )
+        ]
+    )
 
-    # Controle de Acesso e Biometria
-    foto = models.ImageField('Foto', upload_to='fotos_visitantes/', blank=True, null=True)
+    # Fotos em diferentes tamanhos
+    foto = models.ImageField('Foto Original', upload_to='fotos_visitantes/original/', blank=True, null=True)
+    foto_thumbnail = models.ImageField('Foto Thumbnail', upload_to='fotos_visitantes/thumbnail/', blank=True, null=True)
+    foto_medium = models.ImageField('Foto Média', upload_to='fotos_visitantes/medium/', blank=True, null=True)
+    foto_large = models.ImageField('Foto Grande', upload_to='fotos_visitantes/large/', blank=True, null=True)
 
     # Datas de Controle
     data_cadastro = models.DateTimeField(auto_now_add=True, verbose_name="Data de Cadastro")
     data_atualizacao = models.DateTimeField(auto_now=True, verbose_name="Última Atualização")
+
+    def save(self, *args, **kwargs):
+        # Se uma nova foto foi adicionada, processa ela
+        if self.foto and not self.foto_thumbnail:
+            from .utils.image_utils import process_image
+            try:
+                processed_images = process_image(self.foto)
+                self.foto_thumbnail = processed_images['thumbnail']
+                self.foto_medium = processed_images['medium']
+                self.foto_large = processed_images['large']
+            except Exception as e:
+                # Log o erro mas não impede o salvamento
+                import logging
+                logger = logging.getLogger(__name__)
+                logger.error(f'Erro ao processar imagem: {str(e)}')
+        
+        super().save(*args, **kwargs)
+
+    def get_foto_url(self, size='medium'):
+        """
+        Retorna a URL da foto no tamanho especificado.
+        Usa cache para evitar processamento desnecessário.
+        """
+        from django.core.cache import cache
+        
+        # Tenta pegar do cache primeiro
+        cache_key = f'visitante_foto_{self.id}_{size}'
+        cached_url = cache.get(cache_key)
+        if cached_url:
+            return cached_url
+            
+        # Se não está no cache, pega a URL apropriada
+        foto_field = getattr(self, f'foto_{size}', None) or self.foto
+        if foto_field:
+            url = foto_field.url
+            # Cache por 1 hora
+            cache.set(cache_key, url, 3600)
+            return url
+        return None
+
+    def delete(self, *args, **kwargs):
+        # Limpa o cache ao deletar
+        from django.core.cache import cache
+        for size in ['thumbnail', 'medium', 'large']:
+            cache_key = f'visitante_foto_{self.id}_{size}'
+            cache.delete(cache_key)
+        
+        # Remove os arquivos físicos
+        if self.foto:
+            self.foto.delete()
+        if self.foto_thumbnail:
+            self.foto_thumbnail.delete()
+        if self.foto_medium:
+            self.foto_medium.delete()
+        if self.foto_large:
+            self.foto_large.delete()
+        
+        super().delete(*args, **kwargs)
 
     class Meta:
         verbose_name = "Visitante"

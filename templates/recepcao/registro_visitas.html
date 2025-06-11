@@ -543,7 +543,7 @@
                     <div class="alert alert-info mb-4">
                         <div class="d-flex align-items-center">
                             {% if visitante_pre_selecionado.foto %}
-                            <img src="{{ visitante_pre_selecionado.foto.url }}" alt="{{ visitante_pre_selecionado.nome_completo }}" class="rounded-circle me-3" style="width: 50px; height: 50px; object-fit: cover;">
+                            <img src="{{ visitante_pre_selecionado.get_foto_url|default:visitante_pre_selecionado.foto.url }}" alt="{{ visitante_pre_selecionado.nome_completo }}" class="rounded-circle me-3" style="width: 50px; height: 50px; object-fit: cover;">
                             {% else %}
                             <i class="fas fa-user-circle fa-3x me-3 text-muted"></i>
                             {% endif %}

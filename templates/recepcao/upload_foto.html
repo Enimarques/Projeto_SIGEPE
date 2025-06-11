@@ -3,55 +3,300 @@
 
 {% block title %}Upload de Foto - SIGEPE{% endblock %}
 
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css">
+<style>
+    .preview-container {
+        max-width: 300px;
+        margin: 0 auto;
+        position: relative;
+    }
+    
+    .preview-image {
+        width: 100%;
+        height: auto;
+        border-radius: 8px;
+        display: none;
+    }
+    
+    .cropper-container {
+        margin: 20px auto;
+        max-width: 500px;
+        display: none;
+    }
+    
+    .upload-progress {
+        height: 4px;
+        margin: 10px 0;
+        display: none;
+    }
+    
+    .upload-feedback {
+        margin-top: 10px;
+        display: none;
+    }
+    
+    .drag-drop-zone {
+        border: 2px dashed #ccc;
+        border-radius: 8px;
+        padding: 30px;
+        text-align: center;
+        background: #f8f9fa;
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+    
+    .drag-drop-zone.dragover {
+        border-color: #0d6efd;
+        background: #e7f1ff;
+    }
+    
+    .upload-icon {
+        font-size: 3rem;
+        color: #6c757d;
+        margin-bottom: 15px;
+    }
+    
+    .crop-controls {
+        margin: 15px 0;
+        display: none;
+    }
+    
+    .crop-controls button {
+        margin: 0 5px;
+    }
+    
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .fade-in {
+        animation: fadeIn 0.3s ease;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="container mt-4">
     <div class="row">
         <div class="col-md-8 offset-md-2">
-            <div class="card">
+            <div class="card shadow">
                 <div class="card-header bg-primary text-white">
-                    <h4 class="mb-0">Upload de Foto do Visitante</h4>
+                    <h4 class="mb-0"><i class="fas fa-camera"></i> Upload de Foto do Visitante</h4>
                 </div>
                 <div class="card-body">
-                    <form method="post" enctype="multipart/form-data">
+                    {% if visitante.foto %}
+                    <div class="text-center mb-4 fade-in">
+                        <h5 class="text-muted mb-3">Foto Atual</h5>
+                        <img src="{{ visitante.get_foto_url }}" alt="Foto atual" class="img-thumbnail" style="max-width: 200px;">
+                    </div>
+                    {% endif %}
+                    
+                    <form id="uploadForm" method="post" enctype="multipart/form-data">
                         {% csrf_token %}
                         
-                        {% if visitante.foto %}
-                        <div class="text-center mb-4">
-                            <img src="{{ visitante.foto.url }}" alt="Foto atual" class="img-thumbnail" style="max-width: 200px;">
-                            <p class="mt-2">Foto atual</p>
+                        <div class="drag-drop-zone" id="dragDropZone">
+                            <i class="fas fa-cloud-upload-alt upload-icon"></i>
+                            <p class="mb-2">Arraste uma foto ou clique para selecionar</p>
+                            <small class="text-muted">Formatos aceitos: JPG, PNG, WebP (Máx: 5MB)</small>
+                            <input type="file" id="foto" name="foto" accept="image/*" class="d-none">
                         </div>
-                        {% endif %}
                         
-                        <div class="form-group">
-                            <label for="foto">Selecione uma foto:</label>
-                            <input type="file" class="form-control-file" id="foto" name="foto" accept="image/*" required>
-                            <small class="form-text text-muted">
-                                A foto deve mostrar claramente o rosto do visitante, preferencialmente de frente.
-                            </small>
+                        <div class="progress upload-progress" id="uploadProgress">
+                            <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar"></div>
+                        </div>
+                        
+                        <div class="alert upload-feedback" id="uploadFeedback"></div>
+                        
+                        <div class="cropper-container" id="cropperContainer">
+                            <img id="cropperImage" src="" alt="Imagem para recorte">
+                        </div>
+                        
+                        <div class="crop-controls text-center" id="cropControls">
+                            <button type="button" class="btn btn-outline-primary btn-sm" id="rotateLeft">
+                                <i class="fas fa-undo"></i> Girar Esquerda
+                            </button>
+                            <button type="button" class="btn btn-outline-primary btn-sm" id="rotateRight">
+                                <i class="fas fa-redo"></i> Girar Direita
+                            </button>
+                            <button type="button" class="btn btn-outline-primary btn-sm" id="zoomIn">
+                                <i class="fas fa-search-plus"></i> Zoom +
+                            </button>
+                            <button type="button" class="btn btn-outline-primary btn-sm" id="zoomOut">
+                                <i class="fas fa-search-minus"></i> Zoom -
+                            </button>
                         </div>
                         
                         <div class="text-center mt-4">
-                            <button type="submit" class="btn btn-primary">
+                            <button type="submit" class="btn btn-primary" id="submitBtn" disabled>
                                 <i class="fas fa-upload"></i> Enviar Foto
                             </button>
-                            <a href="{% url 'recepcao:detalhes_visitante' visitante.id %}" class="btn btn-secondary">
-                                <i class="fas fa-arrow-left"></i> Voltar
+                            <a href="{% url 'recepcao:detalhes_visitante' visitante.id %}" class="btn btn-outline-secondary">
+                                <i class="fas fa-times"></i> Cancelar
                             </a>
                         </div>
                     </form>
                 </div>
             </div>
-            
-            {% if messages %}
-            <div class="mt-3">
-                {% for message in messages %}
-                <div class="alert alert-{{ message.tags }}">
-                    {{ message }}
-                </div>
-                {% endfor %}
-            </div>
-            {% endif %}
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('uploadForm');
+    const fileInput = document.getElementById('foto');
+    const dragDropZone = document.getElementById('dragDropZone');
+    const cropperContainer = document.getElementById('cropperContainer');
+    const cropperImage = document.getElementById('cropperImage');
+    const cropControls = document.getElementById('cropControls');
+    const uploadProgress = document.getElementById('uploadProgress');
+    const uploadFeedback = document.getElementById('uploadFeedback');
+    const submitBtn = document.getElementById('submitBtn');
+    
+    let cropper = null;
+    
+    // Drag & Drop
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+        dragDropZone.addEventListener(eventName, preventDefaults, false);
+    });
+    
+    function preventDefaults (e) {
+        e.preventDefault();
+        e.stopPropagation();
+    }
+    
+    ['dragenter', 'dragover'].forEach(eventName => {
+        dragDropZone.addEventListener(eventName, highlight, false);
+    });
+    
+    ['dragleave', 'drop'].forEach(eventName => {
+        dragDropZone.addEventListener(eventName, unhighlight, false);
+    });
+    
+    function highlight(e) {
+        dragDropZone.classList.add('dragover');
+    }
+    
+    function unhighlight(e) {
+        dragDropZone.classList.remove('dragover');
+    }
+    
+    dragDropZone.addEventListener('drop', handleDrop, false);
+    
+    function handleDrop(e) {
+        const dt = e.dataTransfer;
+        const files = dt.files;
+        handleFiles(files);
+    }
+    
+    // Clique para selecionar arquivo
+    dragDropZone.addEventListener('click', () => fileInput.click());
+    fileInput.addEventListener('change', () => handleFiles(fileInput.files));
+    
+    function handleFiles(files) {
+        if (files.length === 0) return;
+        
+        const file = files[0];
+        
+        // Validar tipo e tamanho
+        if (!file.type.match('image.*')) {
+            showFeedback('Erro: Arquivo deve ser uma imagem.', 'danger');
+            return;
+        }
+        
+        if (file.size > 5 * 1024 * 1024) {
+            showFeedback('Erro: Arquivo muito grande. Máximo 5MB.', 'danger');
+            return;
+        }
+        
+        // Iniciar cropper
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            cropperImage.src = e.target.result;
+            cropperContainer.style.display = 'block';
+            cropControls.style.display = 'block';
+            dragDropZone.style.display = 'none';
+            
+            if (cropper) cropper.destroy();
+            
+            cropper = new Cropper(cropperImage, {
+                aspectRatio: 1,
+                viewMode: 1,
+                guides: true,
+                autoCropArea: 1,
+                responsive: true
+            });
+            
+            submitBtn.disabled = false;
+        };
+        reader.readAsDataURL(file);
+    }
+    
+    // Controles do Cropper
+    document.getElementById('rotateLeft').addEventListener('click', () => cropper.rotate(-90));
+    document.getElementById('rotateRight').addEventListener('click', () => cropper.rotate(90));
+    document.getElementById('zoomIn').addEventListener('click', () => cropper.zoom(0.1));
+    document.getElementById('zoomOut').addEventListener('click', () => cropper.zoom(-0.1));
+    
+    // Submit do formulário
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        if (!cropper) return;
+        
+        submitBtn.disabled = true;
+        uploadProgress.style.display = 'block';
+        
+        // Pegar imagem recortada
+        cropper.getCroppedCanvas().toBlob(function(blob) {
+            const formData = new FormData();
+            formData.append('foto', blob, 'foto.jpg');
+            formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+            
+            // Simular progresso
+            let progress = 0;
+            const progressBar = uploadProgress.querySelector('.progress-bar');
+            const progressInterval = setInterval(() => {
+                progress += 5;
+                if (progress > 90) clearInterval(progressInterval);
+                progressBar.style.width = progress + '%';
+            }, 100);
+            
+            // Enviar
+            fetch(window.location.href, {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                clearInterval(progressInterval);
+                progressBar.style.width = '100%';
+                
+                if (data.success) {
+                    showFeedback('Foto enviada com sucesso!', 'success');
+                    setTimeout(() => window.location.href = data.redirect_url, 1000);
+                } else {
+                    throw new Error(data.message || 'Erro ao enviar foto.');
+                }
+            })
+            .catch(error => {
+                clearInterval(progressInterval);
+                showFeedback('Erro: ' + error.message, 'danger');
+                submitBtn.disabled = false;
+            });
+        }, 'image/jpeg', 0.9);
+    });
+    
+    function showFeedback(message, type) {
+        uploadFeedback.textContent = message;
+        uploadFeedback.className = `alert alert-${type} upload-feedback fade-in`;
+        uploadFeedback.style.display = 'block';
+    }
+});
+</script>
 {% endblock %}

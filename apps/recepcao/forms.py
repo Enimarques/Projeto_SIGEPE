@@ -15,12 +15,24 @@ class VisitanteForm(forms.ModelForm):
         message='Digite um telefone válido no formato (XX) XXXXX-XXXX'
     )
 
+    cep_validator = RegexValidator(
+        regex=r'^\d{5}-\d{3}$',
+        message='Digite um CEP válido no formato 00000-000'
+    )
+
+    data_validator = RegexValidator(
+        regex=r'^\d{2}/\d{2}/\d{4}$',
+        message='Digite uma data válida no formato dd/mm/aaaa'
+    )
+
     CPF = forms.CharField(
         max_length=14,   
         validators=[cpf_validator],
         widget=forms.TextInput(attrs={
             'class': 'form-control',
-            'placeholder': '000.000.000-00'
+            'placeholder': '000.000.000-00',
+            'data-mask': 'cpf',
+            'required': True
         })
     )
 
@@ -29,7 +41,30 @@ class VisitanteForm(forms.ModelForm):
         validators=[telefone_validator],
         widget=forms.TextInput(attrs={
             'class': 'form-control',
-            'placeholder': '(00) 00000-0000'
+            'placeholder': '(00) 00000-0000',
+            'data-mask': 'telefone',
+            'required': True
+        })
+    )
+
+    data_nascimento = forms.DateField(
+        input_formats=['%d/%m/%Y'],
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'dd/mm/aaaa',
+            'data-mask': 'data',
+            'required': True
+        })
+    )
+
+    CEP = forms.CharField(
+        max_length=9,
+        validators=[cep_validator],
+        required=False,
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': '00000-000',
+            'data-mask': 'cep'
         })
     )
 
@@ -54,15 +89,12 @@ class VisitanteForm(forms.ModelForm):
         widgets = {
             'nome_completo': forms.TextInput(attrs={
                 'class': 'form-control',
-                'placeholder': 'Nome completo do visitante'
+                'placeholder': 'Nome completo do visitante',
+                'required': True
             }),
             'nome_social': forms.TextInput(attrs={
                 'class': 'form-control',
                 'placeholder': 'Nome social (se houver)'
-            }),
-            'data_nascimento': forms.DateInput(attrs={
-                'class': 'form-control',
-                'type': 'date'
             }),
             'email': forms.EmailInput(attrs={
                 'class': 'form-control',
@@ -89,10 +121,6 @@ class VisitanteForm(forms.ModelForm):
             'complemento': forms.TextInput(attrs={
                 'class': 'form-control',
                 'placeholder': 'Apto, Bloco, etc. (Opcional)'
-            }),
-            'CEP': forms.TextInput(attrs={
-                'class': 'form-control',
-                'placeholder': '00000-000'
             }),
             'foto': forms.FileInput(attrs={
                 'class': 'form-control'
@@ -163,14 +191,14 @@ class VisitanteForm(forms.ModelForm):
         # Remover caracteres não numéricos
         telefone_numerico = ''.join(filter(str.isdigit, telefone))
         
-        # Verificar se tem 10, 11 ou 12 dígitos (considerando variações de número)
-        if len(telefone_numerico) < 10 or len(telefone_numerico) > 12:
+        # Verificar se tem 10 ou 11 dígitos
+        if len(telefone_numerico) < 10 or len(telefone_numerico) > 11:
             raise forms.ValidationError('Número de telefone inválido.')
         
         # Verificar se os primeiros dígitos são válidos
         ddd = telefone_numerico[:2]
         
-        # Lista de DDDs válidos (pode ser expandida)
+        # Lista de DDDs válidos
         ddds_validos = [
             '11', '12', '13', '14', '15', '16', '17', '18', '19',  # São Paulo
             '21', '22', '24', '27', '28',  # Rio de Janeiro
@@ -204,9 +232,20 @@ class VisitanteForm(forms.ModelForm):
         
         return telefone
 
-    def clean(self):
-        cleaned_data = super().clean()
-        return cleaned_data
+    def clean_CEP(self):
+        cep = self.cleaned_data.get('CEP')
+        if cep:
+            # Remover caracteres não numéricos
+            cep_numerico = ''.join(filter(str.isdigit, cep))
+            if len(cep_numerico) != 8:
+                raise forms.ValidationError('CEP inválido.')
+        return cep
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Se estiver editando, tornar o CPF somente leitura
+        if self.instance and self.instance.pk:
+            self.fields['CPF'].widget.attrs['readonly'] = True
 
 class VisitaForm(forms.ModelForm):
     cpf = forms.CharField(
@@ -215,6 +254,7 @@ class VisitaForm(forms.ModelForm):
         widget=forms.TextInput(attrs={
             'class': 'form-control',
             'placeholder': '000.000.000-00',
+            'data-mask': 'cpf',
             'id': 'cpf-input'
         })
     )

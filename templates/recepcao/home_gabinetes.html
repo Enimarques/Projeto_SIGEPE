@@ -205,24 +205,13 @@
                             <strong>Email:</strong> {{ gabinete.email_vereador }}<br>
                             <i class="fas fa-map-marker-alt info-icon"></i>
                             <strong>Localização:</strong> {{ gabinete.get_localizacao_display }}<br>
-                            <i class="fas fa-user info-icon"></i>
-                            <strong>Responsável:</strong> {{ gabinete.nome_responsavel }}<br>
                             <i class="fas fa-clock info-icon"></i>
-                            <strong>Horário:</strong> {{ gabinete.horario_abertura|time:"H:i" }} - {{ gabinete.horario_fechamento|time:"H:i" }}
+                            <strong>Horário:</strong> {% if gabinete.horario_abertura and gabinete.horario_fechamento %}{{ gabinete.horario_abertura|time:"H:i" }} - {{ gabinete.horario_fechamento|time:"H:i" }}{% else %}-{% endif %}
                         </p>
-                        <div class="assessor-info">
-                            <h6 class="assessor-title">Assessor Responsável</h6>
-                            <p class="card-text">
-                                <i class="fas fa-user-tie info-icon"></i>
-                                <strong>Nome:</strong> {{ gabinete.nome_responsavel }}<br>
-                                <i class="fas fa-envelope info-icon"></i>
-                                <strong>Email:</strong> {{ gabinete.email }}<br>
-                                <i class="fas fa-phone info-icon"></i>
-                                <strong>Telefone:</strong> {{ gabinete.telefone }}<br>
-                                <i class="fas fa-clock info-icon"></i>
-                                <strong>Horário:</strong> {{ gabinete.horario_entrada|time:"H:i" }} - {{ gabinete.horario_saida|time:"H:i" }}
-                            </p>
-                        </div>
+                        <p class="mb-0 {% if gabinete.esta_aberto %}text-success{% else %}text-danger{% endif %}">
+                            <i class="fas {% if gabinete.esta_aberto %}fa-check-circle{% else %}fa-times-circle{% endif %} me-2"></i>
+                            {{ gabinete.status_funcionamento }}
+                        </p>
                     </div>
                 </div>
             </a>

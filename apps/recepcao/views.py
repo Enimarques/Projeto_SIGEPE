@@ -955,30 +955,60 @@ def upload_foto_visitante(request, visitante_id):
     
     if request.method == 'POST':
         logger.info(f'Recebido POST para upload de foto do visitante {visitante_id}')
-        logger.info(f'Files no request: {request.FILES}')
         
-        if 'foto' in request.FILES:
-            logger.info('Foto encontrada no request')
-            try:
-                # Remove foto antiga se existir
-                if visitante.foto:
-                    visitante.foto.delete()
-                # Salva nova foto
-                visitante.foto = request.FILES['foto']
-                visitante.save()
-                logger.info('Foto salva com sucesso')
-
-                return JsonResponse({
-                    'success': True, 
-                    'message': 'Foto enviada com sucesso!',
-                    'redirect_url': reverse('recepcao:detalhes_visitante', args=[visitante_id])
-                })
-            except Exception as e:
-                logger.error(f'Erro ao salvar foto: {str(e)}')
-                return JsonResponse({'success': False, 'message': f'Erro ao salvar foto: {str(e)}'})
-        else:
+        if 'foto' not in request.FILES:
             logger.error('Nenhuma foto encontrada no request')
             return JsonResponse({'success': False, 'message': 'Nenhuma foto foi enviada.'})
+            
+        foto = request.FILES['foto']
+        
+        try:
+            # Validar e processar a imagem
+            from .utils.image_utils import process_image, sanitize_filename
+            
+            # Sanitizar nome do arquivo
+            foto.name = sanitize_filename(foto.name)
+            
+            # Processar imagem em diferentes tamanhos
+            processed_images = process_image(foto)
+            
+            # Remover fotos antigas se existirem
+            if visitante.foto:
+                visitante.foto.delete()
+            if visitante.foto_thumbnail:
+                visitante.foto_thumbnail.delete()
+            if visitante.foto_medium:
+                visitante.foto_medium.delete()
+            if visitante.foto_large:
+                visitante.foto_large.delete()
+            
+            # Salvar novas fotos
+            visitante.foto = foto  # Original
+            visitante.foto_thumbnail = processed_images['thumbnail']
+            visitante.foto_medium = processed_images['medium']
+            visitante.foto_large = processed_images['large']
+            visitante.save()
+            
+            # Limpar cache
+            from django.core.cache import cache
+            for size in ['thumbnail', 'medium', 'large']:
+                cache_key = f'visitante_foto_{visitante_id}_{size}'
+                cache.delete(cache_key)
+            
+            logger.info('Foto processada e salva com sucesso')
+            
+            return JsonResponse({
+                'success': True, 
+                'message': 'Foto enviada com sucesso!',
+                'redirect_url': reverse('recepcao:detalhes_visitante', args=[visitante_id])
+            })
+            
+        except ValueError as e:
+            logger.error(f'Erro de validação: {str(e)}')
+            return JsonResponse({'success': False, 'message': str(e)})
+        except Exception as e:
+            logger.error(f'Erro ao processar foto: {str(e)}')
+            return JsonResponse({'success': False, 'message': f'Erro ao processar foto: {str(e)}'})
     
     return render(request, 'recepcao/upload_foto.html', {'visitante': visitante})
 

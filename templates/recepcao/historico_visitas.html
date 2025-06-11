@@ -3,17 +3,45 @@
 {% block title %}Histórico de Visitas - URUTAU{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
+<div class="dashboard-container">
+    <div class="dashboard-header mb-4">
+        <div class="dashboard-header-content">
+            <h1 class="page-title mb-0">
+                <i class="fas fa-history me-2"></i>Histórico de Visitas
+            </h1>
+        </div>
+    </div>
     <div class="d-flex justify-content-end mb-3">
         {% include 'includes/botao_voltar.html' %}
     </div>
-    <div class="card shadow">
-        <div class="card-header bg-primary text-white">
-            <h4 class="mb-0"><i class="fas fa-history"></i> Histórico de Visitas</h4>
+    <!-- Estatísticas -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="stat-card stat-card-visitas-andamento">
+                <i class="fas fa-clock stat-icon"></i>
+                <h3>{{ visitas_em_andamento }}</h3>
+                <p>Visitas em Andamento</p>
+            </div>
         </div>
+        <div class="col-md-4">
+            <div class="stat-card stat-card-total-visitantes" style="background: linear-gradient(135deg, #6dd5ed, #2193b0); color: #fff;">
+                <i class="fas fa-users stat-icon"></i>
+                <h3>{{ total_visitantes }}</h3>
+                <p>Visitantes Cadastrados</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="stat-card stat-card-total-visitas" style="background: linear-gradient(135deg, #f1c40f, #f39c12); color: #fff;">
+                <i class="fas fa-list stat-icon"></i>
+                <h3>{{ total_visitas }}</h3>
+                <p>Total de Visitas</p>
+            </div>
+        </div>
+    </div>
+    <div class="card quick-actions mb-4">
         <div class="card-body">
             <!-- Filtros -->
-            <form method="get" class="mb-4" id="formFiltros">
+            <form method="get" class="mb-0" id="formFiltros">
                 <div class="row g-3">
                     <div class="col-md-3">
                         <label for="status" class="form-label">Status</label>
@@ -48,29 +76,17 @@
                     </div>
                 </div>
             </form>
-
-            <!-- Estatísticas -->
-            <div id="stats-container">
-                {% include 'recepcao/includes/stats_historico_visitas.html' %}
-            </div>
-
-            <!-- Loading overlay -->
-            <div id="loading-overlay" style="display: none;">
-                <div class="d-flex justify-content-center align-items-center" style="height: 200px;">
-                    <div class="spinner-border text-primary" role="status">
-                        <span class="visually-hidden">Carregando...</span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Lista de Visitas -->
+        </div>
+    </div>
+    <div class="card">
+        <div class="card-body p-0">
+            <!-- Tabela de visitas -->
             <div id="tabela-container">
                 {% include 'recepcao/includes/tabela_historico_visitas.html' %}
             </div>
         </div>
     </div>
 </div>
-
 <!-- Modal de confirmação de exclusão -->
 <div class="modal fade" id="modalConfirmacao" tabindex="-1" aria-labelledby="modalConfirmacaoLabel" aria-hidden="true">
     <div class="modal-dialog">
