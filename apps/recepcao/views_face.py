@@ -384,7 +384,11 @@ def registrar_visita_api(request):
                     'message': 'Visita registrada com sucesso',
                     'visita_id': visita.id,
                     'url_etiqueta': url_etiqueta,
-                    'url_redirect': url_totem_home  # URL para redirecionamento após etiqueta
+                    'url_redirect': url_totem_home,  # URL para redirecionamento após etiqueta
+                    'nome_exibicao': visitante.nome_social if visitante.nome_social else visitante.nome_completo,
+                    'setor': setor.get_tipo_display() + ' - ' + (setor.nome_vereador if setor.tipo == 'gabinete' else setor.nome_local),
+                    'localizacao': visita.get_localizacao_display(),
+                    'data': visita.data_entrada.strftime('%d/%m/%Y %H:%M')
                 })
                 
             except Visitante.DoesNotExist:

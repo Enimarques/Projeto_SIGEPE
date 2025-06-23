@@ -8,8 +8,8 @@
     <!-- Botão Voltar -->
     <div class="row">
         <div class="col-12 p-3">
-            <a href="{% url 'recepcao:home_recepcao' %}" class="btn btn-secondary">
-                <i class="fas fa-arrow-left me-2"></i>Voltar para Recepção
+            <a href="{% url 'recepcao:totem_home' %}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left me-2"></i>Voltar para o Inicio
             </a>
         </div>
     </div>
@@ -58,12 +58,7 @@
                             </div>
                         </div>
 
-                        <div class="mt-4">
-                            <a href="{% url 'recepcao:cadastro_visitantes' %}" class="btn btn-outline-primary">
-                                <i class="fas fa-user-plus me-2"></i>Não possui cadastro? Clique aqui
-                            </a>
-                        </div>
-
+                      
                         <div class="row mt-3">
                             <div class="col-md-6 mb-2">
                                 <button id="btnReiniciarCamera" class="btn btn-warning btn-block w-100">
@@ -74,12 +69,7 @@
                                 <a href="{% url 'recepcao:teste_camera' %}" class="btn btn-info btn-block w-100" target="_blank">
                                     <i class="fas fa-tools me-2"></i> Diagnosticar Câmera
                                 </a>
-                            </div>
-                            <div class="col-12 mt-2">
-                                <a href="{% url 'recepcao:lista_visitantes' %}" class="btn btn-secondary btn-block w-100">
-                                    <i class="fas fa-user-plus me-2"></i> Cadastrar Novo Visitante
-                                </a>
-                            </div>
+                            </div>                          
                         </div>
 
                         <div id="mensagem-boas-vindas" class="alert alert-success" style="display: none;">
@@ -158,6 +148,18 @@
                             </div>
                         </div>
                     </div>
+
+                    <!-- Etapa 4: Visualização da Etiqueta (inicialmente oculta) -->
+                    <div id="etapaEtiqueta" style="display:none;">
+                        <div class="text-center mb-4">
+                            <h2 class="mt-2"><i class="fas fa-tag me-2"></i>Confira sua Etiqueta</h2>
+                            <div id="preview-etiqueta" class="d-flex justify-content-center"></div>
+                        </div>
+                        <div class="d-flex justify-content-center gap-3">
+                            <button id="btnGerarEtiqueta" class="btn btn-success btn-lg"><i class="fas fa-print me-2"></i>Gerar Etiqueta</button>
+                            <button id="btnCorrigirInfo" class="btn btn-danger btn-lg"><i class="fas fa-edit me-2"></i>Corrigir Informações</button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -207,6 +209,32 @@
 
 .select2-container--bootstrap-5.select2-container--disabled .select2-selection--single .select2-selection__rendered {
     color: #212529 !important;
+}
+
+/* CSS apenas para o preview na tela */
+#preview-etiqueta .etiqueta {
+    width: 320px;   /* Aproximadamente 80mm em tela (1mm ≈ 4px) */
+    height: 160px;  /* Aproximadamente 40mm em tela */
+    padding: 8px;
+    border: 1px solid #000;
+    font-family: Arial, sans-serif;
+    box-sizing: border-box;
+    display: inline-block;
+    background: #fff;
+}
+#preview-etiqueta .etiqueta .nome {
+    font-size: 32px;
+    font-weight: bold;
+    margin-bottom: 8px;
+}
+#preview-etiqueta .etiqueta .info {
+    font-size: 16px;
+    margin-bottom: 4px;
+}
+#preview-etiqueta .etiqueta .id {
+    font-size: 10px;
+    text-align: right;
+    color: #666;
 }
 </style>
 {% endblock %}
@@ -342,15 +370,16 @@ document.addEventListener('DOMContentLoaded', function() {
             
             if (data.success) {
                 console.log("Visita registrada com sucesso:", data);
-                mostrarEtapaConfirmacao();
-                
-                // Abrir etiqueta em nova janela
-                const etiquetaWindow = window.open(data.url_etiqueta, '_blank');
-                
-                // Redirecionar para a home do totem após 3 segundos
-                setTimeout(() => {
-                    window.location.href = data.url_redirect;
-                }, 3000);
+                // Montar dados para a etiqueta
+                const dadosEtiqueta = {
+                    nome_exibicao: data.nome_exibicao || '',
+                    setor: data.setor || '',
+                    localizacao: data.localizacao || '',
+                    data: data.data || '',
+                    id: data.visita_id || ''
+                };
+                mostrarEtapaEtiqueta(dadosEtiqueta);
+                // Não abrir nova janela nem redirecionar aqui
             } else {
                 throw new Error(data.message || "Erro ao registrar visita");
             }
@@ -913,6 +942,59 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     });
+
+    // Função para mostrar a etapa da etiqueta
+    function mostrarEtapaEtiqueta(dadosEtiqueta) {
+        document.getElementById('etapaReconhecimento').style.display = 'none';
+        document.getElementById('etapaSetor').style.display = 'none';
+        document.getElementById('etapaConfirmacao').style.display = 'none';
+        document.getElementById('etapaEtiqueta').style.display = 'block';
+        document.getElementById('preview-etiqueta').innerHTML = gerarHtmlEtiqueta(dadosEtiqueta);
+        adicionarListenersEtiqueta();
+    }
+
+    // Função para gerar o HTML da etiqueta (igual ao modelo etiqueta_visita.html)
+    function gerarHtmlEtiqueta(dados) {
+        return `
+        <div class="etiqueta" style="width:80mm;height:40mm;padding:2mm;border:1px solid #000;font-family:Arial,sans-serif;box-sizing:border-box;display:inline-block;">
+            <div class="nome" style="font-size:25pt;font-weight:bold;margin-bottom:2mm;">${dados.nome_exibicao}</div>
+            <div class="info" style="font-size:12pt;margin-bottom:1mm;"><strong>Setor:</strong> ${dados.setor}</div>
+            <div class="info" style="font-size:12pt;margin-bottom:1mm;"><strong>Localização:</strong> ${dados.localizacao}</div>
+            <div class="info" style="font-size:12pt;margin-bottom:1mm;"><strong>Data:</strong> ${dados.data}</div>
+            <div class="id" style="font-size:8pt;text-align:right;color:#666;">ID: ${dados.id}</div>
+        </div>`;
+    }
+
+    // Evento do botão Gerar Etiqueta
+    function imprimirEtiquetaERedirecionar() {
+        const areaEtiqueta = document.getElementById('preview-etiqueta').innerHTML;
+        const win = window.open('', '', 'width=800,height=600');
+        win.document.write('<html><head><title>Imprimir Etiqueta</title>');
+        win.document.write('<style>@page{size:75mm 35mm;margin:0;}body{margin:1;} .etiqueta{margin:0 auto;box-sizing:border-box;display:inline-block;}</style>');
+        win.document.write('</head><body>');
+        win.document.write(areaEtiqueta);
+        win.document.write('</body></html>');
+        win.document.close();
+        win.focus();
+        win.print();
+        win.close();
+        setTimeout(() => { window.location.href = "/recepcao/totem/home/"; }, 500);
+    }
+
+    // Evento do botão Corrigir Informações
+    function corrigirInformacoes() {
+        document.getElementById('etapaEtiqueta').style.display = 'none';
+        document.getElementById('etapaReconhecimento').style.display = 'block';
+        iniciarCamera();
+    }
+
+    // Adicionar listeners após renderizar o preview
+    function adicionarListenersEtiqueta() {
+        const btnGerarEtiqueta = document.getElementById('btnGerarEtiqueta');
+        if (btnGerarEtiqueta) btnGerarEtiqueta.onclick = imprimirEtiquetaERedirecionar;
+        const btnCorrigirInfo = document.getElementById('btnCorrigirInfo');
+        if (btnCorrigirInfo) btnCorrigirInfo.onclick = corrigirInformacoes;
+    }
 });
 </script>
 {% endblock %}
