@@ -19,7 +19,7 @@ SECRET_KEY = 'django-insecure-&#33ll&))(8!w+g_-qil#t#_@j02+b6r!ca!l8pfms4mqxk6(^
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['127.0.0.1', 'localhost']
+ALLOWED_HOSTS = ['urutal.parauapebas.pa.leg.br', 'localhost', '127.0.0.1']
 
 # Application definition
 
