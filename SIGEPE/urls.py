@@ -19,7 +19,7 @@ urlpatterns = [
     # Apps principais
     path('recepcao/', include('apps.recepcao.urls')),
     path('veiculos/', include('apps.veiculos.urls', namespace='veiculos')),
-    path('main/', include('apps.main.urls', namespace='main')),
+    path('main/', include('apps.main.urls')),
     path('relatorios/', include('relatorios.urls')),
     
     # Home do sistema (sem namespace duplicado)

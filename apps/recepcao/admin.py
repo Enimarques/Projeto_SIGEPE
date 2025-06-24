@@ -9,7 +9,7 @@ from django.db import transaction
 from django.contrib import messages
 from .models import Visitante, Visita, Setor, Assessor
 from .forms_departamento import SetorForm
-from .utils import generate_password_token
+from .misc_utils import generate_password_token
 
 @admin.register(Setor)
 class SetorAdmin(admin.ModelAdmin):

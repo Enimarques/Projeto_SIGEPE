@@ -75,18 +75,27 @@
         <button onclick="window.print()">Imprimir Etiqueta</button>
     </div>
     
-    <div class="etiqueta">
-        <div class="header">
-            <img src="{% static 'img/1660156290.jpg' %}" alt="Logo" class="logo">
-            <div class="header-text">
-                <div class="instituicao">Câmara Municipal de Parauapebas</div>
-                <div class="programa">URUTAL - Visitante</div>
-            </div>
+    <div class="comprovante-visita text-center">
+        <div class="header mb-3">
+            <img src="{% static 'img/LOGO-CAMARA-PARAUAPEBAS.png' %}" alt="Logo Câmara Municipal de Parauapebas" style="max-width: 100px; height: auto;">
+            <h6 class="mt-2 mb-0">Câmara Municipal de Parauapebas</h6>
+            <p class="text-muted small">URUTAL - Comprovante de Visita</p>
         </div>
-        <div class="nome">{{ nome_exibicao }}</div>
-        <div class="info"><strong>Setor:</strong> {% if visita.setor.tipo == 'gabinete' %}{{ visita.setor.nome_vereador }}{% else %}{{ visita.setor.nome_local }}{% endif %}</div>
-        <div class="info"><strong>Data/Hora:</strong> {{ visita.data_entrada|date:"d/m/Y H:i" }}</div>
-        <div class="id">ID: {{ visita.id }}</div>
+
+        <div class="separator"></div>
+
+        <div class="visitante-info my-4">
+            <h3 class="fw-bold">{{ visita.visitante.nome|upper }}</h3>
+        </div>
+
+        <div class="separator"></div>
+
+        <div class="detalhes-visita mt-3" style="line-height: 2;">
+            <p class="mb-1"><strong>Destino:</strong> {{ visita.setor.nome_vereador|default:visita.setor.nome_local }}</p>
+            <p class="mb-1"><strong>Local:</strong> {{ visita.localizacao }}</p>
+            <p class="mb-1"><strong>Data/Hora:</strong> {{ visita.data_entrada|date:"d/m/Y H:i" }}</p>
+        </div>
+
     </div>
 </body>
 </html>

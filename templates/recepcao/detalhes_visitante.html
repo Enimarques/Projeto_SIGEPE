@@ -34,7 +34,7 @@
                     <div class="position-relative mb-4">
                         {% if visitante.foto %}
                         <div class="circular-photo-container">
-                            <img src="{{ visitante.get_foto_url|default:visitante.foto.url }}" alt="Foto" class="circular-photo">
+                            <img src="{{ visitante.get_foto_url }}" alt="Foto" class="circular-photo">
                             {% if visitante.face_registrada %}
                             <span class="badge bg-success position-absolute bottom-0 end-0">
                                 <i class="fas fa-check-circle"></i>

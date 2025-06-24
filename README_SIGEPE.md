@@ -16,20 +16,21 @@
   - [Páginas](#páginas-recepcao)
   - [Fluxos de Uso](#fluxos-recepcao)
   - [Endpoints Principais](#endpoints-recepcao)
-- [4. Módulo Departamentos](#4-módulo-departamentos)
+- [4. Módulo Totem de Autoatendimento](#4-módulo-totem-de-autoatendimento)
+- [5. Módulo Departamentos](#5-módulo-departamentos)
   - [Funcionalidades Gerais](#funcionalidades-gerais-departamentos)
   - [Páginas](#páginas-departamentos)
   - [Fluxos de Uso](#fluxos-departamentos)
   - [Endpoints Principais](#endpoints-departamentos)
-- [5. Módulo Gabinetes](#5-módulo-gabinetes)
+- [6. Módulo Gabinetes](#6-módulo-gabinetes)
   - [Funcionalidades Gerais](#funcionalidades-gerais-gabinetes)
   - [Páginas](#páginas-gabinetes)
   - [Fluxos de Uso](#fluxos-gabinetes)
   - [Endpoints Principais](#endpoints-gabinetes)
-- [6. Relatórios e Analytics](#6-relatórios-e-analytics)
-- [7. Acessibilidade e UX](#7-acessibilidade-e-ux)
-- [8. Administração e Segurança](#8-administração-e-segurança)
-- [9. Observações Gerais](#9-observações-gerais)
+- [7. Relatórios e Analytics](#7-relatórios-e-analytics)
+- [8. Acessibilidade e UX](#8-acessibilidade-e-ux)
+- [9. Administração e Segurança](#9-administração-e-segurança)
+- [10. Observações Gerais](#10-observações-gerais)
 
 ---
 
@@ -141,7 +142,38 @@
 
 ---
 
-## 4. Módulo Departamentos
+## 4. Módulo Totem de Autoatendimento
+
+### <a name="funcionalidades-gerais-totem"></a>Funcionalidades Gerais
+- Sistema de autoatendimento para registro de visitantes em tela de toque.
+- Reconhecimento facial em tempo real para identificação automática de visitantes cadastrados.
+- Fluxo de registro guiado e intuitivo, desde a identificação até a seleção do destino.
+- Geração de comprovante de visita digital com QR Code.
+- Opção de impressão física do comprovante diretamente pelo totem.
+- Interface limpa e de alto contraste, otimizada para acessibilidade e facilidade de uso.
+
+### <a name="páginas-totem"></a>Páginas
+- **Tela de Identificação (`totem_identificacao.html`)**: Página inicial que ativa a câmera e executa o script de reconhecimento facial.
+- **Tela de Destino (`totem_destino.html`)**: Apresenta as opções de destino (Gabinetes, Departamentos) após o visitante ser reconhecido.
+- **Tela de Comprovante (`totem_comprovante.html`)**: Exibe os detalhes da visita (nome, foto, destino, QR Code) e os botões de ação "Imprimir" e "Finalizar".
+
+### <a name="fluxos-totem"></a>Fluxos de Uso
+1. **Identificação**: O visitante se posiciona em frente ao totem. O script `camera.js` detecta o rosto e envia para a API do backend.
+2. **Seleção de Destino**: Após ser reconhecido, o visitante é direcionado para a tela de destino e seleciona para onde deseja ir.
+3. **Registro**: Ao selecionar o destino, uma API registra a visita no sistema com o status "Aguardando".
+4. **Comprovante**: O sistema redireciona para a tela de comprovante, exibindo todos os detalhes da visita.
+5. **Finalização**: O visitante pode imprimir o comprovante ou clicar em "Finalizar" para retornar o totem à tela inicial.
+
+### <a name="endpoints-totem"></a>Endpoints Principais
+- `GET /totem/identificacao/`: Renderiza a página inicial do totem.
+- `GET /totem/destino/<int:visitante_id>/`: Renderiza a página de seleção de destino.
+- `GET /totem/comprovante/<int:visita_id>/`: Exibe o comprovante da visita.
+- `POST /api/find-person-by-face/`: API que recebe a imagem do rosto (Base64) e retorna os dados do visitante correspondente.
+- `POST /api/registrar-visita-totem/`: API que cria o registro da visita e retorna o ID para a página de comprovante.
+
+---
+
+## 5. Módulo Departamentos
 
 ### <a name="funcionalidades-gerais-departamentos"></a>Funcionalidades Gerais
 - Cadastro e visualização de departamentos/setores
@@ -163,7 +195,7 @@
 
 ---
 
-## 5. Módulo Gabinetes
+## 6. Módulo Gabinetes
 
 ### <a name="funcionalidades-gerais-gabinetes"></a>Funcionalidades Gerais
 - Cadastro e visualização de gabinetes/vereadores
@@ -185,7 +217,7 @@
 
 ---
 
-## 6. Relatórios e Analytics
+## 7. Relatórios e Analytics
 - Relatórios em PDF para veículos e visitas
 - Filtros avançados por período, status, setor, visitante
 - Exportação de dados
@@ -193,7 +225,7 @@
 
 ---
 
-## 7. Acessibilidade e UX
+## 8. Acessibilidade e UX
 - Contraste adequado em todos os componentes
 - Navegação por teclado e leitores de tela
 - Botões e cards com feedback visual (hover, foco, toque)
@@ -202,7 +234,7 @@
 
 ---
 
-## 8. Administração e Segurança
+## 9. Administração e Segurança
 - Interface administrativa completa do Django
 - Controle de permissões por grupo (ex: Recepcionista)
 - Validação de dados no cliente e servidor
@@ -211,7 +243,7 @@
 
 ---
 
-## 9. Observações Gerais
+## 10. Observações Gerais
 - Sistema modular, fácil de manter e evoluir
 - Scripts de instalação automatizados para Windows
 - Suporte a reconhecimento facial (opcional)

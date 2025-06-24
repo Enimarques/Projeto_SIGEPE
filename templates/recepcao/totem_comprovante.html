@@ -1,0 +1,171 @@
+{% extends 'base_totem.html' %}
+{% load static %}
+
+{% block extra_css %}
+<style>
+/* Estilos gerais da tela */
+.ticket-screen {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: calc(100vh - 2rem);
+    padding: 2rem;
+}
+
+/* Container do comprovante */
+.ticket-container {
+    background-color: white;
+    max-width: 450px;
+    width: 100%;
+    padding: 2.5rem;
+    border-radius: 15px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+    text-align: center;
+}
+.ticket-header img {
+    width: 60px;
+    margin-bottom: 1rem;
+}
+.ticket-header .instituicao {
+    font-weight: 600;
+    font-size: 1.1rem;
+}
+.ticket-header .programa {
+    font-size: 0.9rem;
+    color: #6c757d;
+    margin-bottom: 1.5rem;
+}
+.separator {
+    border-top: 2px dashed #e9ecef;
+    margin: 1rem 0;
+}
+.ticket-visitor-name {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: #343a40;
+    padding: 1rem 0;
+}
+.ticket-info p {
+    font-size: 1rem;
+    margin-bottom: 0.5rem;
+    color: #495057;
+}
+.ticket-info p strong {
+    color: #343a40;
+}
+
+/* Rodapé com botões */
+.ticket-footer {
+    margin-top: 2.5rem; /* Mais espaço acima dos botões */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+}
+.ticket-footer .btn {
+    width: 100%;
+    max-width: 350px;
+    padding: 0.75rem;
+    font-size: 1rem;
+    border-radius: 8px;
+    font-weight: 500;
+    transition: all 0.2s ease-in-out;
+    border: 1px solid transparent;
+}
+.btn-print {
+    background-color: #4A90E2; /* Azul Elétrico */
+    color: white;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+.btn-print:hover {
+    background-color: #357ABD;
+    border-color: #357ABD;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+}
+.btn-whatsapp {
+    background-color: #25D366; /* Verde WhatsApp */
+    color: white;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+.btn-whatsapp:hover:not(:disabled) {
+    background-color: #1DAE56;
+    border-color: #1DAE56;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+}
+.btn-whatsapp:disabled {
+    background-color: #a9dec1;
+    border-color: transparent;
+    cursor: not-allowed;
+    box-shadow: none;
+}
+.btn-finish {
+    background-color: #fff; /* Outline */
+    color: #4A4A4A; /* Cinza Escuro */
+    border: 1px solid #4A4A4A;
+}
+.btn-finish:hover {
+    background-color: #4A4A4A; /* Preenche no hover */
+    color: #fff;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+
+/* Estilos de Impressão */
+@media print {
+    body * {
+        visibility: hidden;
+    }
+    .ticket-container, .ticket-container * {
+        visibility: visible;
+    }
+    .ticket-container {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        max-width: 100%;
+        margin: 0;
+        padding: 0;
+        box-shadow: none;
+        border-radius: 0;
+    }
+    .ticket-footer {
+        display: none;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="ticket-screen">
+    <div class="ticket-container" id="ticket-a-imprimir">
+        <div class="ticket-header">
+            <img src="{% static 'img/LOGO-CAMARA-PARAUAPEBAS.png' %}" alt="Logo Câmara">
+            <div class="instituicao">Câmara Municipal de Parauapebas</div>
+            <div class="programa">URUTAL - Comprovante de Visita</div>
+        </div>
+        <div class="separator"></div>
+        <div class="ticket-visitor-name">{{ visita.visitante.nome_social|default:visita.visitante.nome_completo|upper }}</div>
+        <div class="separator"></div>
+        <div class="ticket-info">
+            <p><strong>Destino:</strong> {{ visita.setor.nome_vereador|default:visita.setor.nome_local }}</p>
+            <p><strong>Local:</strong> {{ visita.get_localizacao_display }}</p>
+            <p><strong>Data/Hora:</strong> {{ visita.data_entrada|date:"d/m/Y H:i" }}</p>
+        </div>
+    </div>
+    <div class="ticket-footer">
+        <button class="btn btn-print" onclick="window.print()">
+            <i class="fas fa-print me-2"></i>Imprimir Comprovante
+        </button>
+        <button class="btn btn-whatsapp" disabled>
+            <i class="fab fa-whatsapp me-2"></i>Enviar por WhatsApp
+        </button>
+        <button class="btn btn-finish" onclick="window.location.href='{% url 'recepcao:totem_identificacao' %}'">
+            Finalizar e Voltar ao Início
+        </button>
+    </div>
+</div>
+{% endblock %} 

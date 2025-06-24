@@ -11,7 +11,7 @@ from django.conf import settings
 from .models import Visitante, Visita, Setor, Assessor
 from .forms import VisitanteForm, VisitaForm
 from .forms_departamento import SetorForm
-from .utils import gerar_etiqueta_pdf
+from .misc_utils import gerar_etiqueta_pdf
 import base64
 import json
 from django.urls import reverse
@@ -24,6 +24,18 @@ from openpyxl import Workbook
 from openpyxl.utils import get_column_letter
 from django.template.loader import render_to_string
 from apps.veiculos.models import Veiculo
+from .utils.facial_recognition_utils import get_face_embedding
+from .utils.image_utils import process_image
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_POST, require_GET
+import face_recognition
+import numpy as np
+from django.contrib.auth.models import User
+from django.core.files.storage import default_storage
+from django.db.models.fields.files import FieldFile
+from django.db.models import Value
+from django.db.models.functions import Replace
+from django.utils.timezone import get_current_timezone
 
 # Contexto base para todas as views do app
 def get_base_context(title_suffix=''):
@@ -89,9 +101,41 @@ def cadastro_visitantes(request):
     if request.method == 'POST':
         form = VisitanteForm(request.POST, request.FILES)
         if form.is_valid():
-            visitante = form.save()
-            messages.success(request, 'Visitante cadastrado com sucesso!')
-            return redirect('recepcao:detalhes_visitante', pk=visitante.id)
+            try:
+                visitante = form.save(commit=False)
+                
+                # Processamento da foto e reconhecimento facial
+                foto = request.FILES.get('foto')
+                if foto:
+                    # Gera o vetor biométrico a partir da foto
+                    embedding = get_face_embedding(foto)
+                    
+                    if embedding is None:
+                        form.add_error('foto', 'Nenhum rosto foi detectado na imagem. Por favor, tire outra foto.')
+                    else:
+                        visitante.biometric_vector = embedding
+                        # O processamento de redimensionamento da imagem já é feito no `save()` do modelo
+                        visitante.save()
+                        form.save_m2m()  # Salva relações Many-to-Many se houver
+                        # Recarregar vetores faciais após cadastro
+                        carregar_vetores_faciais()
+                        messages.success(request, 'Visitante cadastrado com sucesso!')
+                        return redirect('recepcao:detalhes_visitante', pk=visitante.id)
+                else:
+                    # Se não houver foto, salva sem biometria
+                    visitante.save()
+                    form.save_m2m()
+                    messages.success(request, 'Visitante cadastrado com sucesso (sem foto)!')
+                    return redirect('recepcao:detalhes_visitante', pk=visitante.id)
+
+            except ValueError as e:
+                # Captura o erro de múltiplas faces
+                form.add_error('foto', str(e))
+            except Exception as e:
+                # Captura outros erros inesperados
+                messages.error(request, f"Ocorreu um erro inesperado: {e}")
+                form.add_error(None, "Ocorreu um erro inesperado ao salvar o visitante.")
+
     else:
         form = VisitanteForm()
     
@@ -123,14 +167,47 @@ def editar_visitante(request, pk):
     
     if request.method == 'POST':
         form = VisitanteForm(request.POST, request.FILES, instance=visitante)
+        
+        # Processar fotos da webcam se foram enviadas
+        foto_paths = {}
+        biometric_vector = None
+        for field_name in request.POST:
+            if field_name.startswith('foto_path_'):
+                size = field_name.replace('foto_path_', '')
+                foto_paths[size] = request.POST[field_name]
+            elif field_name == 'biometric_vector':
+                biometric_vector = request.POST[field_name]
+        
+        if foto_paths:
+            # Se há caminhos de foto da webcam, atribuir aos campos do visitante
+            if 'original' in foto_paths:
+                visitante.foto = FieldFile(visitante, visitante._meta.get_field('foto'), foto_paths['original'])
+            if 'thumbnail' in foto_paths:
+                visitante.foto_thumbnail = FieldFile(visitante, visitante._meta.get_field('foto_thumbnail'), foto_paths['thumbnail'])
+            if 'medium' in foto_paths:
+                visitante.foto_medium = FieldFile(visitante, visitante._meta.get_field('foto_medium'), foto_paths['medium'])
+            if 'large' in foto_paths:
+                visitante.foto_large = FieldFile(visitante, visitante._meta.get_field('foto_large'), foto_paths['large'])
+            
+            # Salvar vetor biométrico se disponível
+            if biometric_vector:
+                try:
+                    import json
+                    visitante.biometric_vector = json.loads(biometric_vector)
+                except:
+                    pass
+        elif not request.FILES.get('foto'):
+            # Se não há nova foto nem da webcam, manter a foto antiga
+            form.instance.foto = visitante.foto
+            
         if form.is_valid():
             form.save()
+            # Recarregar vetores faciais após salvar
+            carregar_vetores_faciais()
             messages.success(request, 'Visitante atualizado com sucesso!')
             return redirect('recepcao:lista_visitantes')
     else:
-        # Formatando a data para o formato esperado pelo campo
-        if visitante.data_nascimento:
-            visitante.data_nascimento = visitante.data_nascimento.strftime('%Y-%m-%d')
+        # Não altere data_nascimento manualmente, deixe o Django Forms lidar com isso
         form = VisitanteForm(instance=visitante)
     
     context = get_base_context('Editar Visitante')
@@ -196,14 +273,11 @@ def buscar_visitante(request):
     if not query or len(query) < 3:
         return JsonResponse({'success': False, 'message': 'Digite ao menos 3 caracteres para buscar.'})
     
-    # Limpa o CPF de formatação para a busca no banco
-    cleaned_query = query.replace('.', '').replace('-', '')
-    
-    # Busca por nome ou por CPF
+    # Busca simples e direta
     visitantes = Visitante.objects.filter(
         Q(nome_completo__icontains=query) |
-        Q(CPF__icontains=cleaned_query)
-    ).order_by('nome_completo')[:10] # Limita a 10 resultados
+        Q(CPF__icontains=query)
+    ).order_by('nome_completo')[:10]
 
     if not visitantes.exists():
         return JsonResponse({
@@ -1195,3 +1269,265 @@ def historico_visitas_ajax(request):
         'visitas_em_andamento': visitas_em_andamento,
         'visitas_finalizadas': visitas_finalizadas,
     })
+
+# Carregando os vetores uma vez para evitar múltiplas leituras do DB
+known_face_encodings = []
+known_face_ids = []
+
+def carregar_vetores_faciais():
+    global known_face_encodings, known_face_ids
+    visitantes_com_vetor = Visitante.objects.filter(biometric_vector__isnull=False)
+    known_face_encodings = [np.array(v.biometric_vector) for v in visitantes_com_vetor]
+    known_face_ids = [v.id for v in visitantes_com_vetor]
+    print(f"Carregados {len(known_face_encodings)} vetores faciais.")
+
+@csrf_exempt
+@require_POST
+def api_reconhecer_rosto(request):
+    carregar_vetores_faciais()  # Sempre recarrega os vetores antes de comparar
+    try:
+        # 1. Lê o corpo da requisição JSON
+        data = json.loads(request.body)
+        image_data = data.get('image')
+
+        if not image_data:
+            return JsonResponse({'success': False, 'error': 'Nenhuma imagem enviada.'}, status=400)
+
+        # 2. Decodifica a imagem base64
+        # Remove o prefixo "data:image/jpeg;base64," se existir
+        if 'base64,' in image_data:
+            format, imgstr = image_data.split(';base64,')
+            ext = format.split('/')[-1]
+            image_data = ContentFile(base64.b64decode(imgstr), name=f'temp.{ext}')
+        else:
+            # Se não houver prefixo, assume que é base64 puro
+            image_data = ContentFile(base64.b64decode(image_data), name='temp.jpg')
+
+        # 3. Extrai o vetor da imagem
+        unknown_embedding = get_face_embedding(image_data)
+
+        if unknown_embedding is None:
+            return JsonResponse({'success': False, 'error': 'Nenhum rosto detectado na imagem.'})
+        
+        if not known_face_encodings:
+            return JsonResponse({'success': False, 'error': 'Nenhum visitante com dados faciais cadastrado.'})
+
+        # Compara com os rostos conhecidos
+        matches = face_recognition.compare_faces(known_face_encodings, np.array(unknown_embedding), tolerance=0.6)
+        
+        if True in matches:
+            first_match_index = matches.index(True)
+            visitante_id = known_face_ids[first_match_index]
+            visitante = Visitante.objects.get(id=visitante_id)
+            
+            return JsonResponse({
+                'success': True,
+                'visitante_id': visitante.id, # Envia o ID para o redirect
+                'nome_visitante': visitante.nome_completo
+            })
+        else:
+            return JsonResponse({'success': False, 'error': 'Nenhum visitante correspondente encontrado.'})
+
+    except json.JSONDecodeError:
+        return JsonResponse({'success': False, 'error': 'Formato de requisição inválido (esperado JSON).'}, status=400)
+    except ValueError as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=400)
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': f'Erro interno do servidor: {str(e)}'}, status=500)
+
+def totem_destino(request):
+    """
+    Renderiza a página de seleção de destino para o visitante reconhecido.
+    """
+    visitante_id = request.GET.get('visitante_id')
+    if not visitante_id:
+        messages.error(request, "ID do visitante não fornecido.")
+        return redirect('recepcao:totem_identificacao')
+
+    try:
+        visitante = Visitante.objects.get(id=visitante_id)
+        context = {
+            'visitante': visitante
+        }
+        return render(request, 'recepcao/totem_destino.html', context)
+    except Visitante.DoesNotExist:
+        messages.error(request, "Visitante não encontrado.")
+        return redirect('recepcao:totem_identificacao')
+
+def totem_identificacao(request):
+    """
+    Renderiza a página inicial do totem de autoatendimento.
+    """
+    return render(request, 'recepcao/totem_identificacao.html')
+
+def totem_comprovante(request, visita_id):
+    """
+    Exibe a tela final com o comprovante da visita.
+    Esta página pode ser recarregada.
+    """
+    visita = get_object_or_404(Visita, id=visita_id)
+    context = {
+        'visita': visita
+    }
+    return render(request, 'recepcao/totem_comprovante.html', context)
+
+@require_GET
+def api_get_setores(request):
+    """
+    API para retornar uma lista de setores (departamentos ou gabinetes) com todos os campos necessários para exibição de cards modernos.
+    """
+    tipo = request.GET.get('tipo')
+    if tipo not in ['departamento', 'gabinete']:
+        return JsonResponse({'success': False, 'error': 'Tipo inválido'}, status=400)
+    
+    setores = Setor.objects.filter(tipo=tipo, ativo=True).order_by('nome_vereador', 'nome_local')
+    setores_data = []
+    for setor in setores:
+        dados = {
+            'id': setor.id,
+            'nome': setor.nome_vereador if tipo == 'gabinete' else setor.nome_local,
+            'tipo': setor.tipo,
+            'localizacao': setor.get_localizacao_display(),
+            'funcao': setor.get_funcao_display() if setor.funcao else None,
+            'email': setor.email_vereador if tipo == 'gabinete' else setor.email,
+            'foto_url': None, # Inicialmente nulo
+            'aberto_agora': setor.esta_aberto()
+        }
+        
+        # Lógica para obter a foto do assessor responsável
+        if setor.usuario and hasattr(setor.usuario, 'assessor') and setor.usuario.assessor.foto:
+            dados['foto_url'] = setor.usuario.assessor.foto.url
+
+        setores_data.append(dados)
+
+    return JsonResponse({'success': True, 'setores': setores_data})
+
+@csrf_exempt
+def api_registrar_visita_totem(request):
+    import logging
+    logger = logging.getLogger(__name__)
+
+    if request.method != 'POST':
+        logger.warning("api_registrar_visita_totem chamada com método GET.")
+        return JsonResponse({'success': False, 'error': 'Método inválido'})
+
+    logger.info("Iniciando o registro de visita via totem.")
+    try:
+        logger.info("Decodificando JSON do corpo da requisição...")
+        data = json.loads(request.body)
+        visitante_id = data.get('visitante_id')
+        setor_id = data.get('setor_id')
+        logger.info(f"Dados recebidos: visitante_id={visitante_id}, setor_id={setor_id}")
+
+        logger.info(f"Buscando visitante com ID {visitante_id}...")
+        visitante = Visitante.objects.get(id=visitante_id)
+        logger.info("Visitante encontrado.")
+
+        logger.info(f"Buscando setor com ID {setor_id}...")
+        setor = Setor.objects.get(id=setor_id)
+        logger.info("Setor encontrado.")
+
+        visita_data_para_criar = {
+            'visitante': visitante,
+            'setor': setor,
+            'localizacao': setor.localizacao,
+            'status': 'em_andamento'
+        }
+        logger.info(f"Dados para criação da visita: {visita_data_para_criar}")
+
+        logger.info("Criando registro da visita no banco de dados...")
+        nova_visita = Visita.objects.create(**visita_data_para_criar)
+        logger.info(f"Visita ID {nova_visita.id} criada com sucesso.")
+
+        logger.info(f"Enviando ID da nova visita para o frontend: {nova_visita.id}")
+        return JsonResponse({'success': True, 'visita_id': nova_visita.id})
+
+    except (Visitante.DoesNotExist, Setor.DoesNotExist) as e:
+        logger.error(f"Erro de objeto não encontrado: {str(e)}")
+        return JsonResponse({'success': False, 'error': 'Visitante ou Setor não encontrado.'}, status=404)
+    except json.JSONDecodeError:
+        logger.error("Erro ao decodificar JSON da requisição.")
+        return JsonResponse({'success': False, 'error': 'Requisição mal formatada.'}, status=400)
+    except Exception as e:
+        logger.exception("Erro inesperado e fatal em api_registrar_visita_totem:")
+        return JsonResponse({'success': False, 'error': 'Ocorreu uma falha interna no servidor.'}, status=500)
+
+@csrf_exempt
+@require_POST
+def upload_foto_webcam(request):
+    """View específica para upload de foto via webcam"""
+    import logging
+    import base64
+    import uuid
+    from django.core.files.base import ContentFile
+    from .utils.image_utils import process_image
+    
+    logger = logging.getLogger(__name__)
+    
+    try:
+        # Receber dados da imagem em base64
+        image_data = request.POST.get('image_data')
+        if not image_data:
+            return JsonResponse({'success': False, 'error': 'Dados da imagem não fornecidos'})
+        
+        # Remover o prefixo "data:image/jpeg;base64,"
+        if 'base64,' in image_data:
+            image_data = image_data.split('base64,')[1]
+        
+        # Decodificar base64
+        image_binary = base64.b64decode(image_data)
+        
+        # Criar arquivo temporário
+        filename = f"webcam_{uuid.uuid4().hex}.jpg"
+        image_file = ContentFile(image_binary, name=filename)
+        
+        # Gerar vetor biométrico da foto
+        try:
+            embedding = get_face_embedding(image_file)
+            if embedding is None:
+                return JsonResponse({
+                    'success': False, 
+                    'error': 'Nenhum rosto detectado na imagem. Tire uma nova foto.'
+                })
+        except ValueError as e:
+            return JsonResponse({
+                'success': False, 
+                'error': str(e)
+            })
+        except Exception as e:
+            logger.error(f"Erro ao gerar vetor biométrico: {str(e)}")
+            embedding = None
+        
+        # Processar imagem
+        processed_images = process_image(image_file)
+        
+        # Salvar as versões processadas fisicamente
+        import os
+        media_root = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'media', 'fotos_visitantes')
+        os.makedirs(media_root, exist_ok=True)
+        
+        # Salvar cada versão
+        saved_paths = {}
+        for size, img_file in processed_images.items():
+            file_path = os.path.join(media_root, img_file.name)
+            with open(file_path, 'wb') as f:
+                f.write(img_file.read())
+            saved_paths[size] = f"fotos_visitantes/{img_file.name}"
+            logger.info(f"Arquivo salvo: {file_path}")
+        
+        # Também salvar o original
+        original_path = os.path.join(media_root, filename)
+        with open(original_path, 'wb') as f:
+            f.write(image_binary)
+        saved_paths['original'] = f"fotos_visitantes/{filename}"
+        
+        return JsonResponse({
+            'success': True, 
+            'paths': saved_paths,
+            'biometric_vector': embedding,
+            'message': 'Foto processada e salva com sucesso'
+        })
+        
+    except Exception as e:
+        logger.error(f"Erro ao processar foto da webcam: {str(e)}")
+        return JsonResponse({'success': False, 'error': str(e)})

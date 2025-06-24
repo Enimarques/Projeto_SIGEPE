@@ -9,6 +9,7 @@ class CameraManager {
         this.cameraPlaceholder = null;
         this.clearPhotoBtn = null;
         this.capturedPhoto = null;
+        this.savedPaths = null;
     }
 
     async init() {
@@ -95,24 +96,75 @@ class CameraManager {
             ctx.drawImage(this.video, 0, 0);
             
             // Converter para base64
-            this.capturedPhoto = this.canvas.toDataURL('image/jpeg', 0.8);
+            const imageData = this.canvas.toDataURL('image/jpeg', 0.8);
             
-            // Atualizar preview
-            this.photoPreview.src = this.capturedPhoto;
-            this.photoPreview.style.display = 'block';
-            this.cameraPlaceholder.style.display = 'none';
-            this.clearPhotoBtn.style.display = 'inline-block';
+            // Enviar via AJAX para processamento
+            fetch('/recepcao/upload-foto-webcam/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: `image_data=${encodeURIComponent(imageData)}`
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Atualizar preview
+                    this.photoPreview.src = imageData;
+                    this.photoPreview.style.display = 'block';
+                    this.cameraPlaceholder.style.display = 'none';
+                    this.clearPhotoBtn.style.display = 'inline-block';
+                    
+                    // Armazenar os caminhos das imagens para uso posterior
+                    this.savedPaths = data.paths;
+                    
+                    // Criar inputs hidden com os caminhos das imagens
+                    this.createHiddenInputs(data.paths, data.biometric_vector);
+                    
+                    alert('Foto capturada e processada com sucesso!');
+                } else {
+                    alert('Erro ao processar foto: ' + data.error);
+                }
+            })
+            .catch(error => {
+                console.error('Erro:', error);
+                alert('Erro ao enviar foto para processamento.');
+            })
+            .finally(() => {
+                btnCapturar.disabled = false;
+                btnCapturar.innerHTML = '<i class="fas fa-camera me-2"></i>Capturar Foto';
+                this.stopCamera();
+            });
             
-            // Atualizar input hidden
-            this.photoInput.value = this.capturedPhoto;
-            
-            // Parar câmera e resetar UI
-            this.stopCamera();
         } catch (err) {
             alert('Erro ao capturar foto: ' + err.message);
-        } finally {
             btnCapturar.disabled = false;
             btnCapturar.innerHTML = '<i class="fas fa-camera me-2"></i>Capturar Foto';
+        }
+    }
+
+    createHiddenInputs(paths, biometricVector) {
+        // Remove inputs antigos se existirem
+        const oldInputs = document.querySelectorAll('input[name^="foto_path_"], input[name="biometric_vector"]');
+        oldInputs.forEach(input => input.remove());
+        
+        // Cria novos inputs com os caminhos das imagens
+        const form = document.querySelector('form');
+        Object.keys(paths).forEach(size => {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = `foto_path_${size}`;
+            input.value = paths[size];
+            form.appendChild(input);
+        });
+        
+        // Adiciona o vetor biométrico se disponível
+        if (biometricVector) {
+            const vectorInput = document.createElement('input');
+            vectorInput.type = 'hidden';
+            vectorInput.name = 'biometric_vector';
+            vectorInput.value = JSON.stringify(biometricVector);
+            form.appendChild(vectorInput);
         }
     }
 

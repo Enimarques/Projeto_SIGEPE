@@ -8,6 +8,8 @@ import re
 from datetime import datetime, time
 import base64
 import numpy as np
+import logging
+import os
 
 class Setor(models.Model):
     TIPO_CHOICES = [
@@ -17,6 +19,7 @@ class Setor(models.Model):
 
     LOCALIZACAO_CHOICES = [
         ('terreo', 'Térreo'),
+        ('plenario', 'Plenário'),
         ('primeiro_piso', '1° Piso'),
         ('segundo_piso', '2° Piso'),
     ]
@@ -393,27 +396,53 @@ class Visitante(models.Model):
     foto_thumbnail = models.ImageField('Foto Thumbnail', upload_to='fotos_visitantes/thumbnail/', blank=True, null=True)
     foto_medium = models.ImageField('Foto Média', upload_to='fotos_visitantes/medium/', blank=True, null=True)
     foto_large = models.ImageField('Foto Grande', upload_to='fotos_visitantes/large/', blank=True, null=True)
+    biometric_vector = models.JSONField(verbose_name="Vetor Biométrico", null=True, blank=True, editable=False)
 
     # Datas de Controle
     data_cadastro = models.DateTimeField(auto_now_add=True, verbose_name="Data de Cadastro")
     data_atualizacao = models.DateTimeField(auto_now=True, verbose_name="Última Atualização")
 
     def save(self, *args, **kwargs):
-        # Se uma nova foto foi adicionada, processa ela
-        if self.foto and not self.foto_thumbnail:
-            from .utils.image_utils import process_image
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.info(f"[DEBUG] Chamando save para visitante: {self.nome_completo} (ID: {self.pk})")
+        processar_imagem = False
+        arquivos_processados = None
+        if self.pk:  # se o objeto já existe
             try:
-                processed_images = process_image(self.foto)
-                self.foto_thumbnail = processed_images['thumbnail']
-                self.foto_medium = processed_images['medium']
-                self.foto_large = processed_images['large']
+                visitante_antigo = Visitante.objects.get(pk=self.pk)
+                if visitante_antigo.foto != self.foto:
+                    processar_imagem = True
+                    logger.info(f"[DEBUG] Foto alterada para visitante {self.nome_completo}. Vai processar nova imagem.")
+                    # Remove as fotos antigas do disco antes de salvar as novas
+                    for campo in ['foto_thumbnail', 'foto_medium', 'foto_large']:
+                        imagem_antiga = getattr(visitante_antigo, campo)
+                        if imagem_antiga and hasattr(imagem_antiga, 'path') and os.path.isfile(imagem_antiga.path):
+                            logger.info(f"[DEBUG] Removendo arquivo antigo: {imagem_antiga.path}")
+                            os.remove(imagem_antiga.path)
+            except Visitante.DoesNotExist:
+                processar_imagem = True # O objeto é novo
+        elif self.foto: # Se for um novo objeto com foto
+            processar_imagem = True
+            logger.info(f"[DEBUG] Novo visitante com foto. Vai processar imagem.")
+        if processar_imagem and self.foto:
+            from .utils.image_utils import process_image
+            import os
+            try:
+                media_root = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'media', 'fotos_visitantes')
+                os.makedirs(media_root, exist_ok=True)
+                arquivos_processados = process_image(self.foto)
+                logger.info(f"[DEBUG] Imagens processadas: {[img.name for img in arquivos_processados.values()]}")
             except Exception as e:
-                # Log o erro mas não impede o salvamento
-                import logging
-                logger = logging.getLogger(__name__)
-                logger.error(f'Erro ao processar imagem: {str(e)}')
-        
+                logger.error(f'[DEBUG] Erro ao processar imagem para o visitante {self.nome_completo}: {str(e)}')
         super().save(*args, **kwargs)
+        if arquivos_processados:
+            self.foto_thumbnail.save(arquivos_processados['thumbnail'].name, arquivos_processados['thumbnail'], save=False)
+            self.foto_medium.save(arquivos_processados['medium'].name, arquivos_processados['medium'], save=False)
+            self.foto_large.save(arquivos_processados['large'].name, arquivos_processados['large'], save=False)
+            logger.info(f"[DEBUG] Salvando arquivos derivados: thumbnail={self.foto_thumbnail}, medium={self.foto_medium}, large={self.foto_large}")
+            super().save(update_fields=["foto_thumbnail", "foto_medium", "foto_large"])
+        logger.info(f"[DEBUG] Visitante salvo: foto={self.foto}, thumbnail={self.foto_thumbnail}, medium={self.foto_medium}, large={self.foto_large}")
 
     def get_foto_url(self, size='medium'):
         """

@@ -83,8 +83,7 @@ class VisitanteForm(forms.ModelForm):
             'logradouro',
             'numero',
             'complemento',
-            'CEP',
-            'foto'
+            'CEP'
         ]
         widgets = {
             'nome_completo': forms.TextInput(attrs={
@@ -121,9 +120,6 @@ class VisitanteForm(forms.ModelForm):
             'complemento': forms.TextInput(attrs={
                 'class': 'form-control',
                 'placeholder': 'Apto, Bloco, etc. (Opcional)'
-            }),
-            'foto': forms.FileInput(attrs={
-                'class': 'form-control'
             })
         }
 

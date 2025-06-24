@@ -1,0 +1,354 @@
+{% extends 'base_totem.html' %}
+{% load static %}
+
+{% block extra_css %}
+<style>
+.totem-container {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+/* Welcome Header - Bigger and more prominent */
+.welcome-header {
+    text-align: center;
+    margin-bottom: 4rem; /* Increased spacing */
+}
+.welcome-header .visitor-photo {
+    width: 140px; /* Increased size */
+    height: 140px; /* Increased size */
+    border-radius: 50%;
+    object-fit: cover;
+    margin-bottom: 1.5rem;
+    border: 5px solid #fff;
+    box-shadow: 0 5px 25px rgba(0,0,0,0.15);
+}
+.welcome-header .visitor-name {
+    font-size: 2.75rem; /* Increased size */
+    font-weight: 700; /* Bolder */
+    color: #2c3e50; /* Darker for more contrast */
+    letter-spacing: -1px;
+}
+.welcome-header .welcome-subtitle {
+    font-size: 1.2rem; /* Slightly bigger */
+    color: #6c757d;
+}
+/* Tabs */
+.totem-tabs {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    border-bottom: 1px solid #dee2e6;
+    margin-bottom: 2.5rem;
+}
+.totem-tab-btn {
+    background: none;
+    border: none;
+    font-size: 1.05rem;
+    font-weight: 500;
+    color: #6c757d;
+    padding: 0.8rem 1.5rem;
+    cursor: pointer;
+    border-bottom: 3px solid transparent;
+    margin-bottom: -1px;
+    transition: all 0.2s ease-in-out;
+}
+.totem-tab-btn.active, .totem-tab-btn:hover {
+    color: #6777ef; /* Cor de destaque */
+    border-bottom-color: #6777ef;
+}
+/* Cards Grid */
+.totem-cards-grid {
+    display: none; /* Inicia escondido */
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 2rem;
+}
+.totem-cards-grid.active {
+    display: grid; /* Mostra o grid ativo */
+}
+.destination-card {
+    background-color: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.07);
+    padding: 1.5rem;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    position: relative; /* Necessário para o posicionamento do badge */
+    overflow: hidden; /* Garante que o badge não saia do card */
+}
+.destination-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+}
+.status-badge {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    padding: 0.25rem 0.6rem;
+    border-radius: 50px; /* pill-shape */
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: white;
+    z-index: 2;
+}
+.status-open {
+    background-color: #28a745; /* Verde */
+}
+.status-closed {
+    background-color: #dc3545; /* Vermelho */
+}
+.card-icon {
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    margin: 0 auto 1rem auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    background-color: #eee;
+}
+.card-icon i { font-size: 2rem; }
+.card-icon.departamento i { color: #28a745; }
+.card-icon.gabinete i { color: #ffc107; }
+.card-icon img { width: 100%; height: 100%; object-fit: cover; }
+.card-name {
+    font-size: 1.15rem;
+    font-weight: 600;
+    color: #343a40;
+    margin-bottom: 0.25rem;
+}
+.card-description {
+    font-size: 0.9rem;
+    color: #6c757d;
+    margin-bottom: 1rem;
+    flex-grow: 1;
+}
+/* Card Info Bar - REVISED for better grouping */
+.card-info-bar {
+    width: 100%;
+    text-align: left; /* Left-aligns the content */
+    padding: 0.75rem 0;
+    margin-bottom: 1rem;
+    border-top: 1px solid #f0f0f0;
+    border-bottom: 1px solid #f0f0f0;
+}
+.info-item {
+    display: flex;
+    align-items: flex-start;
+    font-size: 0.9rem;
+    color: #6c757d;
+    margin-bottom: 0.3rem;
+}
+.info-item:last-child {
+    margin-bottom: 0;
+}
+.info-item i {
+    color: #6777ef;
+    margin-right: 0.6rem;
+    width: 16px;
+    margin-top: 0.15em; /* Aligns icon better with text */
+}
+.info-item span {
+    word-break: break-all; /* Breaks long emails */
+}
+.card-button {
+    background-color: #6777ef;
+    color: white;
+    font-weight: 500;
+    border-radius: 8px;
+    border: none;
+    padding: 0.6rem 1.5rem;
+    transition: all 0.2s ease-in-out;
+    width: 100%;
+}
+.card-button:hover {
+    background-color: #5362d5;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="totem-container">
+    
+    <div class="welcome-header" id="welcome-header">
+        <!-- Cabeçalho do visitante será preenchido via JS -->
+    </div>
+
+    <div class="totem-tabs">
+        <button class="totem-tab-btn active" id="tab-departamentos" onclick="mostrarTab('departamentos')">Departamentos</button>
+        <button class="totem-tab-btn" id="tab-gabinetes" onclick="mostrarTab('gabinetes')">Gabinetes</button>
+    </div>
+    
+    <div id="departamentos-grid" class="totem-cards-grid active"></div>
+    <div id="gabinetes-grid" class="totem-cards-grid"></div>
+
+</div>
+
+<!-- Modal de Confirmação -->
+<div class="modal fade" id="confirmacaoModal" tabindex="-1" aria-labelledby="confirmacaoModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="confirmacaoModalLabel">Confirmar Visita</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        Você confirma o registro da visita para <strong id="modal-setor-nome"></strong>?
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-primary" id="btn-confirmar-visita">Confirmar</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const visitante = {
+    id: '{{ visitante.id }}',
+    nome: '{{ visitante.nome_completo|escapejs }}',
+    foto: '{{ visitante.get_foto_url|default_if_none:"" }}'
+};
+
+function renderWelcomeHeader() {
+    const header = document.getElementById('welcome-header');
+    const fotoHtml = `<img class='visitor-photo' src='${visitante.foto || "{% static 'img/default-avatar.png' %}"}' alt='Foto de ${visitante.nome}'>`;
+    header.innerHTML = `
+        ${fotoHtml}
+        <h1 class="visitor-name">${visitante.nome}</h1>
+        <p class="welcome-subtitle">Selecione abaixo o seu destino.</p>
+    `;
+}
+
+function getCardIconHtml(setor) {
+    let iconContent = '';
+    if (setor.foto_url) {
+        iconContent = `<img src="${setor.foto_url}" alt="${setor.nome}">`;
+    } else {
+        const iconClass = setor.tipo === 'gabinete' ? 'fa-users' : 'fa-building';
+        iconContent = `<i class="fas ${iconClass}"></i>`;
+    }
+    return `<div class="card-icon ${setor.tipo}">${iconContent}</div>`;
+}
+
+function getInfoBarHtml(setor) {
+    if (!setor.localizacao && !setor.email) return '';
+    let html = '<div class="card-info-bar">';
+    if (setor.localizacao) {
+        html += `<div class="info-item"><i class="fas fa-map-marker-alt"></i><span>${setor.localizacao}</span></div>`;
+    }
+    if (setor.email) {
+        html += `<div class="info-item"><i class="fas fa-envelope"></i><span>${setor.email}</span></div>`;
+    }
+    html += '</div>';
+    return html;
+}
+
+function getStatusBadgeHtml(setor) {
+    if (setor.aberto_agora === null) {
+        return ''; // Sem badge se o status for indeterminado
+    }
+    const statusText = setor.aberto_agora ? 'Aberto' : 'Fechado';
+    const statusClass = setor.aberto_agora ? 'status-open' : 'status-closed';
+    return `<div class="status-badge ${statusClass}">${statusText}</div>`;
+}
+
+function renderGrid(gridId, setores) {
+    const grid = document.getElementById(gridId);
+    if (!setores || setores.length === 0) {
+        grid.innerHTML = '<p class="text-center text-muted w-100">Nenhum item encontrado.</p>';
+        return;
+    }
+    let html = '';
+    setores.forEach(setor => {
+        const descricao = setor.funcao || (setor.tipo === 'gabinete' ? 'Gabinete' : 'Departamento');
+        const setorNomeEscapado = setor.nome.replace(/'/g, "\\'"); // Escapa aspas
+        html += `
+        <div class="destination-card">
+            ${getStatusBadgeHtml(setor)}
+            ${getCardIconHtml(setor)}
+            <h5 class="card-name">${setor.nome}</h5>
+            <p class="card-description">${descricao}</p>
+            ${getInfoBarHtml(setor)}
+            <button class="card-button" onclick="prepararModal(${setor.id}, '${setorNomeEscapado}')">
+                <i class="fas fa-arrow-right me-2"></i>Visitar
+            </button>
+        </div>
+        `;
+    });
+    grid.innerHTML = html;
+}
+
+function mostrarTab(tabName) {
+    document.getElementById('departamentos-grid').classList.toggle('active', tabName === 'departamentos');
+    document.getElementById('tab-departamentos').classList.toggle('active', tabName === 'departamentos');
+    document.getElementById('gabinetes-grid').classList.toggle('active', tabName === 'gabinetes');
+    document.getElementById('tab-gabinetes').classList.toggle('active', tabName === 'gabinetes');
+}
+
+async function carregarSetores() {
+    const fetchSetores = async (tipo) => {
+        try {
+            const resp = await fetch(`{% url 'recepcao:api_get_setores' %}?tipo=${tipo}`);
+            const data = await resp.json();
+            return (data.success && data.setores) ? data.setores : [];
+        } catch {
+            return [];
+        }
+    };
+    const departamentos = await fetchSetores('departamento');
+    const gabinetes = await fetchSetores('gabinete');
+    renderGrid('departamentos-grid', departamentos);
+    renderGrid('gabinetes-grid', gabinetes);
+}
+
+let confirmacaoModal; // Variável global para o objeto do modal
+
+function prepararModal(setorId, setorNome) {
+    document.getElementById('modal-setor-nome').textContent = setorNome;
+    const btnConfirmar = document.getElementById('btn-confirmar-visita');
+    
+    // Remove listener antigo para evitar múltiplas chamadas
+    const novoBtn = btnConfirmar.cloneNode(true);
+    btnConfirmar.parentNode.replaceChild(novoBtn, btnConfirmar);
+
+    novoBtn.addEventListener('click', () => registrarVisita(setorId));
+    
+    confirmacaoModal.show();
+}
+
+function registrarVisita(setorId) {
+    confirmacaoModal.hide(); // Esconde o modal imediatamente
+
+    fetch("{% url 'recepcao:api_registrar_visita_totem' %}", {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ visitante_id: visitante.id, setor_id: setorId })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success && data.visita_id) {
+            // Redireciona para a nova página de comprovante
+            const url = `/recepcao/totem/comprovante/${data.visita_id}/`;
+            window.location.href = url;
+        } else {
+            alert('Erro ao registrar visita: ' + (data.error || 'ID da visita não recebido.'));
+        }
+    })
+    .catch(error => {
+        console.error('Fetch error:', error);
+        alert('Erro de comunicação. Verifique o console do servidor para mais detalhes.');
+    });
+}
+
+window.onload = () => {
+    renderWelcomeHeader();
+    carregarSetores();
+    confirmacaoModal = new bootstrap.Modal(document.getElementById('confirmacaoModal'));
+};
+</script>
+{% endblock %} 

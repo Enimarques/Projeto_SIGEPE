@@ -24,6 +24,7 @@ urlpatterns = [
     path('setores/<int:pk>/excluir/', views.excluir_setor, name='excluir_setor'),
     
     path('visitantes/<int:visitante_id>/upload-foto/', views.upload_foto_visitante, name='upload_foto_visitante'),
+    path('upload-foto-webcam/', views.upload_foto_webcam, name='upload_foto_webcam'),
     path('visitantes/<int:pk>/excluir/', views.excluir_visitante, name='excluir_visitante'),
     
     # URLs para AJAX do admin
@@ -36,4 +37,16 @@ urlpatterns = [
     path('departamentos/', views.home_departamentos, name='home_departamentos'),
     path('departamentos/<int:departamento_id>/tabela/', views.visitas_tabela_departamento, name='tabela_visitas_departamento'),
     path('departamentos/<int:departamento_id>/', views.detalhes_departamento, name='detalhes_departamento'),
+
+    # Rota do Totem
+    path('totem/', views.totem_identificacao, name='totem_identificacao'),
+    path('totem/destino/', views.totem_destino, name='totem_destino'),
+
+    # API Endpoints para o Totem
+    path('api/reconhecer-rosto/', views.api_reconhecer_rosto, name='api_reconhecer_rosto'),
+    path('api/registrar-visita/', views.api_registrar_visita_totem, name='api_registrar_visita_totem'),
+    path('api/get-setores/', views.api_get_setores, name='api_get_setores'),
+
+    # Rota para a tela do comprovante (ticket)
+    path('totem/comprovante/<int:visita_id>/', views.totem_comprovante, name='totem_comprovante'),
 ]
