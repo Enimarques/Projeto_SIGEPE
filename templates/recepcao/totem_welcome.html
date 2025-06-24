@@ -1,0 +1,99 @@
+{% extends 'base_totem.html' %}
+{% load static %}
+
+{% block extra_css %}
+<style>
+.totem-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: calc(100vh - 1.05rem);
+    text-align: center;
+    padding: 1rem 2rem;
+}
+
+.header-logo {
+    height: 250px;
+    margin-bottom: 2rem;
+}
+
+.main-title {
+    font-size: 3rem;
+    font-weight: 700;
+    margin: 0;
+    background: linear-gradient(45deg, #5e72e4, #825ee4);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    text-fill-color: transparent;
+    letter-spacing: -1px;
+    text-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    line-height: 1.2;
+}
+
+.title-separator {
+    width: 80px;
+    height: 4px;
+    background: linear-gradient(90deg, #5e72e4, #825ee4);
+    border-radius: 2px;
+    margin: 1.25rem 0;
+}
+
+.main-subtitle {
+    font-size: 1.3rem;
+    font-weight: 400;
+    color: #7a82a6;
+    margin-top: 1.5rem;
+    margin-bottom: 3rem;
+    max-width: 650px;
+    line-height: 1.6;
+}
+
+.action-buttons .btn {
+    padding: 1.5rem 3rem;
+    font-size: 1.8rem;
+    margin: 0 1rem;
+    min-width: 300px;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="totem-container">
+    <img src="{% static 'img/LOGO-CAMARA-PARAUAPEBAS.png' %}" alt="Logo Câmara Municipal de Parauapebas" class="header-logo">
+    <h1 class="main-title">Olá! Bem-Vindo(a).</h1>
+    <div class="title-separator"></div>
+    <h1 class="main-title">Câmara Municipal de Parauapebas</h1>
+    <p class="main-subtitle">Utilize nosso sistema de autoatendimento para agilizar sua visita.</p>
+    
+    <div class="action-buttons">
+        <a href="{% url 'recepcao:totem_identificacao' %}" class="btn btn-primary">Realizar Visita</a>
+        <a href="{% url 'recepcao:totem_finalize_search' %}" class="btn btn-info">Finalizar Visita</a>
+        <button type="button" class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#naoVisitarModal">
+            Não Realizar Visita
+        </button>
+    </div>
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="naoVisitarModal" tabindex="-1" aria-labelledby="naoVisitarModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content" style="border-radius: 15px; box-shadow: 0 10px 40px rgba(0,0,0,0.15);">
+      <div class="modal-header" style="background-color: #f8f9fa; border-bottom: none; padding: 1.5rem 2rem;">
+        <h5 class="modal-title" id="naoVisitarModalLabel" style="font-size: 1.5rem; font-weight: 600;">
+            <i class="fas fa-sad-tear me-2 text-warning"></i>Que Pena!
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body" style="padding: 2rem; font-size: 1.3rem; line-height: 1.6;">
+        <p class="mb-3">Ficamos tristes em saber que você não registrará uma visita agora.</p>
+        <p class="mb-0">Lembre-se que nossos Vereadores e Departamentos estão sempre disponíveis para recebê-lo. Esperamos sua visita em uma próxima oportunidade!</p>
+      </div>
+      <div class="modal-footer" style="border-top: none; padding: 1.5rem 2rem;">
+        <button type="button" class="btn btn-primary btn-lg" data-bs-dismiss="modal" style="min-width: 150px;">Fechar</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %} 

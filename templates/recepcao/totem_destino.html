@@ -12,14 +12,16 @@
     text-align: center;
     margin-bottom: 4rem; /* Increased spacing */
 }
-.welcome-header .visitor-photo {
-    width: 140px; /* Increased size */
-    height: 140px; /* Increased size */
+.visitor-photo-container {
+    width: 140px;
+    height: 140px;
     border-radius: 50%;
-    object-fit: cover;
-    margin-bottom: 1.5rem;
+    margin: 0 auto 1.5rem auto;
     border: 5px solid #fff;
     box-shadow: 0 5px 25px rgba(0,0,0,0.15);
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
 }
 .welcome-header .visitor-name {
     font-size: 2.75rem; /* Increased size */
@@ -211,12 +213,14 @@
 const visitante = {
     id: '{{ visitante.id }}',
     nome: '{{ visitante.nome_completo|escapejs }}',
-    foto: '{{ visitante.get_foto_url|default_if_none:"" }}'
+    foto: '{{ visitante_foto_url|default_if_none:"" }}'
 };
 
 function renderWelcomeHeader() {
     const header = document.getElementById('welcome-header');
-    const fotoHtml = `<img class='visitor-photo' src='${visitante.foto || "{% static 'img/default-avatar.png' %}"}' alt='Foto de ${visitante.nome}'>`;
+    const fotoSrc = visitante.foto || "{% static 'img/default-avatar.png' %}";
+    const fotoHtml = `<div class='visitor-photo-container' style='background-image: url("${fotoSrc}")'></div>`;
+
     header.innerHTML = `
         ${fotoHtml}
         <h1 class="visitor-name">${visitante.nome}</h1>

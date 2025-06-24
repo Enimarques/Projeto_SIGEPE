@@ -18,17 +18,12 @@ def process_image(image_file, max_size_mb=5):
     if image_file.size > max_size_mb * 1024 * 1024:
         raise ValueError(f'O arquivo é muito grande. Tamanho máximo permitido: {max_size_mb}MB')
 
-    # Validar tipo de arquivo usando python-magic
-    mime = magic.from_buffer(image_file.read(1024), mime=True)
-    image_file.seek(0)  # Reset file pointer
-    
-    allowed_types = ['image/jpeg', 'image/png', 'image/webp']
-    if mime not in allowed_types:
-        raise ValueError('Tipo de arquivo não permitido. Use apenas JPG, PNG ou WebP.')
-
     # Abrir imagem com PIL
-    img = Image.open(image_file)
-    
+    try:
+        img = Image.open(image_file)
+    except Exception:
+        raise ValueError('Arquivo de imagem inválido ou corrompido.')
+
     # Converter para RGB se necessário
     if img.mode != 'RGB':
         img = img.convert('RGB')

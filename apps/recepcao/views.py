@@ -33,9 +33,12 @@ import numpy as np
 from django.contrib.auth.models import User
 from django.core.files.storage import default_storage
 from django.db.models.fields.files import FieldFile
+from django.core.files import File
 from django.db.models import Value
 from django.db.models.functions import Replace
 from django.utils.timezone import get_current_timezone
+import os
+from django.core.cache import cache
 
 # Contexto base para todas as views do app
 def get_base_context(title_suffix=''):
@@ -168,46 +171,24 @@ def editar_visitante(request, pk):
     if request.method == 'POST':
         form = VisitanteForm(request.POST, request.FILES, instance=visitante)
         
-        # Processar fotos da webcam se foram enviadas
-        foto_paths = {}
-        biometric_vector = None
-        for field_name in request.POST:
-            if field_name.startswith('foto_path_'):
-                size = field_name.replace('foto_path_', '')
-                foto_paths[size] = request.POST[field_name]
-            elif field_name == 'biometric_vector':
-                biometric_vector = request.POST[field_name]
-        
-        if foto_paths:
-            # Se há caminhos de foto da webcam, atribuir aos campos do visitante
-            if 'original' in foto_paths:
-                visitante.foto = FieldFile(visitante, visitante._meta.get_field('foto'), foto_paths['original'])
-            if 'thumbnail' in foto_paths:
-                visitante.foto_thumbnail = FieldFile(visitante, visitante._meta.get_field('foto_thumbnail'), foto_paths['thumbnail'])
-            if 'medium' in foto_paths:
-                visitante.foto_medium = FieldFile(visitante, visitante._meta.get_field('foto_medium'), foto_paths['medium'])
-            if 'large' in foto_paths:
-                visitante.foto_large = FieldFile(visitante, visitante._meta.get_field('foto_large'), foto_paths['large'])
-            
-            # Salvar vetor biométrico se disponível
-            if biometric_vector:
-                try:
-                    import json
-                    visitante.biometric_vector = json.loads(biometric_vector)
-                except:
-                    pass
-        elif not request.FILES.get('foto'):
-            # Se não há nova foto nem da webcam, manter a foto antiga
-            form.instance.foto = visitante.foto
-            
+        # Processar foto da webcam, se foi enviada.
+        foto_original_path = request.POST.get('foto_path_original')
+        if foto_original_path:
+            try:
+                # Abrir o arquivo de imagem temporário e atribuí-lo ao campo 'foto' do formulário.
+                with open(foto_original_path, 'rb') as f:
+                    form.instance.foto.save(os.path.basename(foto_original_path), File(f), save=False)
+            except FileNotFoundError:
+                messages.error(request, "Erro: O arquivo de foto temporário não foi encontrado.")
+                # Lidar com o erro como preferir, talvez renderizando o formulário novamente.
+            except Exception as e:
+                messages.error(request, f"Ocorreu um erro ao processar a foto: {e}")
+
         if form.is_valid():
             form.save()
-            # Recarregar vetores faciais após salvar
-            carregar_vetores_faciais()
             messages.success(request, 'Visitante atualizado com sucesso!')
-            return redirect('recepcao:lista_visitantes')
+            return redirect('recepcao:detalhes_visitante', pk=visitante.pk)
     else:
-        # Não altere data_nascimento manualmente, deixe o Django Forms lidar com isso
         form = VisitanteForm(instance=visitante)
     
     context = get_base_context('Editar Visitante')
@@ -1064,7 +1045,6 @@ def upload_foto_visitante(request, visitante_id):
             visitante.save()
             
             # Limpar cache
-            from django.core.cache import cache
             for size in ['thumbnail', 'medium', 'large']:
                 cache_key = f'visitante_foto_{visitante_id}_{size}'
                 cache.delete(cache_key)
@@ -1335,6 +1315,18 @@ def api_reconhecer_rosto(request):
     except Exception as e:
         return JsonResponse({'success': False, 'error': f'Erro interno do servidor: {str(e)}'}, status=500)
 
+def totem_welcome(request):
+    """
+    Renderiza a página inicial de boas-vindas do totem.
+    """
+    return render(request, 'recepcao/totem_welcome.html')
+
+def totem_finalize_search(request):
+    """
+    Renderiza a página de busca para finalizar uma visita.
+    """
+    return render(request, 'recepcao/totem_finalize_search.html')
+
 def totem_destino(request):
     """
     Renderiza a página de seleção de destino para o visitante reconhecido.
@@ -1347,7 +1339,8 @@ def totem_destino(request):
     try:
         visitante = Visitante.objects.get(id=visitante_id)
         context = {
-            'visitante': visitante
+            'visitante': visitante,
+            'visitante_foto_url': visitante.get_foto_url(size='large')
         }
         return render(request, 'recepcao/totem_destino.html', context)
     except Visitante.DoesNotExist:
@@ -1502,7 +1495,6 @@ def upload_foto_webcam(request):
         processed_images = process_image(image_file)
         
         # Salvar as versões processadas fisicamente
-        import os
         media_root = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'media', 'fotos_visitantes')
         os.makedirs(media_root, exist_ok=True)
         
@@ -1531,3 +1523,63 @@ def upload_foto_webcam(request):
     except Exception as e:
         logger.error(f"Erro ao processar foto da webcam: {str(e)}")
         return JsonResponse({'success': False, 'error': str(e)})
+
+@require_GET
+def api_buscar_visitante_ativo(request):
+    query = request.GET.get('query', '').strip()
+    if len(query) < 3:
+        return JsonResponse({'success': False, 'error': 'Forneça ao menos 3 caracteres para a busca.'}, status=400)
+
+    # Passo 1: Encontrar o visitante por nome ou CPF, sem filtrar por visita.
+    visitantes_qs = Visitante.objects.filter(
+        Q(nome_completo__icontains=query) | Q(CPF__iexact=query)
+    ).distinct()
+
+    if not visitantes_qs.exists():
+        return JsonResponse({'success': False, 'error': 'Nenhum visitante encontrado com os dados informados.'})
+
+    # Passo 2: Preparar os dados, verificando as visitas para cada um.
+    visitantes_data = []
+    for visitante in visitantes_qs:
+        # Agora sim, filtramos as visitas em andamento para este visitante específico.
+        visitas_em_andamento = visitante.visita_set.filter(status='em_andamento')
+        visitas_data_list = [{
+            'id': v.id,
+            'setor': v.setor.nome_vereador if v.setor.tipo == 'gabinete' else v.setor.nome_local,
+            'data_entrada': v.data_entrada.strftime('%d/%m/%Y %H:%M')
+        } for v in visitas_em_andamento]
+
+        # Inclui o visitante na resposta, mesmo que não tenha visitas ativas.
+        visitantes_data.append({
+            'id': visitante.id,
+            'nome': visitante.nome_completo,
+            'visitas': visitas_data_list
+        })
+
+    return JsonResponse({'success': True, 'visitantes': visitantes_data})
+
+@csrf_exempt
+@require_POST
+def api_finalizar_visitas(request):
+    try:
+        data = json.loads(request.body)
+        visitante_id = data.get('visitante_id')
+        if not visitante_id:
+            return JsonResponse({'success': False, 'error': 'ID do visitante não fornecido.'}, status=400)
+
+        visitas_finalizadas = Visita.objects.filter(
+            visitante_id=visitante_id,
+            status='em_andamento'
+        ).update(
+            status='finalizada',
+            data_saida=timezone.now()
+        )
+
+        if visitas_finalizadas == 0:
+            return JsonResponse({'success': False, 'error': 'Nenhuma visita em andamento para finalizar.'})
+
+        return JsonResponse({'success': True, 'message': f'{visitas_finalizadas} visita(s) finalizada(s) com sucesso.'})
+    except json.JSONDecodeError:
+        return JsonResponse({'success': False, 'error': 'Requisição mal formatada.'}, status=400)
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': f'Ocorreu uma falha interna: {str(e)}'}, status=500)

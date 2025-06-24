@@ -39,6 +39,8 @@ urlpatterns = [
     path('departamentos/<int:departamento_id>/', views.detalhes_departamento, name='detalhes_departamento'),
 
     # Rota do Totem
+    path('totem/welcome/', views.totem_welcome, name='totem_welcome'),
+    path('totem/finalize_search/', views.totem_finalize_search, name='totem_finalize_search'),
     path('totem/', views.totem_identificacao, name='totem_identificacao'),
     path('totem/destino/', views.totem_destino, name='totem_destino'),
 
@@ -46,6 +48,8 @@ urlpatterns = [
     path('api/reconhecer-rosto/', views.api_reconhecer_rosto, name='api_reconhecer_rosto'),
     path('api/registrar-visita/', views.api_registrar_visita_totem, name='api_registrar_visita_totem'),
     path('api/get-setores/', views.api_get_setores, name='api_get_setores'),
+    path('api/buscar-visitante-ativo/', views.api_buscar_visitante_ativo, name='api_buscar_visitante_ativo'),
+    path('api/finalizar-visitas/', views.api_finalizar_visitas, name='api_finalizar_visitas'),
 
     # Rota para a tela do comprovante (ticket)
     path('totem/comprovante/<int:visita_id>/', views.totem_comprovante, name='totem_comprovante'),

@@ -155,17 +155,13 @@
             <p><strong>Local:</strong> {{ visita.get_localizacao_display }}</p>
             <p><strong>Data/Hora:</strong> {{ visita.data_entrada|date:"d/m/Y H:i" }}</p>
         </div>
-    </div>
-    <div class="ticket-footer">
-        <button class="btn btn-print" onclick="window.print()">
-            <i class="fas fa-print me-2"></i>Imprimir Comprovante
-        </button>
-        <button class="btn btn-whatsapp" disabled>
-            <i class="fab fa-whatsapp me-2"></i>Enviar por WhatsApp
-        </button>
-        <button class="btn btn-finish" onclick="window.location.href='{% url 'recepcao:totem_identificacao' %}'">
-            Finalizar e Voltar ao Início
-        </button>
+        <p class="comprovante-info">Guarde este comprovante para referência futura.</p>
+
+        <div class="comprovante-actions">
+            <a href="{% url 'recepcao:totem_welcome' %}" class="btn btn-primary btn-lg">
+                <i class="fas fa-home me-2"></i>Voltar para o Início
+            </a>
+        </div>
     </div>
 </div>
 {% endblock %} 

@@ -1,0 +1,233 @@
+{% extends 'base_totem.html' %}
+{% load static %}
+
+{% block extra_css %}
+<style>
+.finalize-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: calc(100vh - 2rem);
+    text-align: center;
+    padding: 2rem;
+}
+.header-logo {
+    height: 180px;
+    margin-bottom: 2rem;
+}
+.main-title {
+    font-size: 2.8rem;
+    font-weight: 700;
+    margin: 0;
+    background: linear-gradient(45deg, #4e65d9, #7b58e0);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    text-fill-color: transparent;
+}
+.main-subtitle {
+    font-size: 1.3rem;
+    color: #6c757d;
+    margin-top: 1rem;
+    margin-bottom: 2.5rem;
+    max-width: 600px;
+}
+.search-area {
+    position: relative;
+    width: 100%;
+    max-width: 600px;
+    margin-bottom: 2rem;
+}
+.search-input {
+    padding: 1.2rem 1.5rem;
+    font-size: 1.5rem;
+    text-align: center;
+    border-radius: 10px;
+}
+.search-spinner {
+    position: absolute;
+    top: 50%;
+    right: 20px;
+    transform: translateY(-50%);
+    display: none; /* Inicia escondido */
+}
+#search-status {
+    min-height: 24px;
+    margin-top: -1.5rem;
+    margin-bottom: 1.5rem;
+    color: #dc3545;
+}
+.or-separator {
+    font-size: 1.2rem;
+    font-weight: 500;
+    margin: 1rem 0;
+    color: #6c757d;
+}
+.camera-viewfinder {
+    position: relative;
+    width: 480px;
+    max-width: 100%;
+    height: 360px;
+    border-radius: 15px;
+    overflow: hidden;
+    background-color: #000;
+}
+#video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="finalize-container">
+    <img src="{% static 'img/LOGO-CAMARA-PARAUAPEBAS.png' %}" alt="Logo Câmara" class="header-logo">
+    <h1 class="main-title">Finalizar Visita</h1>
+    <p class="main-subtitle">Para encerrar sua visita, digite seu nome ou CPF no campo abaixo ou posicione seu rosto para o reconhecimento facial.</p>
+    
+    <div class="search-area">
+        <input type="text" id="searchInput" class="form-control search-input" placeholder="Digite seu Nome ou CPF">
+        <div class="spinner-border text-primary search-spinner" id="searchSpinner" role="status">
+            <span class="visually-hidden">Buscando...</span>
+        </div>
+    </div>
+    <div id="search-status"></div>
+
+    <div class="or-separator">OU</div>
+
+    <div class="camera-viewfinder">
+        <video id="video" autoplay playsinline></video>
+    </div>
+</div>
+
+<!-- Modal para Finalizar Visita -->
+<div class="modal fade" id="finalizeVisitModal" tabindex="-1" aria-labelledby="finalizeVisitModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="finalizeVisitModalLabel">Finalizar Visitas de: <span id="visitorName"></span></h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p>As seguintes visitas em andamento serão finalizadas:</p>
+        <ul id="visitList" class="list-group">
+          <!-- Itens da lista serão adicionados dinamicamente -->
+        </ul>
+        <div id="noVisitsMessage" class="alert alert-warning" style="display: none;">
+            Você não possui visitas em andamento. Por favor, realize o cadastro na recepção ou inicie uma visita pelo modo totem.
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-primary" id="confirmFinalizeBtn">Finalizar Todas as Visitas</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('searchInput');
+    const searchSpinner = document.getElementById('searchSpinner');
+    const searchStatus = document.getElementById('search-status');
+    const finalizeModal = new bootstrap.Modal(document.getElementById('finalizeVisitModal'));
+    const visitorNameSpan = document.getElementById('visitorName');
+    const visitListUl = document.getElementById('visitList');
+    const noVisitsMessageDiv = document.getElementById('noVisitsMessage');
+    const confirmFinalizeBtn = document.getElementById('confirmFinalizeBtn');
+    let currentVisitorId = null;
+
+    async function searchVisitor(query) {
+        if (query.length < 3) {
+            searchStatus.textContent = '';
+            return;
+        }
+
+        searchSpinner.style.display = 'block';
+        searchStatus.textContent = '';
+
+        try {
+            const response = await fetch(`{% url 'recepcao:api_buscar_visitante_ativo' %}?query=${encodeURIComponent(query)}`);
+            const data = await response.json();
+            
+            if (response.ok && data.success && data.visitantes.length > 0) {
+                const visitor = data.visitantes[0];
+                currentVisitorId = visitor.id;
+                visitorNameSpan.textContent = visitor.nome;
+                visitListUl.innerHTML = '';
+
+                if (visitor.visitas.length > 0) {
+                    visitor.visitas.forEach(visita => {
+                        const li = document.createElement('li');
+                        li.className = 'list-group-item';
+                        li.textContent = `Visita ao ${visita.setor} - Entrada: ${visita.data_entrada}`;
+                        visitListUl.appendChild(li);
+                    });
+                    visitListUl.style.display = 'block';
+                    noVisitsMessageDiv.style.display = 'none';
+                    confirmFinalizeBtn.style.display = 'block';
+                } else {
+                    // Visitante encontrado, mas sem visitas ativas
+                    visitListUl.style.display = 'none';
+                    noVisitsMessageDiv.innerHTML = `<strong>${visitor.nome}</strong> foi encontrado, mas não possui visitas em andamento.`;
+                    noVisitsMessageDiv.style.display = 'block';
+                    confirmFinalizeBtn.style.display = 'none';
+                }
+                finalizeModal.show();
+            } else {
+                 searchStatus.textContent = data.error || 'Nenhum visitante com visitas em andamento encontrado.';
+            }
+        } catch (error) {
+            searchStatus.textContent = 'Erro de comunicação com o servidor.';
+            console.error("Erro ao buscar visitante:", error);
+        } finally {
+            searchSpinner.style.display = 'none';
+        }
+    }
+
+    async function finalizeVisits() {
+        if (!currentVisitorId) return;
+
+        try {
+            const response = await fetch(`{% url 'recepcao:api_finalizar_visitas' %}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({ visitante_id: currentVisitorId })
+            });
+            const data = await response.json();
+
+            finalizeModal.hide();
+            if (data.success) {
+                alert(data.message);
+                searchInput.value = '';
+                searchStatus.textContent = '';
+            } else {
+                alert(`Erro: ${data.error}`);
+            }
+        } catch (error) {
+            console.error("Erro ao finalizar visitas:", error);
+            alert("Erro de comunicação ao tentar finalizar as visitas.");
+        }
+    }
+    
+    let searchTimeout;
+    searchInput.addEventListener('input', () => {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => {
+            searchVisitor(searchInput.value);
+        }, 500);
+    });
+
+    confirmFinalizeBtn.addEventListener('click', finalizeVisits);
+
+    // TODO: Adicionar lógica de reconhecimento facial aqui
+});
+</script>
+{% endblock %} 
