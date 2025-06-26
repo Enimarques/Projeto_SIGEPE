@@ -105,47 +105,29 @@ def cadastro_visitantes(request):
         form = VisitanteForm(request.POST, request.FILES)
         if form.is_valid():
             try:
+                # Salva o objeto na memória sem comitar no banco de dados
                 visitante = form.save(commit=False)
-                
-                # Processamento da foto e reconhecimento facial
-                foto = request.FILES.get('foto')
-                if foto:
-                    # Gera o vetor biométrico a partir da foto
-                    embedding = get_face_embedding(foto)
-                    
-                    if embedding is None:
-                        form.add_error('foto', 'Nenhum rosto foi detectado na imagem. Por favor, tire outra foto.')
-                    else:
-                        visitante.biometric_vector = embedding
-                        # O processamento de redimensionamento da imagem já é feito no `save()` do modelo
-                        visitante.save()
-                        form.save_m2m()  # Salva relações Many-to-Many se houver
-                        # Recarregar vetores faciais após cadastro
-                        carregar_vetores_faciais()
-                        messages.success(request, 'Visitante cadastrado com sucesso!')
-                        return redirect('recepcao:detalhes_visitante', pk=visitante.id)
-                else:
-                    # Se não houver foto, salva sem biometria
-                    visitante.save()
-                    form.save_m2m()
-                    messages.success(request, 'Visitante cadastrado com sucesso (sem foto)!')
-                    return redirect('recepcao:detalhes_visitante', pk=visitante.id)
-
-            except ValueError as e:
-                # Captura o erro de múltiplas faces
-                form.add_error('foto', str(e))
+                # O processamento da imagem, que depende de outros campos,
+                # agora ocorrerá de forma segura no save() do modelo.
+                visitante.save()
+                form.save_m2m() # Salva as relações many-to-many, se houver
+                messages.success(request, 'Visitante cadastrado com sucesso!')
+                return redirect('recepcao:detalhes_visitante', pk=visitante.id)
             except Exception as e:
-                # Captura outros erros inesperados
-                messages.error(request, f"Ocorreu um erro inesperado: {e}")
-                form.add_error(None, "Ocorreu um erro inesperado ao salvar o visitante.")
-
+                # Log do erro real no console do servidor para depuração
+                print(f"ERRO CRÍTICO AO SALVAR VISITANTE: {e}")
+                messages.error(request, f"Ocorreu um erro inesperado ao salvar: {e}")
+        else:
+            # Log dos erros de validação para depuração
+            print("ERROS DE VALIDAÇÃO DO FORMULÁRIO:", form.errors.as_json())
+            messages.error(request, 'Por favor, corrija os erros no formulário.')
     else:
         form = VisitanteForm()
     
     context = get_base_context('Cadastro de Visitante')
     context.update({
         'form': form,
-        'visitante': None,  
+        'visitante': None,
     })
     
     return render(request, 'recepcao/cadastro_visitantes.html', context)
@@ -169,25 +151,30 @@ def editar_visitante(request, pk):
     visitante = get_object_or_404(Visitante, pk=pk)
     
     if request.method == 'POST':
+        # Instancia o formulário com os dados da requisição e os arquivos enviados
         form = VisitanteForm(request.POST, request.FILES, instance=visitante)
         
-        # Processar foto da webcam, se foi enviada.
-        foto_original_path = request.POST.get('foto_path_original')
-        if foto_original_path:
-            try:
-                # Abrir o arquivo de imagem temporário e atribuí-lo ao campo 'foto' do formulário.
-                with open(foto_original_path, 'rb') as f:
-                    form.instance.foto.save(os.path.basename(foto_original_path), File(f), save=False)
-            except FileNotFoundError:
-                messages.error(request, "Erro: O arquivo de foto temporário não foi encontrado.")
-                # Lidar com o erro como preferir, talvez renderizando o formulário novamente.
-            except Exception as e:
-                messages.error(request, f"Ocorreu um erro ao processar a foto: {e}")
-
         if form.is_valid():
-            form.save()
+            # Salva o objeto na memória sem comitar no banco de dados
+            visitante = form.save(commit=False)
+            # O processamento da imagem (incluindo a chamada para get_visitor_upload_path)
+            # agora funcionará corretamente.
+            visitante.save()
+            form.save_m2m() # Salva as relações many-to-many, se houver
+            
+            # Limpa o cache da foto antiga para garantir que a nova seja exibida
+            cache.delete(f'visitante_foto_{visitante.id}_thumbnail')
+            cache.delete(f'visitante_foto_{visitante.id}_medium')
+            cache.delete(f'visitante_foto_{visitante.id}_large')
+
             messages.success(request, 'Visitante atualizado com sucesso!')
             return redirect('recepcao:detalhes_visitante', pk=visitante.pk)
+        else:
+            # Se o formulário for inválido, exibe os erros
+            error_message = "Por favor, corrija os erros abaixo. "
+            for field, errors in form.errors.items():
+                error_message += f" {field}: {', '.join(errors)} "
+            messages.error(request, error_message)
     else:
         form = VisitanteForm(instance=visitante)
     
@@ -600,18 +587,19 @@ def excluir_setor(request, pk):
 @admin_required
 def excluir_visitante(request, pk):
     visitante = get_object_or_404(Visitante, pk=pk)
-    
-    # Verificar se o visitante tem visitas registradas
-    visitas_existentes = Visita.objects.filter(visitante=visitante).exists()
+    visitas_relacionadas = Visita.objects.filter(visitante=visitante)
     
     if request.method == 'POST':
-        if visitas_existentes:
-            messages.error(request, 'Não é possível excluir um visitante com histórico de visitas.')
-            return redirect('recepcao:detalhes_visitante', pk=pk)
-        
         try:
+            # Primeiro, deleta o histórico de visitas
+            num_visitas, _ = visitas_relacionadas.delete()
+            
+            # Finalmente, deleta o objeto visitante.
+            # O método delete() do modelo cuidará de apagar os arquivos de foto.
+            nome_visitante = visitante.nome_completo
             visitante.delete()
-            messages.success(request, 'Visitante excluído com sucesso!')
+
+            messages.success(request, f'Visitante "{nome_visitante}" e seu histórico de {num_visitas} visita(s) foram excluídos com sucesso!')
             return redirect('recepcao:lista_visitantes')
         except Exception as e:
             messages.error(request, f'Erro ao excluir visitante: {str(e)}')
@@ -620,7 +608,7 @@ def excluir_visitante(request, pk):
     context = get_base_context('Excluir Visitante')
     context.update({
         'visitante': visitante,
-        'visitas_existentes': visitas_existentes
+        'visitas_relacionadas': visitas_relacionadas
     })
     return render(request, 'recepcao/confirmar_exclusao_visitante.html', context)
 
@@ -995,76 +983,6 @@ def visitas_tabela_gabinete(request, gabinete_id):
         visitas = visitas.filter(objetivo=objetivo)
     html = render_to_string('recepcao/includes/tabela_visitas_gabinete.html', {'visitas': visitas})
     return JsonResponse({'html': html})
-
-@login_required(login_url='autenticacao:login_sistema')
-def upload_foto_visitante(request, visitante_id):
-    """View para gerenciar o upload de fotos dos visitantes"""
-    import logging
-    logger = logging.getLogger(__name__)
-    
-    try:
-        visitante = Visitante.objects.get(id=visitante_id)
-    except Visitante.DoesNotExist:
-        logger.error(f'Visitante {visitante_id} não encontrado')
-        return JsonResponse({'success': False, 'message': 'Visitante não encontrado.'})
-    
-    if request.method == 'POST':
-        logger.info(f'Recebido POST para upload de foto do visitante {visitante_id}')
-        
-        if 'foto' not in request.FILES:
-            logger.error('Nenhuma foto encontrada no request')
-            return JsonResponse({'success': False, 'message': 'Nenhuma foto foi enviada.'})
-            
-        foto = request.FILES['foto']
-        
-        try:
-            # Validar e processar a imagem
-            from .utils.image_utils import process_image, sanitize_filename
-            
-            # Sanitizar nome do arquivo
-            foto.name = sanitize_filename(foto.name)
-            
-            # Processar imagem em diferentes tamanhos
-            processed_images = process_image(foto)
-            
-            # Remover fotos antigas se existirem
-            if visitante.foto:
-                visitante.foto.delete()
-            if visitante.foto_thumbnail:
-                visitante.foto_thumbnail.delete()
-            if visitante.foto_medium:
-                visitante.foto_medium.delete()
-            if visitante.foto_large:
-                visitante.foto_large.delete()
-            
-            # Salvar novas fotos
-            visitante.foto = foto  # Original
-            visitante.foto_thumbnail = processed_images['thumbnail']
-            visitante.foto_medium = processed_images['medium']
-            visitante.foto_large = processed_images['large']
-            visitante.save()
-            
-            # Limpar cache
-            for size in ['thumbnail', 'medium', 'large']:
-                cache_key = f'visitante_foto_{visitante_id}_{size}'
-                cache.delete(cache_key)
-            
-            logger.info('Foto processada e salva com sucesso')
-            
-            return JsonResponse({
-                'success': True, 
-                'message': 'Foto enviada com sucesso!',
-                'redirect_url': reverse('recepcao:detalhes_visitante', args=[visitante_id])
-            })
-            
-        except ValueError as e:
-            logger.error(f'Erro de validação: {str(e)}')
-            return JsonResponse({'success': False, 'message': str(e)})
-        except Exception as e:
-            logger.error(f'Erro ao processar foto: {str(e)}')
-            return JsonResponse({'success': False, 'message': f'Erro ao processar foto: {str(e)}'})
-    
-    return render(request, 'recepcao/upload_foto.html', {'visitante': visitante})
 
 @login_required
 @staff_member_required

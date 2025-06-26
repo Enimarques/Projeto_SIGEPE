@@ -46,7 +46,8 @@ INSTALLED_APPS = [
 ]
 
 # Configuração para o ManifestStaticFilesStorage para cache-busting
-STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.ManifestStaticFilesStorage'
+if not DEBUG:
+    STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.ManifestStaticFilesStorage'
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',

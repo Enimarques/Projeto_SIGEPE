@@ -117,9 +117,9 @@
                         <tr>
                             <td>
                                 <div class="d-flex align-items-center">
-                                    {% if visitante.foto %}
+                                    {% if visitante.foto_thumbnail %}
                                     <div class="circular-photo-container me-2">
-                                        <img src="{{ visitante.get_foto_url|default:visitante.foto.url }}" alt="{{ visitante.nome_completo }}">
+                                        <img src="{{ visitante.foto_thumbnail.url }}" alt="{{ visitante.nome_completo }}">
                                     </div>
                                     {% else %}
                                     <div class="circular-photo-container me-2">

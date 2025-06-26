@@ -83,7 +83,8 @@ class VisitanteForm(forms.ModelForm):
             'logradouro',
             'numero',
             'complemento',
-            'CEP'
+            'CEP',
+            'foto'
         ]
         widgets = {
             'nome_completo': forms.TextInput(attrs={

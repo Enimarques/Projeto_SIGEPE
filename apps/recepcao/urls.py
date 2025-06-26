@@ -23,8 +23,6 @@ urlpatterns = [
     path('setores/buscar/', views.buscar_setores, name='buscar_setores'),
     path('setores/<int:pk>/excluir/', views.excluir_setor, name='excluir_setor'),
     
-    path('visitantes/<int:visitante_id>/upload-foto/', views.upload_foto_visitante, name='upload_foto_visitante'),
-    path('upload-foto-webcam/', views.upload_foto_webcam, name='upload_foto_webcam'),
     path('visitantes/<int:pk>/excluir/', views.excluir_visitante, name='excluir_visitante'),
     
     # URLs para AJAX do admin

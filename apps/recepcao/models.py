@@ -11,6 +11,23 @@ import numpy as np
 import logging
 import os
 from .utils.image_utils import process_image
+from .utils.facial_recognition_utils import get_face_embedding
+from django.utils.text import slugify
+
+def get_visitor_upload_path(instance, filename):
+    """
+    Cria um caminho de upload usando nome, sobrenome e ano de nascimento.
+    Ex: media/fotos_visitantes/ariel-silva-1988/foto.jpg
+    """
+    parts = instance.nome_completo.split()
+    nome = parts[0]
+    sobrenome = parts[-1] if len(parts) > 1 else ''
+    ano = instance.data_nascimento.year
+
+    base_folder_name = f"{nome} {sobrenome} {ano}"
+    safe_folder_name = slugify(base_folder_name)
+    
+    return f'fotos_visitantes/{safe_folder_name}/{filename}'
 
 class Setor(models.Model):
     TIPO_CHOICES = [
@@ -393,10 +410,10 @@ class Visitante(models.Model):
     )
 
     # Fotos em diferentes tamanhos
-    foto = models.ImageField('Foto Original', upload_to='fotos_visitantes/original/', blank=True, null=True)
-    foto_thumbnail = models.ImageField('Foto Thumbnail', upload_to='fotos_visitantes/thumbnail/', blank=True, null=True)
-    foto_medium = models.ImageField('Foto Média', upload_to='fotos_visitantes/medium/', blank=True, null=True)
-    foto_large = models.ImageField('Foto Grande', upload_to='fotos_visitantes/large/', blank=True, null=True)
+    foto = models.ImageField('Foto Original', upload_to=get_visitor_upload_path, blank=True, null=True)
+    foto_thumbnail = models.ImageField('Foto Thumbnail', upload_to=get_visitor_upload_path, blank=True, null=True)
+    foto_medium = models.ImageField('Foto Média', upload_to=get_visitor_upload_path, blank=True, null=True)
+    foto_large = models.ImageField('Foto Grande', upload_to=get_visitor_upload_path, blank=True, null=True)
     biometric_vector = models.JSONField(verbose_name="Vetor Biométrico", null=True, blank=True, editable=False)
 
     # Datas de Controle
@@ -404,83 +421,98 @@ class Visitante(models.Model):
     data_atualizacao = models.DateTimeField(auto_now=True, verbose_name="Última Atualização")
 
     def save(self, *args, **kwargs):
-        import logging
-        logger = logging.getLogger(__name__)
-        logger.info(f"Iniciando save para visitante: {self.nome_completo}")
-
-        processar_imagem = False
+        # Manter controle da foto antiga
+        old_instance = None
         if self.pk:
             try:
-                visitante_antigo = Visitante.objects.get(pk=self.pk)
-                if visitante_antigo.foto != self.foto:
-                    logger.info("Foto alterada detectada.")
-                    processar_imagem = True
-                    for campo in ['foto_thumbnail', 'foto_medium', 'foto_large']:
-                        imagem_antiga = getattr(visitante_antigo, campo)
-                        if imagem_antiga and hasattr(imagem_antiga, 'path') and os.path.isfile(imagem_antiga.path):
-                            logger.info(f"Removendo arquivo antigo: {imagem_antiga.path}")
-                            os.remove(imagem_antiga.path)
+                old_instance = Visitante.objects.get(pk=self.pk)
             except Visitante.DoesNotExist:
-                processar_imagem = True
-        elif self.foto:
-            logger.info("Novo visitante com foto.")
-            processar_imagem = True
+                pass  # O objeto é novo, não há instância antiga
 
-        if processar_imagem and self.foto:
+        # Se a foto foi alterada, a nova foto estará em self.foto
+        # e a antiga em old_instance.foto
+        new_photo_uploaded = False
+        if old_instance and self.foto != old_instance.foto:
+            new_photo_uploaded = True
+            # Deletar os arquivos de foto antigos
+            if old_instance.foto:
+                old_instance.foto.delete(save=False)
+            if old_instance.foto_thumbnail:
+                old_instance.foto_thumbnail.delete(save=False)
+            if old_instance.foto_medium:
+                old_instance.foto_medium.delete(save=False)
+            if old_instance.foto_large:
+                old_instance.foto_large.delete(save=False)
+            
+            # Como a foto mudou, o vetor biométrico antigo não é mais válido
+            self.biometric_vector = None
+
+        # Processa a nova foto (seja no cadastro ou na edição)
+        if self.foto and (new_photo_uploaded or not self.pk):
             try:
-                logger.info("Processando nova imagem.")
-                arquivos_processados = process_image(self.foto)
-                if arquivos_processados:
-                    self.foto_thumbnail.save(arquivos_processados['thumbnail'].name, arquivos_processados['thumbnail'], save=False)
-                    self.foto_medium.save(arquivos_processados['medium'].name, arquivos_processados['medium'], save=False)
-                    self.foto_large.save(arquivos_processados['large'].name, arquivos_processados['large'], save=False)
-                    logger.info("Imagens derivadas atribuídas ao modelo.")
-            except Exception as e:
-                logger.error(f'Erro ao processar imagem para {self.nome_completo}: {str(e)}')
-        
+                # Gerar vetor biométrico
+                self.biometric_vector = get_face_embedding(self.foto)
+                
+                # Processar e salvar as diferentes versões da imagem
+                processed_images = process_image(self.foto)
+                self.foto_thumbnail = processed_images.get('thumbnail')
+                self.foto_medium = processed_images.get('medium')
+                self.foto_large = processed_images.get('large')
+
+            except (ValueError, Exception) as e:
+                # Em caso de erro (ex: rosto não detectado), não bloqueie o salvamento
+                # Apenas registre o erro. A validação principal deve ser no formulário.
+                logging.error(f"Erro ao processar imagem ou vetor para {self.nome_completo}: {e}")
+                # Limpa os campos de imagem para evitar inconsistência
+                self.foto_thumbnail = None
+                self.foto_medium = None
+                self.foto_large = None
+                self.biometric_vector = None
+
         super().save(*args, **kwargs)
-        logger.info(f"Visitante {self.nome_completo} salvo com sucesso.")
+
+    def delete(self, *args, **kwargs):
+        # Deletar todos os arquivos de foto do armazenamento antes de deletar o objeto
+        if self.foto:
+            self.foto.delete(save=False)
+        if self.foto_thumbnail:
+            self.foto_thumbnail.delete(save=False)
+        if self.foto_medium:
+            self.foto_medium.delete(save=False)
+        if self.foto_large:
+            self.foto_large.delete(save=False)
+        
+        super().delete(*args, **kwargs)
 
     def get_foto_url(self, size='medium'):
         """
         Retorna a URL da foto no tamanho especificado.
         Usa cache para evitar processamento desnecessário.
         """
+        import logging
+        logger = logging.getLogger(__name__)
+        
         from django.core.cache import cache
         
         # Tenta pegar do cache primeiro
         cache_key = f'visitante_foto_{self.id}_{size}'
         cached_url = cache.get(cache_key)
         if cached_url:
+            logger.debug(f"Cache hit para visitante {self.id}, tamanho {size}: {cached_url}")
             return cached_url
             
         # Se não está no cache, pega a URL apropriada
         foto_field = getattr(self, f'foto_{size}', None) or self.foto
-        if foto_field:
+        
+        if foto_field and hasattr(foto_field, 'url'):
             url = foto_field.url
+            logger.debug(f"URL gerada para visitante {self.id}, tamanho {size}: {url}")
             # Cache por 1 hora
             cache.set(cache_key, url, 3600)
             return url
+        
+        logger.warning(f"Nenhuma foto encontrada para visitante {self.id}, tamanho {size}")
         return None
-
-    def delete(self, *args, **kwargs):
-        # Limpa o cache ao deletar
-        from django.core.cache import cache
-        for size in ['thumbnail', 'medium', 'large']:
-            cache_key = f'visitante_foto_{self.id}_{size}'
-            cache.delete(cache_key)
-        
-        # Remove os arquivos físicos
-        if self.foto:
-            self.foto.delete()
-        if self.foto_thumbnail:
-            self.foto_thumbnail.delete()
-        if self.foto_medium:
-            self.foto_medium.delete()
-        if self.foto_large:
-            self.foto_large.delete()
-        
-        super().delete(*args, **kwargs)
 
     class Meta:
         verbose_name = "Visitante"

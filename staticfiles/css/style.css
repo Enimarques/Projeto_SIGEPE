@@ -11,8 +11,8 @@
 
 body {
     background:
-        linear-gradient(to right, #fff 0%, rgba(255,255,255,0.85) 10%, rgba(255,255,255,0) 25%, rgba(255,255,255,0) 75%, rgba(255,255,255,0.85) 90%, #fff 100%),
-        url('/static/img/ackground-modern-.jpg') center center/cover no-repeat fixed;
+        linear-gradient(to right, #fff 0%, rgba(255,255,255,0.85) 10%, rgba(255,255,255,0) 25%, rgba(255,255,255,0) 75%, rgba(255,255,255,0.85) 90%, #fff 100%);
+    /* url('/static/img/ackground-modern-.jpg') center center/cover no-repeat fixed; */
     min-height: 100vh;
     display: flex;
     flex-direction: column;
@@ -51,7 +51,7 @@ body {
 }
 
 .card:hover {
-    transform: translateY(-5px);
+    /* transform: translateY(-5px); */
     box-shadow: 0 6px 12px rgba(0,0,0,.15);
 }
 

@@ -24,8 +24,9 @@ urlpatterns = [
     
     # Home do sistema (sem namespace duplicado)
     path('', include('apps.main.urls')),
-] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)  # Para servir arquivos de mídia
+]
 
-# Configuração para servir arquivos estáticos em desenvolvimento
+# Configuração para servir arquivos estáticos e de mídia em desenvolvimento
 if settings.DEBUG:
     urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

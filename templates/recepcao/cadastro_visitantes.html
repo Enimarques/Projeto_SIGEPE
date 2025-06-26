@@ -4,112 +4,43 @@
 {% block title %}{% if is_editing %}Editar{% else %}Cadastrar{% endif %} Visitante - URUTAU{% endblock %}
 
 {% block extra_css %}
-<style>
-    .camera-container {
-        display: none;
-        max-width: 640px;
-        margin: 20px auto;
-        position: relative;
-    }
-    .camera-container video {
-        width: 100%;
-        border-radius: 8px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    }
-    .face-guide {
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        width: 300px;
-        height: 300px;
-        border: 2px solid rgba(255, 255, 255, 0.8);
-        border-radius: 50%;
-        pointer-events: none;
-    }
-    .face-guide::before {
-        content: '';
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        width: 280px;
-        height: 280px;
-        border: 2px dashed rgba(255, 255, 255, 0.5);
-        border-radius: 50%;
-    }
-    .preview-container {
-        width: 150px;
-        height: 150px;
-        border-radius: 50%;
-        overflow: hidden;
-        margin: 15px auto;
-        position: relative;
-        background-color: #f8f9fa;
-        border: 3px solid #e9ecef;
-        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-    }
-    #photoPreview {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        display: none;
-    }
-    .camera-placeholder {
-        width: 100%;
-        height: 100%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 4rem;
-        color: #dee2e6;
-    }
-    .camera-info {
-        margin-top: 10px;
-        color: #6c757d;
-        font-size: 0.9rem;
-    }
-    #canvas {
-        display: none;
-    }
-</style>
+<link rel="stylesheet" href="{% static 'recepcao/css/cadastro_visitantes.css' %}">
 {% endblock %}
 
 {% block content %}
 <div class="container mt-4">
     <div class="row justify-content-center">
         <div class="col-md-10">
-            <div class="card">
+            <div class="card shadow-sm">
                 <div class="card-header bg-primary text-white">
                     <h5 class="mb-0">
                         <i class="fas fa-user-plus me-2"></i>
                         {% if is_editing %}Editar{% else %}Cadastrar{% endif %} Visitante
                     </h5>
                 </div>
-                <div class="card-body">
-                    <div class="d-flex justify-content-end mb-3">
-                        {% if is_editing %}
-                        <a href="{% url 'recepcao:detalhes_visitante' visitante.pk %}" class="btn btn-secondary me-2">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-end mb-4">
+                        <a href="{% if is_editing %}{% url 'recepcao:detalhes_visitante' visitante.pk %}{% else %}{% url 'recepcao:lista_visitantes' %}{% endif %}" class="btn btn-secondary">
                             <i class="fas fa-arrow-left me-2"></i>Voltar
                         </a>
-                        {% else %}
-                        <a href="{% url 'recepcao:lista_visitantes' %}" class="btn btn-secondary">
-                            <i class="fas fa-arrow-left me-2"></i>Voltar
-                        </a>
-                        {% endif %}
                     </div>
 
-                    {% if form.errors %}
+                    {% if form.non_field_errors or form.errors %}
                     <div class="alert alert-danger">
                         <strong>Por favor, corrija os seguintes erros:</strong>
-                        {{ form.errors }}
+                        {{ form.non_field_errors }}
+                        <ul>
+                        {% for field in form %}
+                            {% for error in field.errors %}
+                            <li>{{ field.label }}: {{ error }}</li>
+                            {% endfor %}
+                        {% endfor %}
+                        </ul>
                     </div>
                     {% endif %}
 
                     <form method="post" enctype="multipart/form-data" class="needs-validation" novalidate>
                         {% csrf_token %}
-                        
-
                         
                         <!-- Bloco da Webcam e Preview -->
                         <div class="mb-4 text-center">
@@ -121,11 +52,13 @@
                                 <img id="photoPreview" src="{% if form.instance.foto %}{{ form.instance.foto.url }}{% endif %}" alt="Preview da foto" style="display: {% if form.instance.foto %}block{% else %}none{% endif %};">
                             </div>
                             
-
-
+                            <div class="django-file-input">
+                                <input type="file" name="foto" accept="image/*" id="id_foto">
+                            </div>
+                            
                             <div class="mt-3">
                                 <button type="button" class="btn btn-primary" id="btnIniciarCamera">
-                                    <i class="fas fa-camera me-2"></i>Iniciar Câmera
+                                    <i class="fas fa-video me-2"></i>Iniciar Câmera
                                 </button>
                                 <button type="button" class="btn btn-success" id="btnCapturarFoto" disabled>
                                     <i class="fas fa-camera-retro me-2"></i>Capturar Foto
@@ -142,197 +75,75 @@
                             </div>
                         </div>
 
+                        <!-- Demais campos do formulário -->
                         <div class="row">
                             <div class="col-md-6">
-                                <h5 class="text-primary mb-3">
-                                    <i class="fas fa-user me-2"></i>Informações Pessoais
-                                </h5>
-                                
-                                <div class="form-group mb-3">
-                                    <label for="{{ form.nome_completo.id_for_label }}" class="form-label">Nome Completo:</label>
+                                <h5 class="text-primary mb-3"><i class="fas fa-user me-2"></i>Informações Pessoais</h5>
+                                <div class="mb-3">
+                                    {{ form.nome_completo.label_tag }}
                                     {{ form.nome_completo }}
-                                    {% if form.nome_completo.errors %}
-                                    <div class="invalid-feedback d-block">
-                                        {{ form.nome_completo.errors }}
-                                    </div>
-                                    {% endif %}
                                 </div>
-
-                                <div class="form-group mb-3">
-                                    <label for="{{ form.nome_social.id_for_label }}" class="form-label">Nome Social:</label>
+                                <div class="mb-3">
+                                    {{ form.nome_social.label_tag }}
                                     {{ form.nome_social }}
-                                    {% if form.nome_social.errors %}
-                                    <div class="invalid-feedback d-block">
-                                        {{ form.nome_social.errors }}
-                                    </div>
-                                    {% endif %}
                                 </div>
-
-                                <div class="form-group mb-3">
-                                    <label for="{{ form.CPF.id_for_label }}" class="form-label">CPF:</label>
-                                    <input type="text" 
-                                           name="CPF" 
-                                           id="{{ form.CPF.id_for_label }}" 
-                                           class="form-control {% if form.CPF.errors %}is-invalid{% endif %}" 
-                                           placeholder="000.000.000-00" 
-                                           data-mask="cpf" 
-                                           required 
-                                           maxlength="14" 
-                                           value="{{ form.CPF.value|default:'' }}"
-                                           {% if is_editing %}readonly{% endif %}>
-                                    {% if form.CPF.errors %}
-                                    <div class="invalid-feedback">
-                                        {{ form.CPF.errors }}
-                                    </div>
-                                    {% endif %}
+                                <div class="mb-3">
+                                    {{ form.CPF.label_tag }}
+                                    <input type="text" name="CPF" id="{{ form.CPF.id_for_label }}" class="form-control" placeholder="000.000.000-00" data-mask="cpf" required maxlength="14" value="{{ form.CPF.value|default:'' }}" {% if is_editing %}readonly{% endif %}>
                                 </div>
-
-                                <div class="form-group mb-3">
-                                    <label for="{{ form.data_nascimento.id_for_label }}" class="form-label">Data de Nascimento:</label>
-                                    <input type="text" 
-                                           name="data_nascimento" 
-                                           id="{{ form.data_nascimento.id_for_label }}" 
-                                           class="form-control {% if form.data_nascimento.errors %}is-invalid{% endif %}" 
-                                           placeholder="dd/mm/aaaa" 
-                                           data-mask="data" 
-                                           required 
-                                           maxlength="10" 
-                                           value="{{ form.data_nascimento.value|date:'d/m/Y'|default:'' }}">
-                                    {% if form.data_nascimento.errors %}
-                                    <div class="invalid-feedback">
-                                        {{ form.data_nascimento.errors }}
-                                    </div>
-                                    {% endif %}
+                                <div class="mb-3">
+                                    {{ form.data_nascimento.label_tag }}
+                                    <input type="text" name="data_nascimento" id="{{ form.data_nascimento.id_for_label }}" class="form-control" placeholder="dd/mm/aaaa" data-mask="data" required maxlength="10" value="{{ form.data_nascimento.value|date:'d/m/Y'|default:'' }}">
                                 </div>
-
-                                <div class="form-group mb-3">
-                                    <label for="{{ form.telefone.id_for_label }}" class="form-label">Telefone:</label>
-                                    <input type="text" 
-                                           name="telefone" 
-                                           id="{{ form.telefone.id_for_label }}" 
-                                           class="form-control {% if form.telefone.errors %}is-invalid{% endif %}" 
-                                           placeholder="(00) 00000-0000" 
-                                           data-mask="telefone" 
-                                           required 
-                                           maxlength="15" 
-                                           value="{{ form.telefone.value|default:'' }}">
-                                    {% if form.telefone.errors %}
-                                    <div class="invalid-feedback">
-                                        {{ form.telefone.errors }}
-                                    </div>
-                                    {% endif %}
+                                <div class="mb-3">
+                                    {{ form.telefone.label_tag }}
+                                    <input type="text" name="telefone" id="{{ form.telefone.id_for_label }}" class="form-control" placeholder="(00) 00000-0000" data-mask="telefone" required maxlength="15" value="{{ form.telefone.value|default:'' }}">
                                 </div>
-
-                                <div class="form-group mb-3">
-                                    <label for="{{ form.email.id_for_label }}" class="form-label">E-mail:</label>
+                                <div class="mb-3">
+                                    {{ form.email.label_tag }}
                                     {{ form.email }}
-                                    {% if form.email.errors %}
-                                    <div class="invalid-feedback d-block">
-                                        {{ form.email.errors }}
-                                    </div>
-                                    {% endif %}
                                 </div>
                             </div>
-
                             <div class="col-md-6">
-                                <h5 class="text-primary mb-3">
-                                    <i class="fas fa-map-marker-alt me-2"></i>Endereço
-                                </h5>
-
-                                <div class="form-group mb-3">
-                                    <label for="{{ form.CEP.id_for_label }}" class="form-label">CEP:</label>
-                                    <input type="text" 
-                                           name="CEP" 
-                                           id="{{ form.CEP.id_for_label }}" 
-                                           class="form-control {% if form.CEP.errors %}is-invalid{% endif %}" 
-                                           placeholder="00000-000" 
-                                           data-mask="cep" 
-                                           maxlength="9" 
-                                           value="{{ form.CEP.value|default:'' }}">
-                                    {% if form.CEP.errors %}
-                                    <div class="invalid-feedback">
-                                        {{ form.CEP.errors }}
-                                    </div>
-                                    {% endif %}
+                                <h5 class="text-primary mb-3"><i class="fas fa-map-marker-alt me-2"></i>Endereço</h5>
+                                <div class="mb-3">
+                                    {{ form.CEP.label_tag }}
+                                    <input type="text" name="CEP" id="{{ form.CEP.id_for_label }}" class="form-control" placeholder="00000-000" data-mask="cep" maxlength="9" value="{{ form.CEP.value|default:'' }}">
                                 </div>
-
-                                <div class="form-group mb-3">
-                                    <label for="{{ form.estado.id_for_label }}" class="form-label">Estado:</label>
+                                <div class="mb-3">
+                                    {{ form.estado.label_tag }}
                                     {{ form.estado }}
-                                    {% if form.estado.errors %}
-                                    <div class="invalid-feedback d-block">
-                                        {{ form.estado.errors }}
-                                    </div>
-                                    {% endif %}
                                 </div>
-
-                                <div class="form-group mb-3">
-                                    <label for="{{ form.cidade.id_for_label }}" class="form-label">Cidade:</label>
+                                <div class="mb-3">
+                                    {{ form.cidade.label_tag }}
                                     {{ form.cidade }}
-                                    {% if form.cidade.errors %}
-                                    <div class="invalid-feedback d-block">
-                                        {{ form.cidade.errors }}
-                                    </div>
-                                    {% endif %}
                                 </div>
-
-                                <div class="form-group mb-3">
-                                    <label for="{{ form.bairro.id_for_label }}" class="form-label">Bairro:</label>
+                                <div class="mb-3">
+                                    {{ form.bairro.label_tag }}
                                     {{ form.bairro }}
-                                    {% if form.bairro.errors %}
-                                    <div class="invalid-feedback d-block">
-                                        {{ form.bairro.errors }}
-                                    </div>
-                                    {% endif %}
                                 </div>
-
-                                <div class="form-group mb-3">
-                                    <label for="{{ form.logradouro.id_for_label }}" class="form-label">Logradouro:</label>
+                                <div class="mb-3">
+                                    {{ form.logradouro.label_tag }}
                                     {{ form.logradouro }}
-                                    {% if form.logradouro.errors %}
-                                    <div class="invalid-feedback d-block">
-                                        {{ form.logradouro.errors }}
-                                    </div>
-                                    {% endif %}
                                 </div>
-
                                 <div class="row">
-                                    <div class="col-md-4">
-                                        <div class="form-group mb-3">
-                                            <label for="{{ form.numero.id_for_label }}" class="form-label">Número:</label>
-                                            {{ form.numero }}
-                                            {% if form.numero.errors %}
-                                            <div class="invalid-feedback d-block">
-                                                {{ form.numero.errors }}
-                                            </div>
-                                            {% endif %}
-                                        </div>
+                                    <div class="col-md-6 mb-3">
+                                        {{ form.numero.label_tag }}
+                                        {{ form.numero }}
                                     </div>
-                                    <div class="col-md-8">
-                                        <div class="form-group mb-3">
-                                            <label for="{{ form.complemento.id_for_label }}" class="form-label">Complemento:</label>
-                                            {{ form.complemento }}
-                                            {% if form.complemento.errors %}
-                                            <div class="invalid-feedback d-block">
-                                                {{ form.complemento.errors }}
-                                            </div>
-                                            {% endif %}
-                                        </div>
+                                    <div class="col-md-6 mb-3">
+                                        {{ form.complemento.label_tag }}
+                                        {{ form.complemento }}
                                     </div>
                                 </div>
-
-
                             </div>
                         </div>
 
-                        <div class="mt-4">
-                            <button type="submit" class="btn btn-primary">
+                        <div class="form-group mt-4 text-end">
+                            <button type="submit" class="btn btn-success btn-lg">
                                 <i class="fas fa-save me-2"></i>
-                                {% if is_editing %}Atualizar{% else %}Cadastrar{% endif %} Visitante
+                                {% if is_editing %}Salvar Alterações{% else %}Cadastrar Visitante{% endif %}
                             </button>
-                            <a href="{% if is_editing %}{% url 'recepcao:detalhes_visitante' visitante.pk %}{% else %}{% url 'recepcao:lista_visitantes' %}{% endif %}" class="btn btn-outline-secondary">
-                                <i class="fas fa-times me-2"></i>Cancelar
-                            </a>
                         </div>
                     </form>
                 </div>
@@ -343,24 +154,38 @@
 {% endblock %}
 
 {% block extra_js %}
-<script src="{% static 'js/masks.js' %}"></script>
-<script src="{% static 'js/camera.js' %}"></script>
+{% load static %}
+<script src="{% static 'js/masks.js' %}?v=2.0"></script>
+<script src="{% static 'js/camera.js' %}?v=2.0"></script>
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Inicializa validação do Bootstrap
-    const forms = document.querySelectorAll('.needs-validation');
-    Array.from(forms).forEach(form => {
-        form.addEventListener('submit', event => {
-            if (!form.checkValidity()) {
-                event.preventDefault();
-                event.stopPropagation();
-            }
-            form.classList.add('was-validated');
-        }, false);
+document.addEventListener('DOMContentLoaded', function () {
+    // O script masks.js já inicializa as máscaras automaticamente.
+    
+    // Inicializa a câmera com a nova lógica (passando o ID como string)
+    const camera = new Camera(
+        document.getElementById('video'),
+        document.getElementById('canvas'),
+        document.getElementById('photoPreview'),
+        document.getElementById('cameraPlaceholder'),
+        'id_foto', // Passar o ID como string
+        document.getElementById('cameraContainer'),
+        document.getElementById('cameraInfo'),
+        document.getElementById('clearPhotoBtn')
+    );
+
+    document.getElementById('btnIniciarCamera').addEventListener('click', () => camera.startCamera());
+    document.getElementById('btnCapturarFoto').addEventListener('click', () => camera.capturePhoto());
+    document.getElementById('clearPhotoBtn').addEventListener('click', () => camera.clearPhoto());
+
+    document.getElementById('video').addEventListener('playing', () => {
+        document.getElementById('btnCapturarFoto').disabled = false;
+    });
+    document.getElementById('video').addEventListener('pause', () => {
+        document.getElementById('btnCapturarFoto').disabled = true;
     });
 
-    // Integração com ViaCEP
-    const cepInput = document.getElementById('{{ form.CEP.id_for_label }}');
+    // Função para buscar endereço pelo CEP
+    const cepInput = document.querySelector('[data-mask="cep"]');
     if (cepInput) {
         cepInput.addEventListener('blur', function() {
             const cep = this.value.replace(/\D/g, '');
@@ -369,10 +194,20 @@ document.addEventListener('DOMContentLoaded', function() {
                     .then(response => response.json())
                     .then(data => {
                         if (!data.erro) {
-                            document.getElementById('{{ form.logradouro.id_for_label }}').value = data.logradouro || '';
-                            document.getElementById('{{ form.bairro.id_for_label }}').value = data.bairro || '';
-                            document.getElementById('{{ form.cidade.id_for_label }}').value = data.localidade || '';
-                            document.getElementById('{{ form.estado.id_for_label }}').value = data.uf || '';
+                            document.querySelector('[name="logradouro"]').value = data.logradouro || '';
+                            document.querySelector('[name="bairro"]').value = data.bairro || '';
+                            document.querySelector('[name="cidade"]').value = data.localidade || '';
+                            const estadoSelect = document.querySelector('[name="estado"]');
+                            if(estadoSelect){
+                                for(let i=0; i<estadoSelect.options.length; i++){
+                                    if(estadoSelect.options[i].value === data.uf){
+                                        estadoSelect.selectedIndex = i;
+                                        break;
+                                    }
+                                }
+                            }
+                        } else {
+                            alert("CEP não encontrado.");
                         }
                     })
                     .catch(error => console.error('Erro ao buscar CEP:', error));
@@ -381,4 +216,4 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 </script>
-{% endblock %} 
+{% endblock %}
