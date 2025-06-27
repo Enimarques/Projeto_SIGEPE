@@ -14,6 +14,10 @@
 }
 
 /* Container do comprovante */
+.comprovante-info{
+    font-weight: 600;
+    font-size: 1.1rem;
+}
 .ticket-container {
     background-color: white;
     max-width: 450px;
@@ -146,16 +150,20 @@
             <img src="{% static 'img/LOGO-CAMARA-PARAUAPEBAS.png' %}" alt="Logo Câmara">
             <div class="instituicao">Câmara Municipal de Parauapebas</div>
             <div class="programa">URUTAL - Comprovante de Visita</div>
+            <p class="comprovante-info">Por favor, aguarde a impressão da sua Etiqueta.</p>
         </div>
         <div class="separator"></div>
         <div class="ticket-visitor-name">{{ visita.visitante.nome_social|default:visita.visitante.nome_completo|upper }}</div>
         <div class="separator"></div>
         <div class="ticket-info">
-            <p><strong>Destino:</strong> {{ visita.setor.nome_vereador|default:visita.setor.nome_local }}</p>
+            <p><strong>Destino:</strong>  {% if visita.setor.tipo == 'gabinete' %}
+                {{ visita.setor.nome_vereador|upper }}
+            {% else %}
+                {{ visita.setor.nome_local|upper }}
+            {% endif %}</p>
             <p><strong>Local:</strong> {{ visita.get_localizacao_display }}</p>
             <p><strong>Data/Hora:</strong> {{ visita.data_entrada|date:"d/m/Y H:i" }}</p>
         </div>
-        <p class="comprovante-info">Guarde este comprovante para referência futura.</p>
 
         <div class="comprovante-actions">
             <a href="{% url 'recepcao:totem_welcome' %}" class="btn btn-primary btn-lg">
@@ -164,4 +172,17 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+window.onload = function() {
+    // Abre a etiqueta em uma nova janela e imprime automaticamente
+    var win = window.open("{% url 'recepcao:gerar_etiqueta' visita.id %}?auto_print=1", "_blank", "width=400,height=300");
+    // Redireciona para a home do totem após 60 segundos
+    setTimeout(function() {
+        window.location.href = "{% url 'recepcao:totem_welcome' %}";
+    }, 60000);
+}
+</script>
 {% endblock %} 

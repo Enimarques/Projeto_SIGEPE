@@ -1278,7 +1278,8 @@ def totem_comprovante(request, visita_id):
     """
     visita = get_object_or_404(Visita, id=visita_id)
     context = {
-        'visita': visita
+        'visita': visita,
+        'nome_exibicao': visita.visitante.nome_social if visita.visitante.nome_social else visita.visitante.nome_completo
     }
     return render(request, 'recepcao/totem_comprovante.html', context)
 
