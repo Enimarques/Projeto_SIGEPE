@@ -117,25 +117,8 @@
     box-shadow: 0 4px 10px rgba(0,0,0,0.1);
 }
 
-/* Estilos de Impressão */
+/* Estilos de Impressão Simples */
 @media print {
-    body * {
-        visibility: hidden;
-    }
-    .ticket-container, .ticket-container * {
-        visibility: visible;
-    }
-    .ticket-container {
-        position: absolute;
-        left: 0;
-        top: 0;
-        width: 100%;
-        max-width: 100%;
-        margin: 0;
-        padding: 0;
-        box-shadow: none;
-        border-radius: 0;
-    }
     .ticket-footer {
         display: none;
     }
@@ -165,8 +148,16 @@
             <p><strong>Data/Hora:</strong> {{ visita.data_entrada|date:"d/m/Y H:i" }}</p>
         </div>
 
-        <div class="comprovante-actions">
-            <a href="{% url 'recepcao:totem_welcome' %}" class="btn btn-primary btn-lg">
+        <div class="ticket-footer">
+            <button onclick="printTicket()" class="btn btn-print">
+                <i class="fas fa-print me-2"></i>Imprimir Comprovante
+            </button>
+            
+            <button onclick="shareWhatsApp()" class="btn btn-whatsapp">
+                <i class="fab fa-whatsapp me-2"></i>Compartilhar no WhatsApp
+            </button>
+            
+            <a href="{% url 'recepcao:totem_welcome' %}" class="btn btn-finish">
                 <i class="fas fa-home me-2"></i>Voltar para o Início
             </a>
         </div>
@@ -183,6 +174,28 @@ window.onload = function() {
     setTimeout(function() {
         window.location.href = "{% url 'recepcao:totem_welcome' %}";
     }, 60000);
+}
+
+function printTicket() {
+    // Utiliza a página de etiqueta já existente para impressão
+    var printWindow = window.open("{% url 'recepcao:gerar_etiqueta' visita.id %}?auto_print=1", "_blank", "width=400,height=300");
+}
+
+function shareWhatsApp() {
+    const visitante = "{{ visita.visitante.nome_social|default:visita.visitante.nome_completo }}";
+    const destino = "{% if visita.setor.tipo == 'gabinete' %}{{ visita.setor.nome_vereador }}{% else %}{{ visita.setor.nome_local }}{% endif %}";
+    const local = "{{ visita.get_localizacao_display }}";
+    const dataHora = "{{ visita.data_entrada|date:'d/m/Y H:i' }}";
+    
+    const mensagem = `🎫 *COMPROVANTE DE VISITA*\n\n` +
+                    `👤 *Visitante:* ${visitante}\n` +
+                    `🏛️ *Destino:* ${destino}\n` +
+                    `📍 *Local:* ${local}\n` +
+                    `📅 *Data/Hora:* ${dataHora}\n\n` +
+                    `_Câmara Municipal de Parauapebas - URUTAL_`;
+    
+    const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(mensagem)}`;
+    window.open(whatsappUrl, '_blank');
 }
 </script>
 {% endblock %} 
