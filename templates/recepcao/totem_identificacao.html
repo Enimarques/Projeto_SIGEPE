@@ -71,12 +71,28 @@
     object-fit: cover;
 }
 
+#overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 10;
+}
+
 #status-message {
     margin-top: 1.5rem;
     font-size: 1.2rem;
     font-weight: 500;
     color: #555;
     min-height: 2rem; /* Reserva espaço para a mensagem */
+    transition: color 0.3s ease, transform 0.2s ease;
+    text-align: center;
+    padding: 0.5rem;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(5px);
 }
 
 .spinner-border {
@@ -115,7 +131,7 @@
     <h1 class="main-title">Olá! Bem-Vindo(a).</h1>
     <div class="title-separator"></div>
     <h1 class="main-title">Câmara Municipal de Parauapebas</h1>
-    <p class="main-subtitle">Nosso sistema de reconhecimento facial está pronto para agilizar sua visita. Por favor, centralize seu rosto na câmera.</p>
+    <p class="main-subtitle">Nosso sistema de reconhecimento facial está pronto para agilizar sua visita.</p>
 
     <div class="camera-viewfinder">
         <video id="video" autoplay playsinline></video>
@@ -126,7 +142,7 @@
         <div class="spinner-border text-primary" role="status">
             <span class="visually-hidden">Loading...</span>
         </div>
-        Inicializando câmera...
+        🚀 Inicializando sistema de reconhecimento facial...
     </div>
     
     <div style="margin-top: 2.5rem; text-align: center;">
@@ -163,6 +179,9 @@ document.addEventListener('DOMContentLoaded', () => {
     function drawOverlay(box, color) {
         ctx.clearRect(0, 0, overlay.width, overlay.height);
         if (!box) return;
+
+        // Debug: Confirma que a função está sendo chamada
+        console.log(`Desenhando overlay: ${color}`, box);
 
         const { originX, originY, width, height } = box;
         const cornerLength = width * 0.2;
@@ -202,9 +221,19 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // 4. Função para atualizar a mensagem de status
-    function updateStatus(message, showSpinner = false) {
+    function updateStatus(message, showSpinner = false, color = '#555') {
         let spinnerHtml = showSpinner ? `<div class="spinner-border text-primary" role="status"><span class="visually-hidden">...</span></div>` : '';
-        statusMessage.innerHTML = `${spinnerHtml} ${message}`;
+        
+        // Efeito de fade para transição suave
+        statusMessage.style.opacity = '0.7';
+        statusMessage.style.transform = 'scale(0.98)';
+        
+        setTimeout(() => {
+            statusMessage.innerHTML = `${spinnerHtml} ${message}`;
+            statusMessage.style.color = color;
+            statusMessage.style.opacity = '1';
+            statusMessage.style.transform = 'scale(1)';
+        }, 150);
     }
 
     // 5. Lógica principal de detecção
@@ -222,18 +251,18 @@ document.addEventListener('DOMContentLoaded', () => {
             if (faceWidthPercent >= DESIRED_FACE_WIDTH_PERCENT) {
                 // Rosto está perto o suficiente
                 drawOverlay(face, '#28a745'); // Verde
-                updateStatus('Ótimo! Analisando...', true);
+                updateStatus('🎯 Ótimo! Analisando seu rosto para identificação...', true, '#28a745');
                 isRecognitionPaused = true;
                 sendFrameForRecognition();
             } else {
                 // Rosto detectado, mas muito longe
                 drawOverlay(face, '#ffc107'); // Amarelo
-                updateStatus('Aproxime-se um pouco mais.');
+                updateStatus('📏 Aproxime-se um pouco mais da câmera para melhor detecção', false, '#ffc107');
             }
         } else {
             // Nenhum rosto detectado
             drawOverlay(null); 
-            updateStatus('Posicione seu rosto na área da câmera.');
+            updateStatus('👤 Posicione seu rosto na área da câmera para iniciar identificação', false, '#6c757d');
         }
 
         window.requestAnimationFrame(detectFacesLoop);
@@ -256,19 +285,23 @@ document.addEventListener('DOMContentLoaded', () => {
             const data = await response.json();
 
             if (data.success && data.visitante_id) {
-                updateStatus(`Bem-vindo(a), ${data.nome_visitante}! Redirecionando...`);
-                window.location.href = `{% url 'recepcao:totem_destino' %}?visitante_id=${data.visitante_id}`;
+                updateStatus(`✅ Bem-vindo(a), ${data.nome_visitante}! Redirecionando para seleção de destino...`, false, '#28a745');
+                setTimeout(() => {
+                    window.location.href = `{% url 'recepcao:totem_destino' %}?visitante_id=${data.visitante_id}`;
+                }, 1500);
             } else {
-                updateStatus('Não foi possível reconhecer. Tente novamente.');
+                updateStatus('❌ Rosto não reconhecido. Posicione-se melhor e tente novamente', false, '#dc3545');
                 setTimeout(() => {
                     isRecognitionPaused = false;
+                    updateStatus('👤 Posicione seu rosto na área da câmera para iniciar identificação', false, '#6c757d');
                     window.requestAnimationFrame(detectFacesLoop); // Reinicia o loop
                 }, RECOGNITION_PAUSE_MS);
             }
         } catch (error) {
-            updateStatus('Erro de comunicação. Tentando novamente em breve.');
+            updateStatus('🔄 Erro de comunicação. Tentando reconectar...', true, '#fd7e14');
             setTimeout(() => {
                 isRecognitionPaused = false;
+                updateStatus('👤 Posicione seu rosto na área da câmera para iniciar identificação', false, '#6c757d');
                 window.requestAnimationFrame(detectFacesLoop); // Reinicia o loop
             }, RECOGNITION_PAUSE_MS * 2);
         }
@@ -277,27 +310,59 @@ document.addEventListener('DOMContentLoaded', () => {
     // 7. Inicialização
     async function initialize() {
         try {
-            updateStatus('Carregando modelo de IA...', true);
+            updateStatus('🤖 Carregando modelo de IA para reconhecimento facial...', true, '#6c757d');
             const filesetResolver = await FilesetResolver.forVisionTasks("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm");
             faceDetector = await FaceDetector.createFromOptions(filesetResolver, {
                 baseOptions: { modelAssetPath: `https://storage.googleapis.com/mediapipe-models/face_detector/blaze_face_short_range/float16/1/blaze_face_short_range.tflite` },
                 runningMode: 'VIDEO'
             });
 
-            updateStatus('Iniciando câmera...', true);
+            updateStatus('📹 Iniciando câmera e configurando detecção...', true, '#6c757d');
             const stream = await navigator.mediaDevices.getUserMedia({
                 video: { width: { ideal: 1280, max: 1920 }, height: { ideal: 720, max: 1080 } }
             });
             video.srcObject = stream;
             video.addEventListener('loadeddata', () => {
-                overlay.width = video.videoWidth;
-                overlay.height = video.videoHeight;
-                detectFacesLoop(); // Inicia o loop de detecção
+                // Aguarda um pouco para garantir que o vídeo esteja totalmente carregado
+                setTimeout(() => {
+                    // Configura o canvas overlay com as dimensões do elemento vídeo na tela
+                    const videoRect = video.getBoundingClientRect();
+                    overlay.width = video.videoWidth;
+                    overlay.height = video.videoHeight;
+                    
+                    // Ajusta o estilo CSS para corresponder ao elemento de vídeo
+                    overlay.style.width = '100%';
+                    overlay.style.height = '100%';
+                    
+                    // Debug: Verifica se o canvas foi configurado corretamente
+                    console.log(`Canvas configurado: ${overlay.width}x${overlay.height}`);
+                    console.log(`Vídeo stream: ${video.videoWidth}x${video.videoHeight}`);
+                    console.log(`Vídeo elemento: ${videoRect.width}x${videoRect.height}`);
+                    
+                    // Garante que o contexto do canvas está limpo
+                    ctx.clearRect(0, 0, overlay.width, overlay.height);
+                    
+                    // Teste visual: desenha um pequeno retângulo para verificar se o canvas está funcionando
+                    ctx.fillStyle = '#ff0000';
+                    ctx.fillRect(20, 20, 10, 10);
+                    console.log('Teste visual: ponto vermelho desenhado');
+                    
+                    setTimeout(() => {
+                        ctx.clearRect(0, 0, overlay.width, overlay.height);
+                        console.log('Teste visual removido, sistema pronto');
+                    }, 2000);
+                    
+                    updateStatus('🎉 Sistema pronto! Posicione seu rosto na câmera', false, '#28a745');
+                    setTimeout(() => {
+                        updateStatus('👤 Posicione seu rosto na área da câmera para iniciar identificação', false, '#6c757d');
+                        detectFacesLoop(); // Inicia o loop de detecção
+                    }, 3000);
+                }, 500);
             });
 
         } catch (err) {
             console.error(err);
-            updateStatus(`Erro fatal: ${err.message}`);
+            updateStatus(`❌ Erro ao inicializar: ${err.message}`, false, '#dc3545');
         }
     }
 
