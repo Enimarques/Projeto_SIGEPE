@@ -75,13 +75,21 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    transition: all 0.3s ease;
     position: relative; /* Necessário para o posicionamento do badge */
     overflow: hidden; /* Garante que o badge não saia do card */
+    cursor: pointer; /* Cursor de ponteiro */
+    border: 2px solid transparent; /* Borda invisível para feedback */
 }
 .destination-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+    border-color: #6777ef; /* Borda azul no hover */
+}
+.destination-card:active {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+    transition: all 0.1s ease;
 }
 .status-badge {
     position: absolute;
@@ -155,19 +163,7 @@
 .info-item span {
     word-break: break-all; /* Breaks long emails */
 }
-.card-button {
-    background-color: #6777ef;
-    color: white;
-    font-weight: 500;
-    border-radius: 8px;
-    border: none;
-    padding: 0.6rem 1.5rem;
-    transition: all 0.2s ease-in-out;
-    width: 100%;
-}
-.card-button:hover {
-    background-color: #5362d5;
-}
+/* Botão removido - card é totalmente clicável */
 </style>
 {% endblock %}
 
@@ -182,12 +178,12 @@
     </div>
 
     <div class="totem-tabs">
-        <button class="totem-tab-btn active" id="tab-departamentos" onclick="mostrarTab('departamentos')">Departamentos</button>
-        <button class="totem-tab-btn" id="tab-gabinetes" onclick="mostrarTab('gabinetes')">Gabinetes</button>
+        <button class="totem-tab-btn active" id="tab-gabinetes" onclick="mostrarTab('gabinetes')">Gabinetes</button>
+        <button class="totem-tab-btn" id="tab-departamentos" onclick="mostrarTab('departamentos')">Departamentos</button>
     </div>
     
-    <div id="departamentos-grid" class="totem-cards-grid active"></div>
-    <div id="gabinetes-grid" class="totem-cards-grid"></div>
+    <div id="gabinetes-grid" class="totem-cards-grid active"></div>
+    <div id="departamentos-grid" class="totem-cards-grid"></div>
 
 </div>
 
@@ -275,15 +271,12 @@ function renderGrid(gridId, setores) {
         const descricao = setor.funcao || (setor.tipo === 'gabinete' ? 'Gabinete' : 'Departamento');
         const setorNomeEscapado = setor.nome.replace(/'/g, "\\'"); // Escapa aspas
         html += `
-        <div class="destination-card">
+        <div class="destination-card" onclick="prepararModal(${setor.id}, '${setorNomeEscapado}')">
             ${getStatusBadgeHtml(setor)}
             ${getCardIconHtml(setor)}
             <h5 class="card-name">${setor.nome}</h5>
             <p class="card-description">${descricao}</p>
             ${getInfoBarHtml(setor)}
-            <button class="card-button" onclick="prepararModal(${setor.id}, '${setorNomeEscapado}')">
-                <i class="fas fa-arrow-right me-2"></i>Visitar
-            </button>
         </div>
         `;
     });
@@ -291,10 +284,10 @@ function renderGrid(gridId, setores) {
 }
 
 function mostrarTab(tabName) {
-    document.getElementById('departamentos-grid').classList.toggle('active', tabName === 'departamentos');
-    document.getElementById('tab-departamentos').classList.toggle('active', tabName === 'departamentos');
     document.getElementById('gabinetes-grid').classList.toggle('active', tabName === 'gabinetes');
     document.getElementById('tab-gabinetes').classList.toggle('active', tabName === 'gabinetes');
+    document.getElementById('departamentos-grid').classList.toggle('active', tabName === 'departamentos');
+    document.getElementById('tab-departamentos').classList.toggle('active', tabName === 'departamentos');
 }
 
 async function carregarSetores() {
@@ -307,10 +300,10 @@ async function carregarSetores() {
             return [];
         }
     };
-    const departamentos = await fetchSetores('departamento');
     const gabinetes = await fetchSetores('gabinete');
-    renderGrid('departamentos-grid', departamentos);
+    const departamentos = await fetchSetores('departamento');
     renderGrid('gabinetes-grid', gabinetes);
+    renderGrid('departamentos-grid', departamentos);
 }
 
 let confirmacaoModal; // Variável global para o objeto do modal
