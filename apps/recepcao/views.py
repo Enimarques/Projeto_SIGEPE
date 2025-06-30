@@ -381,6 +381,7 @@ def status_visita(request):
     hora_fim = request.GET.get('hora_fim')
     localizacao = request.GET.get('localizacao')
     setor = request.GET.get('setor')
+    busca_nome = request.GET.get('busca_nome')
 
     # Iniciar queryset com visitas não finalizadas e status em andamento
     visitas = Visita.objects.filter(
@@ -415,6 +416,13 @@ def status_visita(request):
 
     if setor:
         visitas = visitas.filter(setor_id=setor)
+
+    if busca_nome:
+        from django.db.models import Q
+        visitas = visitas.filter(
+            Q(visitante__nome_completo__icontains=busca_nome) |
+            Q(visitante__nome_social__icontains=busca_nome)
+        )
 
     # Ordenar por data de entrada mais recente
     visitas = visitas.order_by('-data_entrada')
@@ -452,7 +460,8 @@ def status_visita(request):
         'hora_inicio_filtro': hora_inicio.strftime('%H:%M') if hora_inicio else '',
         'hora_fim_filtro': hora_fim.strftime('%H:%M') if hora_fim else '',
         'localizacao_filtro': localizacao,
-        'setor_filtro': setor
+        'setor_filtro': setor,
+        'busca_nome_filtro': busca_nome
     })
 
     return render(request, 'recepcao/status_visita.html', context)
@@ -1036,6 +1045,7 @@ def status_visita_ajax(request):
     hora_fim = request.GET.get('hora_fim')
     localizacao = request.GET.get('localizacao')
     setor = request.GET.get('setor')
+    busca_nome = request.GET.get('busca_nome')
 
     # Iniciar queryset com visitas não finalizadas e status em andamento
     visitas = Visita.objects.filter(
@@ -1070,6 +1080,13 @@ def status_visita_ajax(request):
 
     if setor:
         visitas = visitas.filter(setor_id=setor)
+
+    if busca_nome:
+        from django.db.models import Q
+        visitas = visitas.filter(
+            Q(visitante__nome_completo__icontains=busca_nome) |
+            Q(visitante__nome_social__icontains=busca_nome)
+        )
 
     # Ordenar por data de entrada mais recente
     visitas = visitas.order_by('-data_entrada')
@@ -1502,3 +1519,56 @@ def api_finalizar_visitas(request):
         return JsonResponse({'success': False, 'error': 'Requisição mal formatada.'}, status=400)
     except Exception as e:
         return JsonResponse({'success': False, 'error': f'Ocorreu uma falha interna: {str(e)}'}, status=500)
+
+@login_required(login_url='autenticacao:login_sistema')
+@require_POST
+def finalizar_multiplas_visitas(request):
+    """
+    Finaliza múltiplas visitas de uma só vez.
+    """
+    import logging
+    logger = logging.getLogger(__name__)
+    
+    # Log dos dados recebidos para debugging
+    logger.info(f"POST data recebido: {request.POST}")
+    logger.info(f"Content-Type: {request.content_type}")
+    logger.info(f"Method: {request.method}")
+    
+    visitas_ids = request.POST.getlist('visitas_ids')
+    logger.info(f"IDs de visitas extraídos: {visitas_ids}")
+    
+    if not visitas_ids:
+        logger.warning("Nenhuma visita selecionada")
+        return JsonResponse({'success': False, 'error': 'Nenhuma visita selecionada.'}, status=400)
+    
+    try:
+        # Verificar se todas as visitas existem e estão em andamento
+        visitas = Visita.objects.filter(
+            id__in=visitas_ids,
+            status='em_andamento',
+            data_saida__isnull=True
+        )
+        
+        logger.info(f"Visitas encontradas: {visitas.count()}")
+        
+        if not visitas.exists():
+            logger.warning("Nenhuma visita válida encontrada")
+            return JsonResponse({'success': False, 'error': 'Nenhuma visita válida encontrada para finalizar.'})
+        
+        # Finalizar as visitas
+        visitas_finalizadas = visitas.update(
+            status='finalizada',
+            data_saida=timezone.now()
+        )
+        
+        logger.info(f"Visitas finalizadas com sucesso: {visitas_finalizadas}")
+        
+        return JsonResponse({
+            'success': True,
+            'finalizadas': visitas_finalizadas,
+            'message': f'{visitas_finalizadas} visita(s) finalizada(s) com sucesso!'
+        })
+        
+    except Exception as e:
+        logger.error(f"Erro ao finalizar visitas: {str(e)}")
+        return JsonResponse({'success': False, 'error': f'Erro ao finalizar visitas: {str(e)}'}, status=500)

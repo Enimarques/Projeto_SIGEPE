@@ -16,6 +16,7 @@ urlpatterns = [
     path('visitas/historico/', views.historico_visitas, name='historico_visitas'),
     path('visitas/historico/ajax/', views.historico_visitas_ajax, name='historico_visitas_ajax'),
     path('visitas/<int:visita_id>/finalizar/', views.finalizar_visita, name='finalizar_visita'),
+    path('visitas/finalizar-multiplas/', views.finalizar_multiplas_visitas, name='finalizar_multiplas_visitas'),
     path('visitas/<int:pk>/excluir/', views.excluir_visita, name='excluir_visita'),
     path('visitas/<int:visita_id>/etiqueta/', views.gerar_etiqueta, name='gerar_etiqueta'),
     path('visitantes/buscar/', views.buscar_visitante, name='buscar_visitante'),

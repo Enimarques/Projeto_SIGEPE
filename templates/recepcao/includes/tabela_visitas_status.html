@@ -1,55 +1,411 @@
 {% if visitas %}
+<style>
+    /* Estilos responsivos para a tabela */
+    .table-controls {
+        background: #f8f9fa;
+        border-radius: 8px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+        border: 1px solid #dee2e6;
+    }
+    
+    .selected-info {
+        font-size: 0.875rem;
+        color: #6c757d;
+    }
+    
+    .visitor-info {
+        min-width: 200px;
+    }
+    
+    .visitor-name {
+        font-weight: 500;
+        color: #495057;
+        line-height: 1.3;
+    }
+    
+    .visitor-avatar {
+        width: 36px;
+        height: 36px;
+        border: 2px solid #fff;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .table-actions {
+        min-width: 200px;
+    }
+    
+         .action-button {
+         font-size: 0.8rem;
+         padding: 0.375rem 0.75rem;
+         border-radius: 6px;
+         min-width: 80px;
+     }
+     
+     /* Espaçamento entre botões */
+     .table-actions .d-flex {
+         gap: 0.75rem;
+     }
+    
+    .table-responsive {
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        border: 1px solid #dee2e6;
+    }
+    
+    .table {
+        margin-bottom: 0;
+    }
+    
+    .table thead th {
+        background-color: #f8f9fa;
+        border-bottom: 2px solid #dee2e6;
+        font-weight: 600;
+        color: #495057;
+        font-size: 0.875rem;
+        padding: 1rem 0.75rem;
+        vertical-align: middle;
+    }
+    
+    .table tbody td {
+        padding: 1rem 0.75rem;
+        vertical-align: middle;
+        border-bottom: 1px solid #f1f3f4;
+    }
+    
+    .table tbody tr:hover {
+        background-color: #f8f9fa;
+    }
+    
+    /* Responsividade para mobile */
+    @media (max-width: 767px) {
+        .table-controls {
+            padding: 0.75rem;
+        }
+        
+        .table-controls .d-flex {
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+        
+        .btn-finalizar-multiplas {
+            width: 100%;
+            justify-content: center;
+        }
+        
+        .selected-info {
+            text-align: center;
+        }
+        
+        .visitor-info {
+            min-width: auto;
+        }
+        
+        .visitor-name {
+            font-size: 0.9rem;
+        }
+        
+        .visitor-avatar {
+            width: 32px;
+            height: 32px;
+        }
+        
+        .table thead th {
+            font-size: 0.8rem;
+            padding: 0.75rem 0.5rem;
+        }
+        
+        .table tbody td {
+            padding: 0.75rem 0.5rem;
+            font-size: 0.875rem;
+        }
+        
+        .table-actions {
+            min-width: auto;
+        }
+        
+                 .action-button {
+             font-size: 0.75rem;
+             padding: 0.25rem 0.5rem;
+             min-width: 75px;
+         }
+         
+         .table-actions .d-flex {
+             gap: 0.5rem !important;
+         }
+        
+                 .table-actions .d-flex {
+             flex-direction: column;
+             width: 100%;
+             gap: 0.5rem !important;
+         }
+         
+         .table-actions .btn {
+             border-radius: 6px !important;
+             width: 100%;
+         }
+        
+        /* Esconder algumas colunas em telas muito pequenas */
+        .d-none-mobile {
+            display: none;
+        }
+    }
+    
+         @media (max-width: 575px) {
+         .table-controls {
+             padding: 0.5rem;
+         }
+         
+         .table thead th,
+         .table tbody td {
+             padding: 0.5rem 0.25rem;
+             font-size: 0.8rem;
+         }
+         
+         .visitor-name {
+             font-size: 0.85rem;
+         }
+         
+         .action-button {
+             font-size: 0.7rem;
+             padding: 0.2rem 0.4rem;
+             min-width: 70px;
+         }
+         
+         .table-actions .d-flex {
+             gap: 0.4rem !important;
+         }
+     }
+</style>
+
+<div class="table-controls">
+    <div class="d-flex justify-content-between align-items-center">
+        <div class="d-flex align-items-center gap-2">
+            <label class="form-check mb-0">
+                <input type="checkbox" class="form-check-input" id="select-all">
+                <span class="form-check-label">
+                    <span class="d-none d-md-inline">Selecionar Todas</span>
+                    <span class="d-md-none">Todas</span>
+                </span>
+            </label>
+            <span id="selected-count" class="selected-info">0 visitas selecionadas</span>
+        </div>
+        <button type="button" class="btn btn-success btn-sm btn-finalizar-multiplas" id="btn-finalizar-multiplas" disabled>
+            <i class="fas fa-sign-out-alt me-1"></i>
+            <span class="d-none d-sm-inline">Finalizar Selecionadas</span>
+            <span class="d-sm-none">Finalizar</span>
+        </button>
+    </div>
+</div>
+
 <div class="table-responsive">
     <table class="table table-hover">
         <thead>
             <tr>
-                <th>Visitante</th>
-                <th>Setor</th>
-                <th>Localização</th>
-                <th>Objetivo</th>
-                <th>Entrada</th>
-                <th>Ações</th>
+                <th width="40" class="text-center">
+                    <input type="checkbox" class="form-check-input" id="select-all-header">
+                </th>
+                <th class="visitor-info">Visitante</th>
+                <th class="d-none d-md-table-cell">Setor</th>
+                <th class="d-none d-lg-table-cell">Localização</th>
+                <th class="d-none d-lg-table-cell">Objetivo</th>
+                <th class="d-none d-sm-table-cell">Entrada</th>
+                <th class="table-actions text-center">Ações</th>
             </tr>
         </thead>
         <tbody>
             {% for visita in visitas %}
             <tr>
-                <td>
+                <td class="text-center">
+                    <input type="checkbox" class="form-check-input visita-checkbox" value="{{ visita.id }}">
+                </td>
+                <td class="visitor-info">
                     <div class="d-flex align-items-center">
                         {% if visita.visitante.foto %}
                         <img src="{{ visita.visitante.foto.url }}" alt="{{ visita.visitante.nome_completo }}" 
-                             class="rounded-circle me-2" style="width: 40px; height: 40px; object-fit: cover;">
+                             class="rounded-circle me-2 visitor-avatar">
                         {% else %}
-                        <i class="fas fa-user-circle fa-2x me-2 text-muted"></i>
+                        <div class="visitor-avatar me-2 bg-light rounded-circle d-flex align-items-center justify-content-center">
+                            <i class="fas fa-user text-muted"></i>
+                        </div>
                         {% endif %}
-                        <div>{{ visita.visitante.nome_completo }}</div>
+                        <div>
+                            <div class="visitor-name">{{ visita.visitante.nome_completo }}</div>
+                            <div class="d-md-none">
+                                <small class="text-muted">
+                                    {% if visita.setor.tipo == 'gabinete' %}{{ visita.setor.nome_vereador }}{% else %}{{ visita.setor.nome_local }}{% endif %}
+                                </small><br>
+                                <small class="text-muted">{{ visita.data_entrada|date:"d/m/Y H:i" }}</small>
+                            </div>
+                        </div>
                     </div>
                 </td>
-                <td>{% if visita.setor.tipo == 'gabinete' %}{{ visita.setor.nome_vereador }}{% else %}{{ visita.setor.nome_local }}{% endif %}</td>
-                <td>{{ visita.get_localizacao_display }}</td>
-                <td>{{ visita.get_objetivo_display|default:"-" }}</td>
-                <td>
-                    {{ visita.data_entrada|date:"d/m/Y" }}<br>
-                    <small class="text-muted">{{ visita.data_entrada|time:"H:i" }}</small>
-                </td>
-                <td>
-                    <div class="btn-group">
-                        <form method="post" action="{% url 'recepcao:finalizar_visita' visita.id %}">
-                            {% csrf_token %}
-                            <button type="submit" class="btn btn-outline-success btn-sm me-2">
-                                <i class="fas fa-sign-out-alt me-1"></i>Finalizar Visita
-                            </button>
-                        </form>
-                        <a href="{% url 'recepcao:gerar_etiqueta' visita.id %}" class="btn btn-outline-primary btn-sm">
-                            <i class="fas fa-tag me-1"></i>Gerar Etiqueta
-                        </a>
+                <td class="d-none d-md-table-cell">
+                    <div class="text-truncate" style="max-width: 150px;" title="{% if visita.setor.tipo == 'gabinete' %}{{ visita.setor.nome_vereador }}{% else %}{{ visita.setor.nome_local }}{% endif %}">
+                        {% if visita.setor.tipo == 'gabinete' %}{{ visita.setor.nome_vereador }}{% else %}{{ visita.setor.nome_local }}{% endif %}
                     </div>
                 </td>
+                <td class="d-none d-lg-table-cell">
+                    <span class="badge bg-light text-dark">{{ visita.get_localizacao_display }}</span>
+                </td>
+                <td class="d-none d-lg-table-cell">
+                    <span class="text-muted">{{ visita.get_objetivo_display|default:"-" }}</span>
+                </td>
+                <td class="d-none d-sm-table-cell">
+                    <div>
+                        {{ visita.data_entrada|date:"d/m/Y" }}<br>
+                        <small class="text-muted">{{ visita.data_entrada|time:"H:i" }}</small>
+                    </div>
+                </td>
+                                 <td class="table-actions text-center">
+                     <div class="d-flex justify-content-center gap-2" role="group">
+                         <form method="post" action="{% url 'recepcao:finalizar_visita' visita.id %}" class="d-inline">
+                             {% csrf_token %}
+                             <button type="submit" class="btn btn-outline-success action-button">
+                                 <i class="fas fa-sign-out-alt me-1"></i>
+                                 <span class="d-none d-sm-inline">Finalizar</span>
+                             </button>
+                         </form>
+                         <a href="{% url 'recepcao:gerar_etiqueta' visita.id %}" class="btn btn-outline-primary action-button">
+                             <i class="fas fa-tag me-1"></i>
+                             <span class="d-none d-sm-inline">Etiqueta</span>
+                         </a>
+                     </div>
+                 </td>
             </tr>
             {% endfor %}
         </tbody>
     </table>
 </div>
+
+<script>
+$(document).ready(function() {
+    // Controle dos checkboxes
+    $('#select-all, #select-all-header').on('change', function() {
+        const isChecked = $(this).prop('checked');
+        $('.visita-checkbox').prop('checked', isChecked);
+        updateSelectedCount();
+        updateBothSelectAll();
+    });
+    
+    $('.visita-checkbox').on('change', function() {
+        updateSelectedCount();
+        updateSelectAllState();
+    });
+    
+    function updateSelectedCount() {
+        const selected = $('.visita-checkbox:checked').length;
+        const total = $('.visita-checkbox').length;
+        $('#selected-count').text(`${selected} de ${total} visitas selecionadas`);
+        $('#btn-finalizar-multiplas').prop('disabled', selected === 0);
+    }
+    
+    function updateSelectAllState() {
+        const total = $('.visita-checkbox').length;
+        const selected = $('.visita-checkbox:checked').length;
+        const selectAllChecked = selected === total && total > 0;
+        $('#select-all, #select-all-header').prop('checked', selectAllChecked);
+    }
+    
+    function updateBothSelectAll() {
+        const isChecked = $('#select-all').prop('checked');
+        $('#select-all-header').prop('checked', isChecked);
+    }
+    
+    // Finalizar múltiplas visitas
+    $('#btn-finalizar-multiplas').on('click', function() {
+        const selectedVisitas = $('.visita-checkbox:checked').map(function() {
+            return $(this).val();
+        }).get();
+        
+        if (selectedVisitas.length === 0) {
+            alert('Selecione pelo menos uma visita para finalizar.');
+            return;
+        }
+        
+        if (!confirm(`Tem certeza que deseja finalizar ${selectedVisitas.length} visita(s) selecionada(s)?`)) {
+            return;
+        }
+        
+        // Desabilitar botão e mostrar loading
+        const btn = $(this);
+        const originalText = btn.html();
+        btn.html('<i class="fas fa-spinner fa-spin me-1"></i>Finalizando...').prop('disabled', true);
+        
+        // Debug: Verificar token CSRF
+        const csrfToken = $('[name=csrfmiddlewaretoken]').val();
+        console.log('Token CSRF encontrado:', csrfToken ? 'Sim' : 'Não');
+        console.log('IDs selecionados:', selectedVisitas);
+        
+        // Construir os dados da forma tradicional que funciona com Django
+        const postData = {
+            'csrfmiddlewaretoken': csrfToken,
+            'visitas_ids': selectedVisitas
+        };
+        
+        console.log('Dados a serem enviados:', postData);
+        
+        $.ajax({
+            url: '{% url "recepcao:finalizar_multiplas_visitas" %}',
+            type: 'POST',
+            data: postData,
+            traditional: true,  // Importante para arrays
+            success: function(response) {
+                if (response.success) {
+                    // Mostrar mensagem de sucesso
+                    showMessage(`${response.finalizadas} visita(s) finalizada(s) com sucesso!`, 'success');
+                    
+                    // Recarregar a tabela
+                    $('#filtro-form').trigger('submit');
+                } else {
+                    showMessage(response.error || 'Erro ao finalizar visitas.', 'error');
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error('Erro AJAX:', error);
+                console.error('Status:', status);
+                console.error('Response:', xhr.responseText);
+                console.error('Status Code:', xhr.status);
+                
+                let errorMessage = 'Erro ao finalizar visitas. Tente novamente.';
+                if (xhr.responseJSON && xhr.responseJSON.error) {
+                    errorMessage = xhr.responseJSON.error;
+                } else if (xhr.status === 400) {
+                    errorMessage = 'Dados inválidos enviados para o servidor.';
+                } else if (xhr.status === 403) {
+                    errorMessage = 'Você não tem permissão para realizar esta ação.';
+                } else if (xhr.status === 500) {
+                    errorMessage = 'Erro interno do servidor.';
+                }
+                
+                showMessage(errorMessage, 'error');
+            },
+            complete: function() {
+                btn.html(originalText).prop('disabled', false);
+            }
+        });
+    });
+    
+    function showMessage(message, type) {
+        const alertClass = type === 'success' ? 'alert-success' : 'alert-danger';
+        const icon = type === 'success' ? 'fa-check-circle' : 'fa-exclamation-triangle';
+        
+        const alertHtml = `
+            <div class="alert ${alertClass} alert-dismissible fade show alert-discrete" role="alert">
+                <i class="fas ${icon} me-2"></i>${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        `;
+        
+        $('.alert').remove();
+        $('.container').first().prepend(alertHtml);
+        
+        setTimeout(function() {
+            $('.alert').fadeOut();
+        }, 3000);
+    }
+});
+</script>
 {% else %}
 <div class="text-center py-5">
     <i class="fas fa-clipboard-list fa-3x text-muted mb-3"></i>
