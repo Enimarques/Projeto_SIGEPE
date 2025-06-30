@@ -14,23 +14,23 @@
 }
 
 .header-logo {
-    height: 100px;
+    width: 250px;
+    height: auto;
     margin-bottom: 1rem;
 }
 
 .main-title {
     font-size: 3rem;
     font-weight: 700;
-    margin: 0; /* Reseta a margem para controle mais preciso */
-    /* Efeito de gradiente no texto */
+    margin: 0;
     background: linear-gradient(45deg, #5e72e4, #825ee4);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
     text-fill-color: transparent;
-    letter-spacing: -1px; /* Espaçamento mais justo */
-    text-shadow: 0 2px 8px rgba(0,0,0,0.05); /* Sombra sutil */
-    line-height: 1.2; /* Ajuste para títulos de múltiplas linhas */
+    letter-spacing: -1px;
+    text-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    line-height: 1.2;
 }
 
 .title-separator {
@@ -38,17 +38,19 @@
     height: 4px;
     background: linear-gradient(90deg, #5e72e4, #825ee4);
     border-radius: 2px;
-    margin: 1.25rem 0; /* Espaçamento vertical entre os títulos */
+    margin: 1.25rem 0;
 }
 
+
+
 .main-subtitle {
-    font-size: 1.3rem; /* Ligeiramente menor para mais contraste */
+    font-size: 1.3rem;
     font-weight: 400;
-    color: #7a82a6; /* Cor mais suave e azulada */
-    margin-top: 1.5rem; /* Adiciona espaço acima */
-    margin-bottom: 3rem; /* Mais espaço antes da câmera */
+    color: #7a82a6;
+    margin-top: 1.5rem;
+    margin-bottom: 3rem;
     max-width: 650px;
-    line-height: 1.6; /* Melhora a legibilidade */
+    line-height: 1.6;
 }
 
 .camera-viewfinder {
@@ -82,12 +84,34 @@
     height: 1.5rem;
     vertical-align: text-bottom;
 }
+
+.btn-voltar {
+    background-color: #6c757d;
+    border-color: #6c757d;
+    color: white;
+    padding: 0.75rem 2rem;
+    font-size: 1.1rem;
+    border-radius: 25px;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    box-shadow: 0 3px 10px rgba(108, 117, 125, 0.3);
+    display: inline-block;
+}
+
+.btn-voltar:hover {
+    background-color: #5a6268;
+    border-color: #545b62;
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(108, 117, 125, 0.4);
+    text-decoration: none;
+}
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="totem-container">
-    <img src="{% static 'img/LOGO-CAMARA-PARAUAPEBAS.png' %}" alt="Logo Câmara Municipal de Parauapebas" class="header-logo">
+    <img src="{% static 'img/logo_CMP.png' %}" alt="Logo Câmara Municipal de Parauapebas" class="header-logo">
     <h1 class="main-title">Olá! Bem-Vindo(a).</h1>
     <div class="title-separator"></div>
     <h1 class="main-title">Câmara Municipal de Parauapebas</h1>
@@ -103,6 +127,12 @@
             <span class="visually-hidden">Loading...</span>
         </div>
         Inicializando câmera...
+    </div>
+    
+    <div style="margin-top: 2.5rem; text-align: center;">
+        <a href="{% url 'recepcao:totem_welcome' %}" class="btn-voltar">
+            <i class="fas fa-arrow-left me-2"></i>Voltar ao Início
+        </a>
     </div>
 </div>
 {% endblock %}

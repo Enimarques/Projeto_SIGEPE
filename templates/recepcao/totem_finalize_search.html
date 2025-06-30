@@ -3,35 +3,49 @@
 
 {% block extra_css %}
 <style>
-.finalize-container {
+.totem-container {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    min-height: calc(100vh - 2rem);
+    min-height: calc(100vh - 1.05rem);
     text-align: center;
-    padding: 2rem;
+    padding: 1rem 2rem;
 }
 .header-logo {
-    height: 180px;
-    margin-bottom: 2rem;
+    width: 250px;
+    height: auto;
+    margin-bottom: 1rem;
 }
 .main-title {
-    font-size: 2.8rem;
+    font-size: 3rem;
     font-weight: 700;
     margin: 0;
-    background: linear-gradient(45deg, #4e65d9, #7b58e0);
+    background: linear-gradient(45deg, #5e72e4, #825ee4);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
     text-fill-color: transparent;
+    letter-spacing: -1px;
+    text-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    line-height: 1.2;
 }
+.title-separator {
+    width: 80px;
+    height: 4px;
+    background: linear-gradient(90deg, #5e72e4, #825ee4);
+    border-radius: 2px;
+    margin: 1.25rem 0;
+}
+
 .main-subtitle {
     font-size: 1.3rem;
-    color: #6c757d;
-    margin-top: 1rem;
-    margin-bottom: 2.5rem;
-    max-width: 600px;
+    font-weight: 400;
+    color: #7a82a6;
+    margin-top: 1.5rem;
+    margin-bottom: 3rem;
+    max-width: 650px;
+    line-height: 1.6;
 }
 .search-area {
     position: relative;
@@ -66,25 +80,63 @@
 }
 .camera-viewfinder {
     position: relative;
-    width: 480px;
+    width: 640px;
     max-width: 100%;
-    height: 360px;
+    height: 480px;
     border-radius: 15px;
     overflow: hidden;
     background-color: #000;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+    border: 3px solid #fff;
 }
 #video {
     width: 100%;
     height: 100%;
     object-fit: cover;
 }
+
+#overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+}
+
+.btn-voltar {
+    background-color: #6c757d;
+    border-color: #6c757d;
+    color: white;
+    padding: 0.75rem 2rem;
+    font-size: 1.1rem;
+    border-radius: 25px;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    box-shadow: 0 3px 10px rgba(108, 117, 125, 0.3);
+}
+
+.btn-voltar:hover {
+    background-color: #5a6268;
+    border-color: #545b62;
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(108, 117, 125, 0.4);
+}
+
+.spinner-border {
+    width: 1.5rem;
+    height: 1.5rem;
+    vertical-align: text-bottom;
+}
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="finalize-container">
-    <img src="{% static 'img/LOGO-CAMARA-PARAUAPEBAS.png' %}" alt="Logo Câmara" class="header-logo">
+<div class="totem-container">
+    <img src="{% static 'img/logo_CMP.png' %}" alt="Logo Câmara" class="header-logo">
     <h1 class="main-title">Finalizar Visita</h1>
+    <div class="title-separator"></div>
     <p class="main-subtitle">Para encerrar sua visita, digite seu nome ou CPF no campo abaixo ou posicione seu rosto para o reconhecimento facial.</p>
     
     <div class="search-area">
@@ -99,6 +151,20 @@
 
     <div class="camera-viewfinder">
         <video id="video" autoplay playsinline></video>
+        <canvas id="overlay"></canvas>
+    </div>
+
+    <div id="camera-status" style="margin-top: 1.5rem; font-size: 1.2rem; font-weight: 500; color: #555; min-height: 2rem;">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+        Inicializando câmera...
+    </div>
+    
+    <div style="margin-top: 2.5rem; text-align: center;">
+        <a href="{% url 'recepcao:totem_welcome' %}" class="btn-voltar">
+            <i class="fas fa-arrow-left me-2"></i>Voltar ao Início
+        </a>
     </div>
 </div>
 
@@ -129,8 +195,18 @@
 {% endblock %}
 
 {% block extra_js %}
-<script>
-document.addEventListener('DOMContentLoaded', function() {
+<!-- Carrega o script como um módulo e importa os recursos necessários -->
+<script type="module">
+import { FaceDetector, FilesetResolver } from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision/vision_bundle.js";
+
+document.addEventListener('DOMContentLoaded', () => {
+    // 1. Elementos do DOM e Constantes
+    const video = document.getElementById('video');
+    const overlay = document.getElementById('overlay');
+    const cameraStatus = document.getElementById('camera-status');
+    const ctx = overlay.getContext('2d');
+    
+    // Elementos do sistema de busca por texto
     const searchInput = document.getElementById('searchInput');
     const searchSpinner = document.getElementById('searchSpinner');
     const searchStatus = document.getElementById('search-status');
@@ -141,6 +217,197 @@ document.addEventListener('DOMContentLoaded', function() {
     const confirmFinalizeBtn = document.getElementById('confirmFinalizeBtn');
     let currentVisitorId = null;
 
+    const DESIRED_FACE_WIDTH_PERCENT = 0.25;
+    const RECOGNITION_PAUSE_MS = 2000;
+
+    let faceDetector;
+    let isRecognitionPaused = false;
+    let lastRecognitionTime = 0;
+
+    // 2. Função para desenhar o overlay (cantos)
+    function drawOverlay(box, color) {
+        ctx.clearRect(0, 0, overlay.width, overlay.height);
+        if (!box) return;
+
+        const { originX, originY, width, height } = box;
+        const cornerLength = width * 0.2;
+        const lineWidth = 6;
+
+        ctx.strokeStyle = color;
+        ctx.lineWidth = lineWidth;
+        ctx.lineCap = 'round';
+
+        // Top-left
+        ctx.beginPath();
+        ctx.moveTo(originX + cornerLength, originY);
+        ctx.lineTo(originX, originY);
+        ctx.lineTo(originX, originY + cornerLength);
+        ctx.stroke();
+
+        // Top-right
+        ctx.beginPath();
+        ctx.moveTo(originX + width - cornerLength, originY);
+        ctx.lineTo(originX + width, originY);
+        ctx.lineTo(originX + width, originY + cornerLength);
+        ctx.stroke();
+
+        // Bottom-left
+        ctx.beginPath();
+        ctx.moveTo(originX + cornerLength, originY + height);
+        ctx.lineTo(originX, originY + height);
+        ctx.lineTo(originX, originY + height - cornerLength);
+        ctx.stroke();
+
+        // Bottom-right
+        ctx.beginPath();
+        ctx.moveTo(originX + width - cornerLength, originY + height);
+        ctx.lineTo(originX + width, originY + height);
+        ctx.lineTo(originX + width, originY + height - cornerLength);
+        ctx.stroke();
+    }
+
+    // 3. Função para atualizar a mensagem de status
+    function updateCameraStatus(message, showSpinner = false) {
+        let spinnerHtml = showSpinner ? `<div class="spinner-border text-primary" role="status"><span class="visually-hidden">...</span></div>` : '';
+        cameraStatus.innerHTML = `${spinnerHtml} ${message}`;
+    }
+
+    // 4. Lógica principal de detecção facial
+    async function detectFacesLoop() {
+        if (isRecognitionPaused || video.paused || video.ended) {
+            return; 
+        }
+
+        const detections = faceDetector.detectForVideo(video, Date.now()).detections;
+
+        if (detections.length > 0) {
+            const face = detections[0].boundingBox;
+            const faceWidthPercent = face.width / video.videoWidth;
+
+            if (faceWidthPercent >= DESIRED_FACE_WIDTH_PERCENT) {
+                // Rosto está perto o suficiente
+                drawOverlay(face, '#28a745'); // Verde
+                updateCameraStatus('Ótimo! Analisando rosto para finalizar visita...', true);
+                isRecognitionPaused = true;
+                sendFrameForRecognition();
+            } else {
+                // Rosto detectado, mas muito longe
+                drawOverlay(face, '#ffc107'); // Amarelo
+                updateCameraStatus('Aproxime-se um pouco mais da câmera.');
+            }
+        } else {
+            // Nenhum rosto detectado
+            drawOverlay(null); 
+            updateCameraStatus('Posicione seu rosto na área da câmera para finalizar visita.');
+        }
+
+        window.requestAnimationFrame(detectFacesLoop);
+    }
+
+    // 5. Envio do frame para reconhecimento facial
+    async function sendFrameForRecognition() {
+        const canvas = document.createElement('canvas');
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        canvas.getContext('2d').drawImage(video, 0, 0);
+        const imageDataUrl = canvas.toDataURL('image/jpeg');
+
+        try {
+            const response = await fetch("{% url 'recepcao:api_reconhecer_rosto' %}", {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}' },
+                body: JSON.stringify({ image: imageDataUrl })
+            });
+            const data = await response.json();
+
+            if (data.success && data.visitante_id) {
+                updateCameraStatus(`Reconhecido: ${data.nome_visitante}! Finalizando visitas...`);
+                
+                // Buscar visitas ativas e finalizar automaticamente
+                await finalizeVisitsByFaceRecognition(data.visitante_id, data.nome_visitante);
+            } else {
+                updateCameraStatus('Rosto não reconhecido. Tente novamente ou use busca por nome.');
+                setTimeout(() => {
+                    isRecognitionPaused = false;
+                    window.requestAnimationFrame(detectFacesLoop);
+                }, RECOGNITION_PAUSE_MS);
+            }
+        } catch (error) {
+            updateCameraStatus('Erro de comunicação. Tentando novamente...');
+            setTimeout(() => {
+                isRecognitionPaused = false;
+                window.requestAnimationFrame(detectFacesLoop);
+            }, RECOGNITION_PAUSE_MS * 2);
+        }
+    }
+
+    // 6. Finalizar visitas através do reconhecimento facial
+    async function finalizeVisitsByFaceRecognition(visitanteId, nomeVisitante) {
+        try {
+            const response = await fetch(`{% url 'recepcao:api_finalizar_visitas' %}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({ visitante_id: visitanteId })
+            });
+            const data = await response.json();
+
+            if (data.success) {
+                updateCameraStatus(`✅ Visitas de ${nomeVisitante} finalizadas com sucesso!`);
+                
+                // Mostrar mensagem de sucesso e redirecionar
+                setTimeout(() => {
+                    alert(`Visitas finalizadas com sucesso!\n\n${data.message}`);
+                    window.location.href = "{% url 'recepcao:totem_welcome' %}";
+                }, 2000);
+            } else {
+                updateCameraStatus(`Erro: ${data.error}`);
+                setTimeout(() => {
+                    isRecognitionPaused = false;
+                    window.requestAnimationFrame(detectFacesLoop);
+                }, RECOGNITION_PAUSE_MS);
+            }
+        } catch (error) {
+            console.error("Erro ao finalizar visitas:", error);
+            updateCameraStatus("Erro ao finalizar visitas. Tente novamente.");
+            setTimeout(() => {
+                isRecognitionPaused = false;
+                window.requestAnimationFrame(detectFacesLoop);
+            }, RECOGNITION_PAUSE_MS);
+        }
+    }
+
+    // 7. Inicialização do sistema de reconhecimento facial
+    async function initializeFaceRecognition() {
+        try {
+            updateCameraStatus('Carregando modelo de IA...', true);
+            const filesetResolver = await FilesetResolver.forVisionTasks("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm");
+            faceDetector = await FaceDetector.createFromOptions(filesetResolver, {
+                baseOptions: { modelAssetPath: `https://storage.googleapis.com/mediapipe-models/face_detector/blaze_face_short_range/float16/1/blaze_face_short_range.tflite` },
+                runningMode: 'VIDEO'
+            });
+
+            updateCameraStatus('Iniciando câmera...', true);
+            const stream = await navigator.mediaDevices.getUserMedia({
+                video: { width: { ideal: 1280, max: 1920 }, height: { ideal: 720, max: 1080 } }
+            });
+            video.srcObject = stream;
+            video.addEventListener('loadeddata', () => {
+                overlay.width = video.videoWidth;
+                overlay.height = video.videoHeight;
+                updateCameraStatus('Posicione seu rosto na câmera para finalizar visita.');
+                detectFacesLoop(); // Inicia o loop de detecção
+            });
+
+        } catch (err) {
+            console.error(err);
+            updateCameraStatus(`Erro ao inicializar câmera: ${err.message}`);
+        }
+    }
+
+    // 8. Sistema de busca por texto (mantido)
     async function searchVisitor(query) {
         if (query.length < 3) {
             searchStatus.textContent = '';
@@ -171,7 +438,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     noVisitsMessageDiv.style.display = 'none';
                     confirmFinalizeBtn.style.display = 'block';
                 } else {
-                    // Visitante encontrado, mas sem visitas ativas
                     visitListUl.style.display = 'none';
                     noVisitsMessageDiv.innerHTML = `<strong>${visitor.nome}</strong> foi encontrado, mas não possui visitas em andamento.`;
                     noVisitsMessageDiv.style.display = 'block';
@@ -217,6 +483,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
+    // 9. Event listeners para busca por texto
     let searchTimeout;
     searchInput.addEventListener('input', () => {
         clearTimeout(searchTimeout);
@@ -227,7 +494,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     confirmFinalizeBtn.addEventListener('click', finalizeVisits);
 
-    // TODO: Adicionar lógica de reconhecimento facial aqui
+    // 10. Inicializar tudo
+    initializeFaceRecognition();
 });
 </script>
 {% endblock %} 
