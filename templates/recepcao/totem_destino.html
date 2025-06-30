@@ -37,25 +37,65 @@
 .totem-tabs {
     display: flex;
     justify-content: center;
-    gap: 1rem;
-    border-bottom: 1px solid #dee2e6;
+    gap: 1.5rem;
     margin-bottom: 2.5rem;
+    padding: 0 2rem;
 }
 .totem-tab-btn {
-    background: none;
-    border: none;
-    font-size: 1.05rem;
-    font-weight: 500;
-    color: #6c757d;
-    padding: 0.8rem 1.5rem;
+    background: linear-gradient(145deg, #f8f9fa, #e9ecef);
+    border: 2px solid #dee2e6;
+    border-radius: 15px;
+    font-size: 1.6em;
+    font-weight: 700;
+    color: rgb(93, 97, 100);
+    padding: 1rem 2rem;
     cursor: pointer;
-    border-bottom: 3px solid transparent;
-    margin-bottom: -1px;
-    transition: all 0.2s ease-in-out;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    position: relative;
+    overflow: hidden;
+    min-width: 200px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    white-space: nowrap;
 }
-.totem-tab-btn.active, .totem-tab-btn:hover {
-    color: #6777ef; /* Cor de destaque */
-    border-bottom-color: #6777ef;
+.totem-tab-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(103, 119, 239, 0.1), transparent);
+    transition: left 0.5s ease;
+}
+.totem-tab-btn:hover::before {
+    left: 100%;
+}
+.totem-tab-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
+    border-color: #6777ef;
+    color: #6777ef;
+}
+.totem-tab-btn.active {
+    background: linear-gradient(145deg, #6777ef, #5562d5);
+    color: white;
+    border-color: #6777ef;
+    box-shadow: 0 6px 15px rgba(103, 119, 239, 0.3);
+    transform: translateY(-1px);
+}
+.totem-tab-btn.active:hover {
+    background: linear-gradient(145deg, #5562d5, #4650c4);
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(103, 119, 239, 0.4);
+}
+.totem-tab-btn i {
+    font-size: 1.2em;
+    margin-right: 0.5rem;
+    vertical-align: middle;
 }
 /* Cards Grid */
 .totem-cards-grid {
@@ -178,8 +218,12 @@
     </div>
 
     <div class="totem-tabs">
-        <button class="totem-tab-btn active" id="tab-gabinetes" onclick="mostrarTab('gabinetes')">Gabinetes</button>
-        <button class="totem-tab-btn" id="tab-departamentos" onclick="mostrarTab('departamentos')">Departamentos</button>
+        <button class="totem-tab-btn active" id="tab-gabinetes" onclick="mostrarTab('gabinetes')">
+            <i class="fas fa-users me-2"></i>Gabinetes
+        </button>
+        <button class="totem-tab-btn" id="tab-departamentos" onclick="mostrarTab('departamentos')">
+            <i class="fas fa-building me-2"></i>Departamentos
+        </button>
     </div>
     
     <div id="gabinetes-grid" class="totem-cards-grid active"></div>
