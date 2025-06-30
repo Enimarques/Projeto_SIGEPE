@@ -88,23 +88,7 @@
     transform: translateY(-2px);
     box-shadow: 0 4px 10px rgba(0,0,0,0.2);
 }
-.btn-whatsapp {
-    background-color: #25D366; /* Verde WhatsApp */
-    color: white;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-}
-.btn-whatsapp:hover:not(:disabled) {
-    background-color: #1DAE56;
-    border-color: #1DAE56;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-}
-.btn-whatsapp:disabled {
-    background-color: #a9dec1;
-    border-color: transparent;
-    cursor: not-allowed;
-    box-shadow: none;
-}
+
 .btn-finish {
     background-color: #fff; /* Outline */
     color: #4A4A4A; /* Cinza Escuro */
@@ -117,10 +101,54 @@
     box-shadow: 0 4px 10px rgba(0,0,0,0.1);
 }
 
-/* Estilos de Impressão Simples */
+/* Estilos de Impressão Otimizados */
 @media print {
+    /* Esconde elementos desnecessários */
     .ticket-footer {
-        display: none;
+        display: none !important;
+    }
+    
+    /* Otimiza a página para impressão */
+    body {
+        margin: 0;
+        padding: 0;
+        background: white !important;
+    }
+    
+    .ticket-screen {
+        min-height: auto;
+        padding: 10px;
+        background: white !important;
+    }
+    
+    .ticket-container {
+        max-width: none;
+        width: auto;
+        margin: 0;
+        padding: 20px;
+        box-shadow: none;
+        border: 2px solid #e9ecef;
+        page-break-inside: avoid;
+    }
+    
+    /* Garante que o texto seja legível */
+    .ticket-visitor-name {
+        color: #000 !important;
+    }
+    
+    .ticket-info p,
+    .ticket-info p strong {
+        color: #000 !important;
+    }
+    
+    .instituicao {
+        color: #000 !important;
+    }
+    
+    /* Otimiza o tamanho da página */
+    @page {
+        margin: 0.5in;
+        size: auto;
     }
 }
 </style>
@@ -153,10 +181,6 @@
                 <i class="fas fa-print me-2"></i>Imprimir Comprovante
             </button>
             
-            <button onclick="shareWhatsApp()" class="btn btn-whatsapp">
-                <i class="fab fa-whatsapp me-2"></i>Compartilhar no WhatsApp
-            </button>
-            
             <a href="{% url 'recepcao:totem_welcome' %}" class="btn btn-finish">
                 <i class="fas fa-home me-2"></i>Voltar para o Início
             </a>
@@ -177,25 +201,11 @@ window.onload = function() {
 }
 
 function printTicket() {
-    // Utiliza a página de etiqueta já existente para impressão
-    var printWindow = window.open("{% url 'recepcao:gerar_etiqueta' visita.id %}?auto_print=1", "_blank", "width=400,height=300");
+    // Abre a página da etiqueta para impressão no formato 60x40mm
+    window.open("{% url 'recepcao:gerar_etiqueta' visita.id %}?auto_print=1", "_blank", "width=400,height=300");
 }
 
-function shareWhatsApp() {
-    const visitante = "{{ visita.visitante.nome_social|default:visita.visitante.nome_completo }}";
-    const destino = "{% if visita.setor.tipo == 'gabinete' %}{{ visita.setor.nome_vereador }}{% else %}{{ visita.setor.nome_local }}{% endif %}";
-    const local = "{{ visita.get_localizacao_display }}";
-    const dataHora = "{{ visita.data_entrada|date:'d/m/Y H:i' }}";
-    
-    const mensagem = `🎫 *COMPROVANTE DE VISITA*\n\n` +
-                    `👤 *Visitante:* ${visitante}\n` +
-                    `🏛️ *Destino:* ${destino}\n` +
-                    `📍 *Local:* ${local}\n` +
-                    `📅 *Data/Hora:* ${dataHora}\n\n` +
-                    `_Câmara Municipal de Parauapebas - URUTAL_`;
-    
-    const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(mensagem)}`;
-    window.open(whatsappUrl, '_blank');
-}
+
+
 </script>
 {% endblock %} 
