@@ -278,7 +278,7 @@ def buscar_setores(request):
     tipo = request.GET.get('tipo', 'departamento')
     
     # Filtrar setores por tipo
-    setores = Setor.objects.filter(tipo=tipo).order_by('nome_vereador', 'nome_local')
+    setores = Setor.objects.filter(tipo=tipo).order_by('id')
     
     if not setores.exists():
         return JsonResponse({
@@ -453,7 +453,7 @@ def status_visita(request):
         'veiculos_no_estacionamento': veiculos_no_estacionamento,
         'total_veiculos_cadastrados': total_veiculos_cadastrados,
         'total_por_local': total_por_local,
-        'setores': Setor.objects.filter(ativo=True).order_by('nome_vereador', 'nome_local'),
+        'setores': Setor.objects.filter(ativo=True).order_by('id'),
         'localizacoes': dict(Visita.LOCALIZACAO_CHOICES),
         # Manter filtros selecionados
         'data_filtro': data if data else None,
@@ -554,7 +554,7 @@ def excluir_setor(request, pk):
             assessores = Assessor.objects.filter(
                 ativo=True,
                 departamento__isnull=False
-            ).order_by('nome_vereador', 'nome_local')
+            ).order_by('id')
             if assessores.exists():
                 # Desassociar os assessores deste setor
                 qtd_assessores = assessores.count()
@@ -1309,7 +1309,7 @@ def api_get_setores(request):
     if tipo not in ['departamento', 'gabinete']:
         return JsonResponse({'success': False, 'error': 'Tipo inválido'}, status=400)
     
-    setores = Setor.objects.filter(tipo=tipo, ativo=True).order_by('nome_vereador', 'nome_local')
+    setores = Setor.objects.filter(tipo=tipo, ativo=True).order_by('id')
     setores_data = []
     for setor in setores:
         dados = {

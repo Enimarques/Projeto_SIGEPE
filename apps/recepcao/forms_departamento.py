@@ -47,6 +47,7 @@ class SetorForm(forms.ModelForm):
         fields = [
             'tipo',
             'localizacao',
+            'foto',
             'nome_responsavel',
             'funcao',
             'horario_entrada',
@@ -64,6 +65,10 @@ class SetorForm(forms.ModelForm):
             }),
             'localizacao': forms.Select(attrs={
                 'class': 'form-control'
+            }),
+            'foto': forms.ClearableFileInput(attrs={
+                'class': 'form-control',
+                'accept': 'image/*'
             }),
             'nome_responsavel': forms.TextInput(attrs={
                 'class': 'form-control',
@@ -109,7 +114,7 @@ class SetorForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         hide_responsavel = kwargs.pop('hide_responsavel', False)
         super().__init__(*args, **kwargs)
-        instance = kwargs.get('instance')
+        instance = getattr(self, 'instance', None)
         
         # Se for edição de gabinete pelo assessor, esconde o campo
         if hide_responsavel or (instance and instance.tipo == 'gabinete'):
@@ -118,18 +123,27 @@ class SetorForm(forms.ModelForm):
         # Mostra/esconde campos baseado no tipo
         if instance:
             if instance.tipo == 'gabinete':
-                self.fields['nome_vereador'].required = True
-                self.fields['email_vereador'].required = True
-                self.fields['nome_local'].required = False
+                if 'nome_vereador' in self.fields:
+                    self.fields['nome_vereador'].required = True
+                if 'email_vereador' in self.fields:
+                    self.fields['email_vereador'].required = True
+                if 'nome_local' in self.fields:
+                    self.fields['nome_local'].required = False
             elif instance.tipo == 'departamento':
-                self.fields['nome_local'].required = True
-                self.fields['nome_vereador'].required = False
-                self.fields['email_vereador'].required = False
+                if 'nome_local' in self.fields:
+                    self.fields['nome_local'].required = True
+                if 'nome_vereador' in self.fields:
+                    self.fields['nome_vereador'].required = False
+                if 'email_vereador' in self.fields:
+                    self.fields['email_vereador'].required = False
         
         # Adiciona classes do Select2 para os campos de seleção
-        self.fields['tipo'].widget.attrs.update({'class': 'form-control select2'})
-        self.fields['localizacao'].widget.attrs.update({'class': 'form-control select2'})
-        self.fields['funcao'].widget.attrs.update({'class': 'form-control select2'})
+        if 'tipo' in self.fields:
+            self.fields['tipo'].widget.attrs.update({'class': 'form-control select2'})
+        if 'localizacao' in self.fields:
+            self.fields['localizacao'].widget.attrs.update({'class': 'form-control select2'})
+        if 'funcao' in self.fields:
+            self.fields['funcao'].widget.attrs.update({'class': 'form-control select2'})
         
     def clean(self):
         cleaned_data = super().clean()
@@ -141,12 +155,12 @@ class SetorForm(forms.ModelForm):
         
         # Valida campos obrigatórios baseado no tipo
         if tipo == 'gabinete':
-            if not cleaned_data.get('nome_vereador'):
+            if not cleaned_data.get('nome_vereador') and 'nome_vereador' in self.fields:
                 self.add_error('nome_vereador', 'Este campo é obrigatório para gabinetes.')
-            if not cleaned_data.get('email_vereador'):
+            if not cleaned_data.get('email_vereador') and 'email_vereador' in self.fields:
                 self.add_error('email_vereador', 'Este campo é obrigatório para gabinetes.')
         elif tipo == 'departamento':
-            if not cleaned_data.get('nome_local'):
+            if not cleaned_data.get('nome_local') and 'nome_local' in self.fields:
                 self.add_error('nome_local', 'Este campo é obrigatório para departamentos.')
         
         # Valida horário de funcionamento do setor

@@ -62,6 +62,7 @@ class Setor(models.Model):
     # Campos comuns
     tipo = models.CharField('Tipo', max_length=20, choices=TIPO_CHOICES)
     localizacao = models.CharField('Localização', max_length=20, choices=LOCALIZACAO_CHOICES)
+    foto = models.ImageField('Foto', upload_to='setores/', blank=True, null=True, help_text='Foto do setor/responsável')
     horario_abertura = models.TimeField('Horário de Abertura', blank=True, null=True)
     horario_fechamento = models.TimeField('Horário de Fechamento', blank=True, null=True)
     
@@ -89,7 +90,10 @@ class Setor(models.Model):
         ordering = ['tipo', 'localizacao']
 
     def __str__(self):
-        return f"{self.nome_local} - {self.nome_vereador}"
+        if self.tipo == 'gabinete':
+            return self.nome_vereador or 'Gabinete sem nome'
+        else:
+            return self.nome_local or 'Departamento sem nome'
 
     def esta_aberto(self):
         if not self.horario_abertura or not self.horario_fechamento:
@@ -197,7 +201,11 @@ class Assessor(models.Model):
 
     def __str__(self):
         if self.departamento:
-            return f'{self.nome_responsavel} - {self.get_funcao_display()} ({self.departamento.nome_vereador if self.departamento.tipo == "gabinete" else self.departamento.nome_local})'
+            if self.departamento.tipo == "gabinete":
+                departamento_nome = self.departamento.nome_vereador or 'Gabinete'
+            else:
+                departamento_nome = self.departamento.nome_local or 'Departamento'
+            return f'{self.nome_responsavel} - {self.get_funcao_display()} ({departamento_nome})'
         return f'{self.nome_responsavel} - {self.get_funcao_display()} (Sem departamento)'
 
     def clean(self):

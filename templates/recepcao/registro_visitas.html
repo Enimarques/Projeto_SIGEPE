@@ -820,8 +820,8 @@ document.addEventListener('DOMContentLoaded', function() {
             
             setoresDoGrupo.forEach(setor => {
                 const nome = tipo === 'gabinete' ? 
-                    `Vereador ${setor.nome_vereador}` : 
-                    setor.nome_local;
+                    `Vereador ${setor.nome_vereador || 'Sem nome'}` : 
+                    setor.nome_local || 'Sem nome';
                 
                 const icon = tipo === 'gabinete' ? 'fa-users' : 'fa-building';
                 
@@ -866,8 +866,8 @@ document.addEventListener('DOMContentLoaded', function() {
         const queryLower = query.toLowerCase();
         const setoresFiltrados = setoresOriginais.filter(setor => {
             const nome = setor.tipo === 'gabinete' ? 
-                setor.nome_vereador : 
-                setor.nome_local;
+                setor.nome_vereador || 'Sem nome' : 
+                setor.nome_local || 'Sem nome';
             
             return nome.toLowerCase().includes(queryLower) ||
                    setor.localizacao.toLowerCase().includes(queryLower);

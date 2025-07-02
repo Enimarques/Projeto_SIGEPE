@@ -289,7 +289,7 @@ class VisitaForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         
         # Carregar todos os setores para permitir filtragem via JavaScript
-        setores = Setor.objects.all().order_by('tipo', 'nome_vereador', 'nome_local')
+        setores = Setor.objects.all().order_by('tipo', 'id')
         self.fields['setor'].queryset = setores
         self.fields['objetivo'].initial = 'outros'
         

@@ -17,7 +17,7 @@ class SetorAdmin(admin.ModelAdmin):
     list_display = ('get_nome_display', 'tipo', 'localizacao', 'get_nome_responsavel', 'funcao', 'get_horario_trabalho', 'get_status_presenca', 'ativo', 'excluir_com_visitas')
     list_filter = ('tipo', 'localizacao', 'ativo')
     search_fields = ('nome_vereador', 'nome_local', 'nome_responsavel', 'email')
-    ordering = ['tipo', 'nome_vereador', 'nome_local']
+    ordering = ['tipo', 'id']
     readonly_fields = ('data_criacao', 'data_atualizacao')
 
     def get_fieldsets(self, request, obj=None):
@@ -26,7 +26,7 @@ class SetorAdmin(admin.ModelAdmin):
             # Para gabinetes, não mostra o campo nome_responsavel
             return (
                 ('Informações do Setor', {
-                    'fields': ('tipo', 'localizacao'),
+                    'fields': ('tipo', 'localizacao', 'foto'),
                     'description': 'Informações básicas do setor'
                 }),
                 ('Informações do Gabinete', {
@@ -53,7 +53,7 @@ class SetorAdmin(admin.ModelAdmin):
             # Para departamentos, mostra todos os campos
             return (
                 ('Informações do Setor', {
-                    'fields': ('tipo', 'localizacao'),
+                    'fields': ('tipo', 'localizacao', 'foto'),
                     'description': 'Informações básicas do setor'
                 }),
                 ('Informações do Departamento', {
@@ -84,7 +84,6 @@ class SetorAdmin(admin.ModelAdmin):
         js = (
             'admin/js/jquery.init.js',
             'https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js',
-            'admin/js/setor.js',
         )
 
     def get_form(self, request, obj=None, **kwargs):
@@ -97,15 +96,15 @@ class SetorAdmin(admin.ModelAdmin):
     def get_nome_display(self, obj):
         """Retorna o nome apropriado baseado no tipo do setor."""
         if obj.tipo == 'gabinete':
-            return obj.nome_vereador
-        return obj.nome_local
+            return obj.nome_vereador or 'Gabinete sem nome'
+        return obj.nome_local or 'Departamento sem nome'
     get_nome_display.short_description = 'Nome'
 
     def get_nome_responsavel(self, obj):
         """Retorna o nome do responsável de forma segura."""
         if obj.tipo == 'gabinete':
-            return obj.nome_vereador or 'Não definido'
-        return obj.nome_responsavel or 'Não definido'
+            return getattr(obj, 'nome_vereador', None) or 'Não definido'
+        return getattr(obj, 'nome_responsavel', None) or 'Não definido'
     get_nome_responsavel.short_description = 'Responsável'
 
     def get_horario_trabalho(self, obj):
@@ -348,7 +347,7 @@ class VisitaAdmin(admin.ModelAdmin):
     list_filter = ('setor', 'objetivo', 'status', 'data_entrada')
     search_fields = (
         'visitante__nome_completo', 'visitante__CPF',
-        'setor__nome', 'objetivo', 'observacoes'
+        'setor__nome_vereador', 'setor__nome_local', 'objetivo', 'observacoes'
     )
     date_hierarchy = 'data_entrada'
 
