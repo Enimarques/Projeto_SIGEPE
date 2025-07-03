@@ -188,7 +188,7 @@
     display: flex;
     align-items: flex-start;
     font-size: 0.9rem;
-    color: #6c757d;
+    color:rgb(4, 63, 224);
     margin-bottom: 0.3rem;
 }
 .info-item:last-child {
@@ -283,13 +283,10 @@ function getCardIconHtml(setor) {
 }
 
 function getInfoBarHtml(setor) {
-    if (!setor.localizacao && !setor.email) return '';
+    if (!setor.localizacao) return '';
     let html = '<div class="card-info-bar">';
     if (setor.localizacao) {
         html += `<div class="info-item"><i class="fas fa-map-marker-alt"></i><span>${setor.localizacao}</span></div>`;
-    }
-    if (setor.email) {
-        html += `<div class="info-item"><i class="fas fa-envelope"></i><span>${setor.email}</span></div>`;
     }
     html += '</div>';
     return html;

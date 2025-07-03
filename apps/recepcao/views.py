@@ -289,13 +289,24 @@ def buscar_setores(request):
     # Preparar dados dos setores
     setores_data = []
     for setor in setores:
-        setores_data.append({
+        dados = {
             'id': setor.id,
+            'nome': setor.nome_vereador if tipo == 'gabinete' else setor.nome_local,
             'tipo': setor.tipo,
-            'nome_vereador': setor.nome_vereador if setor.tipo == 'gabinete' else None,
-            'nome_local': setor.nome_local if setor.tipo == 'departamento' else None,
-            'localizacao': setor.get_localizacao_display()
-        })
+            'localizacao': setor.get_localizacao_display(),
+            'funcao': setor.get_funcao_display() if setor.funcao else None,
+            'email': setor.email_vereador if tipo == 'gabinete' else setor.email,
+            'foto_url': None, # Inicialmente nulo
+            'aberto_agora': setor.esta_aberto()
+        }
+        
+        # Prioridade: foto do gabinete (vereador), depois foto do assessor
+        if tipo == 'gabinete' and setor.foto:
+            dados['foto_url'] = setor.foto.url
+        elif setor.usuario and hasattr(setor.usuario, 'assessor') and setor.usuario.assessor.foto:
+            dados['foto_url'] = setor.usuario.assessor.foto.url
+
+        setores_data.append(dados)
     
     return JsonResponse({
         'success': True,
@@ -1323,8 +1334,10 @@ def api_get_setores(request):
             'aberto_agora': setor.esta_aberto()
         }
         
-        # Lógica para obter a foto do assessor responsável
-        if setor.usuario and hasattr(setor.usuario, 'assessor') and setor.usuario.assessor.foto:
+        # Prioridade: foto do gabinete (vereador), depois foto do assessor
+        if tipo == 'gabinete' and setor.foto:
+            dados['foto_url'] = setor.foto.url
+        elif setor.usuario and hasattr(setor.usuario, 'assessor') and setor.usuario.assessor.foto:
             dados['foto_url'] = setor.usuario.assessor.foto.url
 
         setores_data.append(dados)
