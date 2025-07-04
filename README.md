@@ -53,6 +53,10 @@ Ou
 
 venv\Scripts\activate
 
+python manage.py makemigrations 
+
+python manage.py migrate
+
 python manage.py runserver
 
 - O servidor será iniciado e o sistema estará disponível em [http://127.0.0.1:8000/](http://127.0.0.1:8000/)

@@ -51,31 +51,43 @@ class SetorAdmin(admin.ModelAdmin):
             )
         else:
             # Para departamentos, mostra todos os campos
-            return (
-                ('Informações do Setor', {
-                    'fields': ('tipo', 'localizacao', 'foto'),
-                    'description': 'Informações básicas do setor'
-                }),
-                ('Informações do Departamento', {
-                    'fields': ('nome_local',),
-                    'description': 'Informações do departamento'
-                }),
-                ('Horário de Funcionamento', {
-                    'fields': ('horario_abertura', 'horario_fechamento'),
-                    'description': 'Defina o horário de funcionamento do setor'
-                }),
-                ('Informações do Responsável', {
-                    'fields': ('nome_responsavel', 'funcao', 'email', 'horario_entrada', 'horario_saida'),
-                    'description': 'Informações do responsável pelo departamento'
-                }),
-                ('Status', {    
-                    'fields': ('ativo',)
-                }),
-                ('Informações do Sistema', {
-                    'fields': ('data_criacao', 'data_atualizacao'),
-                    'classes': ('collapse',)
-                })
-            )
+            if obj is None:
+                # Formulário de adição: remove horário_entrada e horário_saida
+                return (
+                    ('Informações do Setor', {
+                        'fields': ('tipo', 'localizacao', 'foto', 'nome_local', 'horario_abertura', 'horario_fechamento'),
+                        'description': 'Informações básicas do setor'
+                    }),
+                    ('Informações do Responsável', {
+                        'fields': ('nome_responsavel', 'funcao', 'email'),
+                        'description': 'Informações do responsável pelo departamento'
+                    }),
+                    ('Status', {    
+                        'fields': ('ativo',)
+                    }),
+                    ('Informações do Sistema', {
+                        'fields': ('data_criacao', 'data_atualizacao'),
+                        'classes': ('collapse',)
+                    })
+                )
+            else:
+                return (
+                    ('Informações do Setor', {
+                        'fields': ('tipo', 'localizacao', 'foto', 'nome_local', 'horario_abertura', 'horario_fechamento'),
+                        'description': 'Informações básicas do setor'
+                    }),
+                    ('Informações do Responsável', {
+                        'fields': ('nome_responsavel', 'funcao', 'email', 'horario_entrada', 'horario_saida'),
+                        'description': 'Informações do responsável pelo departamento'
+                    }),
+                    ('Status', {    
+                        'fields': ('ativo',)
+                    }),
+                    ('Informações do Sistema', {
+                        'fields': ('data_criacao', 'data_atualizacao'),
+                        'classes': ('collapse',)
+                    })
+                )
 
     class Media:
         css = {

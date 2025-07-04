@@ -162,6 +162,7 @@ class Assessor(models.Model):
         ('assessor_10', 'Assessor X'),
         ('agente_parlamentar', 'Agente Parlamentar'),
         ('chefe_de_gabinete', 'Chefe de Gabinete'),
+        ('vereador', 'Vereador'),
         ('outros', 'Outros')
     ]
 
