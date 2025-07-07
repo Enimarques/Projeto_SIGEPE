@@ -181,8 +181,8 @@ document.addEventListener('DOMContentLoaded', () => {
     let isRecognitionPaused = false;
     let lastRecognitionTime = 0;
 
-    // 3. Função para desenhar o overlay (cantos)
-    function drawOverlay(box, color) {
+    // 3. Função para desenhar o overlay (cantos e pontos faciais)
+    function drawOverlay(box, color, keypoints) {
         ctx.clearRect(0, 0, overlay.width, overlay.height);
         if (!box) return;
         // Suaviza a cor do overlay
@@ -195,6 +195,7 @@ document.addEventListener('DOMContentLoaded', () => {
         ctx.strokeStyle = niceColor;
         ctx.lineWidth = lineWidth;
         ctx.lineCap = 'round';
+        // Desenha os cantos
         // Top-left
         ctx.beginPath();
         ctx.moveTo(originX + cornerLength, originY);
@@ -219,6 +220,18 @@ document.addEventListener('DOMContentLoaded', () => {
         ctx.lineTo(originX + width, originY + height);
         ctx.lineTo(originX + width, originY + height - cornerLength);
         ctx.stroke();
+        // Desenha os pontos faciais (landmarks)
+        if (keypoints && Array.isArray(keypoints)) {
+            ctx.fillStyle = '#1976d2';
+            keypoints.forEach(pt => {
+                // pt.x e pt.y são normalizados (0-1), converter para coordenadas do canvas
+                const x = pt.x * overlay.width;
+                const y = pt.y * overlay.height;
+                ctx.beginPath();
+                ctx.arc(x, y, 5, 0, 2 * Math.PI);
+                ctx.fill();
+            });
+        }
     }
 
     // 4. Função para atualizar a mensagem de status
@@ -244,17 +257,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (detections.length > 0) {
             const face = detections[0].boundingBox;
+            const keypoints = detections[0].keypoints || detections[0].normalizedKeypoints || [];
             const faceWidthPercent = face.width / video.videoWidth;
 
             if (faceWidthPercent >= DESIRED_FACE_WIDTH_PERCENT) {
                 // Rosto está perto o suficiente
-                drawOverlay(face, '#28a745'); // Verde
+                drawOverlay(face, '#28a745', keypoints); // Verde
                 updateStatus('🎯 Ótimo! Analisando seu rosto para identificação...', true, '#28a745');
                 isRecognitionPaused = true;
                 sendFrameForRecognition();
             } else {
                 // Rosto detectado, mas muito longe
-                drawOverlay(face, '#ffc107'); // Amarelo
+                drawOverlay(face, '#ffc107', keypoints); // Amarelo
                 updateStatus('📏 Aproxime-se um pouco mais da câmera para melhor detecção', false, '#ffc107');
             }
         } else {
