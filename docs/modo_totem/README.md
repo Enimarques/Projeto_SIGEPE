@@ -11,6 +11,7 @@ Sistema completo de reconhecimento facial e gestão autônoma de visitas para c�
 4. **[04_reconhecimento_facial.md](04_reconhecimento_facial.md)** - Detalhes da IA e reconhecimento
 5. **[05_configuracao_e_dependencias.md](05_configuracao_e_dependencias.md)** - Setup e dependências
 6. **[06_funcionalidade_finalizar_visita.md](06_funcionalidade_finalizar_visita.md)** - Nova funcionalidade de finalização
+7. **[07_anti_spoofing.md](07_anti_spoofing.md)** - Sistema de proteção contra fraudes
 
 ### **Documentação Adicional:**
 - **[totem_finalize_search_documentacao.md](../totem_finalize_search_documentacao.md)** - Documentação técnica detalhada da página de finalizar visita
@@ -19,27 +20,30 @@ Sistema completo de reconhecimento facial e gestão autônoma de visitas para c�
 
 ## 🚀 Novidades Implementadas
 
-### **✨ Últimas Atualizações (2024):**
+### **✨ Últimas Atualizações (2025):**
+
+#### **🛡️ Sistema Anti-Spoofing Avançado**
+- **Múltiplas Camadas de Segurança**: Estabilidade, movimento natural, detecções consecutivas
+- **Análise de Fraude**: Score de spoofing em tempo real (0-1)
+- **Proteção Contra Ataques**: Detecção de fotos, vídeos e máscaras
+- **Configuração Rigorosa**: Thresholds ajustáveis para máxima segurança
+
+#### **🎨 Overlay Visual Moderno**
+- **Design Avançado**: Cantos arredondados, gradientes dinâmicos, animações sutis
+- **Posicionamento Inteligente**: Centralização automática nos olhos (35% offset)
+- **Feedback Visual**: Cores contextuais (verde/amarelo/vermelho) com mensagens
+- **Animações Fluidas**: Pulso sutil, brilho de borda, pontos de referência
 
 #### **🎯 Sistema Dual de Finalização**
 - **Reconhecimento Facial**: MediaPipe para detecção automática
 - **Busca Manual**: Por nome, CPF ou nome social
 - **Finalização Automática**: Encerra todas as visitas ativas
 
-#### **🎨 Interface Moderna**
-- **Design Consistente**: Gradientes e tipografia Poppins
-- **Feedback Visual**: Overlays coloridos e mensagens dinâmicas
-- **Responsividade**: Adaptação para diferentes resoluções
-
-#### **🤖 Tecnologia Avançada**
-- **MediaPipe Tasks Vision**: Substitui face-api.js
-- **ES6+ Modules**: JavaScript moderno via CDN
-- **Performance Otimizada**: RequestAnimationFrame e debounce
-
 #### **🔧 Melhorias Técnicas**
-- **APIs REST Robustas**: Endpoints especializados
-- **Tratamento de Erros**: Validações e fallbacks
-- **Logging Detalhado**: Auditoria completa de ações
+- **Resolução Otimizada**: 800x800px para proporção quadrada ideal
+- **Performance Aprimorada**: ~60fps com requestAnimationFrame
+- **Logs Detalhados**: Debug completo de posicionamento e segurança
+- **Sistema de Debug**: Botão para forçar reconhecimento e modo de teste
 
 ---
 
@@ -97,6 +101,8 @@ python manage.py runserver
 
 ### **Para Visitantes:**
 - ✅ **Identificação Automática**: Reconhecimento facial sem contato
+- ✅ **Segurança Avançada**: Anti-Spoofing para proteção contra fraudes
+- ✅ **Feedback Visual**: Overlay moderno com posicionamento inteligente
 - ✅ **Seleção de Destino**: Interface intuitiva para escolher setor
 - ✅ **Finalização Autônoma**: Encerrar visita sem ir à recepção
 - ✅ **Comprovante Digital**: Impressão automática de etiqueta
@@ -129,6 +135,16 @@ python manage.py runserver
 - Testar em navegador atualizado
 - Verificar console para erros JavaScript
 
+#### **🛡️ Anti-Spoofing muito restritivo:**
+- Ajustar thresholds no código (ANTI_SPOOFING_CONFIG)
+- Verificar iluminação da câmera
+- Usar botão de debug para modo de teste
+
+#### **🎨 Overlay não centraliza:**
+- Verificar logs de posicionamento no console
+- Ajustar VERTICAL_OFFSET_PERCENT se necessário
+- Verificar resolução da câmera (800x800px recomendado)
+
 #### **🐍 face_recognition falha:**
 - Instalar/recompilar dlib
 - Verificar versão do Python
@@ -146,18 +162,21 @@ python manage.py runserver
 ```
 Frontend (Browser)
 ├── MediaPipe Tasks Vision (CDN)
+├── Anti-Spoofing Engine (JavaScript)
+├── Canvas Overlay Moderno (Gradientes + Animações)
 ├── Bootstrap 5 + Font Awesome (CDN)
 ├── JavaScript ES6+ Modules
-└── Canvas Overlay + Video Stream
+└── Video Stream (800x800px)
 
 Backend (Django)
 ├── face_recognition + dlib
 ├── APIs REST especializadas
 ├── Models otimizados
-└── Logging e auditoria
+├── Logging e auditoria
+└── Sistema de debug
 
 Hardware
-├── Câmera HD (720p+)
+├── Câmera HD (800x800px recomendado)
 ├── Impressora térmica (60x40mm)
 ├── Totem touch screen
 └── Conexão estável (CDNs)
@@ -168,12 +187,13 @@ Hardware
 ## 📈 Próximos Passos
 
 ### **Melhorias Futuras:**
-- 🔮 **IA Avançada**: Modelos mais precisos
-- 📊 **Analytics**: Dashboard em tempo real
-- 🔐 **Biometria Adicional**: Impressão digital, íris
-- 🌐 **PWA**: App offline-first
-- 🎨 **Temas**: Personalização visual
-- 📱 **Mobile**: Versão para smartphones
+- 🔮 **IA Avançada**: Modelos mais precisos de Anti-Spoofing
+- 📊 **Analytics**: Dashboard em tempo real com métricas de segurança
+- 🔐 **Biometria Adicional**: Impressão digital, íris, voz
+- 🌐 **PWA**: App offline-first com cache de modelos
+- 🎨 **Temas**: Personalização visual e configurações de overlay
+- 📱 **Mobile**: Versão para smartphones com câmera traseira
+- 🛡️ **Segurança**: Machine Learning para detecção de ataques avançados
 
 ---
 
@@ -191,6 +211,6 @@ Hardware
 
 ---
 
-**📅 Última Atualização:** Dezembro 2024  
-**🔄 Versão da Documentação:** 2.0  
-**📋 Status:** Produção Ativa 
+**📅 Última Atualização:** Julho 2025  
+**🔄 Versão da Documentação:** 3.0  
+**📋 Status:** Produção Ativa com Anti-Spoofing 

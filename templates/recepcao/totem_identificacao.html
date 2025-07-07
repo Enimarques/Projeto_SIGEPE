@@ -53,9 +53,9 @@
 
 .camera-viewfinder {
     position: relative;
-    width: 640px;
+    width: 800px;
     max-width: 100%;
-    height: 480px;
+    height: 800px;
     border-radius: 15px;
     overflow: hidden;
     background-color: #000;
@@ -151,6 +151,13 @@
         🚀 Inicializando sistema de reconhecimento facial...
     </div>
     
+    <!-- Botão de debug para desenvolvimento -->
+    <div class="debug-controls" style="position: absolute; bottom: 20px; right: 20px; z-index: 1000;">
+        <button id="debugBtn" class="btn btn-sm btn-outline-secondary" style="display: none;">
+            🔧 Debug (Anti-Spoofing OFF)
+        </button>
+    </div>
+    
     <div style="margin-top: 2.5rem; text-align: center;">
         <a href="{% url 'recepcao:totem_welcome' %}" class="btn-voltar">
             <i class="fas fa-arrow-left me-2"></i>Voltar ao Início
@@ -172,65 +179,276 @@ document.addEventListener('DOMContentLoaded', () => {
     const overlay = document.getElementById('overlay');
     const statusMessage = document.getElementById('status-message');
     const spinner = document.getElementById('spinner');
+    const debugBtn = document.getElementById('debugBtn');
     const ctx = overlay.getContext('2d');
 
-    const DESIRED_FACE_WIDTH_PERCENT = 0.16; // Ajustado para permitir reconhecimento a ~1,05m
+    const DESIRED_FACE_WIDTH_PERCENT = 0.25; // Ajustado para câmera 800x800px - rosto deve ocupar ~25% da largura
     const RECOGNITION_PAUSE_MS = 2000; // Pausa após uma tentativa falha
+
+    // Anti-Spoofing: Configurações de segurança (AJUSTADAS PARA CÂMERA 800x800px)
+    const ANTI_SPOOFING_CONFIG = {
+        enabled: false, // Desabilitado por padrão para evitar falsos positivos
+        minFaceStabilityTime: 800, // Reduzido para câmera quadrada
+        maxFaceMovementThreshold: 0.15, // Ajustado para proporção quadrada
+        requiredDetections: 3, // Reduzido para câmera quadrada
+        livenessCheckInterval: 400, // Intervalo otimizado para câmera quadrada
+        depthVariationThreshold: 0.015, // Ajustado para proporção quadrada
+        textureAnalysisEnabled: false, // Desabilitado para reduzir falsos positivos
+        reflectionAnalysisEnabled: false, // Desabilitado para reduzir falsos positivos
+        motionAnalysisEnabled: true // Mantido habilitado
+    };
 
     let faceDetector;
     let isRecognitionPaused = false;
     let lastRecognitionTime = 0;
+    
+    // Anti-Spoofing: Variáveis de controle
+    let faceDetectionHistory = [];
+    let faceStabilityStartTime = null;
+    let lastFacePosition = null;
+    let spoofingScore = 0;
+    let consecutiveDetections = 0;
+    let livenessCheckTimer = null;
+
+
 
     // 3. Função para desenhar o overlay (cantos e pontos faciais)
-    function drawOverlay(box, color, keypoints) {
+    let animationFrame = 0;
+    function drawOverlay(box, color, keypoints, debugInfo = null) {
+        // Limpa o canvas
         ctx.clearRect(0, 0, overlay.width, overlay.height);
-        if (!box) return;
+        
+        // Se não há rosto detectado, apenas limpa
+        if (!box) {
+            overlay.style.boxShadow = 'none';
+            overlay.style.border = 'none';
+            return;
+        }
+        
+        console.log('Desenhando overlay:', { box, color, keypointsCount: keypoints ? keypoints.length : 0 });
+        
         // Suaviza a cor do overlay
         let niceColor = color === '#28a745' ? '#3ec97a' : (color === '#ffc107' ? '#ffb347' : color);
         overlay.style.boxShadow = color === '#28a745' ? '0 0 16px #3ec97a88' : (color === '#ffc107' ? '0 0 12px #ffb34788' : 'none');
         overlay.style.border = color === '#28a745' ? '2px solid #3ec97a' : (color === '#ffc107' ? '2px solid #ffb347' : '2px solid #fff');
+        
         const { originX, originY, width, height } = box;
-        const cornerLength = width * 0.2;
-        const lineWidth = 6;
-        ctx.strokeStyle = niceColor;
+        
+        // Calcula as coordenadas do canvas baseadas na proporção do vídeo
+        const scaleX = overlay.width / video.videoWidth;
+        const scaleY = overlay.height / video.videoHeight;
+        
+        // Aplica a escala para centralizar o overlay
+        const canvasX = originX * scaleX;
+        const canvasY = originY * scaleY;
+        const canvasWidth = width * scaleX;
+        const canvasHeight = height * scaleY;
+        
+        // Verifica se as coordenadas estão dentro dos limites do canvas
+        let finalCanvasX = canvasX;
+        let finalCanvasY = canvasY;
+        
+        // Ajusta o posicionamento vertical - centraliza o overlay no rosto
+        // O MediaPipe detecta o rosto incluindo a testa, então precisamos ajustar para centralizar nos olhos
+        const VERTICAL_OFFSET_PERCENT = 0.35; // Move 35% da altura do rosto para cima para centralizar nos olhos
+        const verticalOffset = -canvasHeight * VERTICAL_OFFSET_PERCENT;
+        finalCanvasY += verticalOffset;
+        
+        if (canvasX < 0 || finalCanvasY < 0 || canvasX + canvasWidth > overlay.width || finalCanvasY + canvasHeight > overlay.height) {
+            console.warn('Overlay fora dos limites do canvas, ajustando...');
+            // Centraliza o overlay se estiver fora dos limites
+            const centerX = overlay.width / 2 - canvasWidth / 2;
+            const centerY = overlay.height / 2 - canvasHeight / 2;
+            finalCanvasX = Math.max(0, Math.min(centerX, overlay.width - canvasWidth));
+            finalCanvasY = Math.max(0, Math.min(centerY, overlay.height - canvasHeight));
+        }
+        
+        console.log('🎯 Posicionamento do overlay:', {
+            original: { originX, originY, width, height },
+            canvas: { canvasX, canvasY, canvasWidth, canvasHeight },
+            final: { finalCanvasX, finalCanvasY },
+            verticalOffset: -canvasHeight * VERTICAL_OFFSET_PERCENT,
+            verticalOffsetPercent: VERTICAL_OFFSET_PERCENT,
+            verticalOffsetPixels: Math.round(-canvasHeight * VERTICAL_OFFSET_PERCENT),
+            scale: { scaleX, scaleY },
+            videoSize: { width: video.videoWidth, height: video.videoHeight },
+            canvasSize: { width: overlay.width, height: overlay.height },
+            note: 'Overlay centralizado nos olhos (35% para cima)'
+        });
+        
+        // Configurações do quadrado de reconhecimento
+        const cornerLength = Math.min(canvasWidth, canvasHeight) * 0.25; // Cantos mais longos
+        const lineWidth = 3; // Linha mais fina para elegância
+        const cornerRadius = 2; // Raio para cantos arredondados
+        
+        // Cor principal do quadrado com gradiente
+        const gradient = ctx.createLinearGradient(finalCanvasX, finalCanvasY, finalCanvasX + canvasWidth, finalCanvasY + canvasHeight);
+        gradient.addColorStop(0, niceColor);
+        gradient.addColorStop(1, niceColor + '80'); // Versão mais transparente
+        
+        // Configura o contexto para desenhar
+        ctx.strokeStyle = gradient;
         ctx.lineWidth = lineWidth;
         ctx.lineCap = 'round';
-        // Desenha os cantos
-        // Top-left
+        ctx.lineJoin = 'round';
+        
+        // Desenha os cantos do quadrado com design moderno
+        // Canto superior esquerdo
         ctx.beginPath();
-        ctx.moveTo(originX + cornerLength, originY);
-        ctx.lineTo(originX, originY);
-        ctx.lineTo(originX, originY + cornerLength);
+        ctx.moveTo(finalCanvasX + cornerRadius, finalCanvasY);
+        ctx.lineTo(finalCanvasX + cornerLength, finalCanvasY);
+        ctx.moveTo(finalCanvasX, finalCanvasY + cornerRadius);
+        ctx.lineTo(finalCanvasX, finalCanvasY + cornerLength);
         ctx.stroke();
-        // Top-right
+        
+        // Canto superior direito
         ctx.beginPath();
-        ctx.moveTo(originX + width - cornerLength, originY);
-        ctx.lineTo(originX + width, originY);
-        ctx.lineTo(originX + width, originY + cornerLength);
+        ctx.moveTo(finalCanvasX + canvasWidth - cornerLength, finalCanvasY);
+        ctx.lineTo(finalCanvasX + canvasWidth - cornerRadius, finalCanvasY);
+        ctx.moveTo(finalCanvasX + canvasWidth, finalCanvasY + cornerRadius);
+        ctx.lineTo(finalCanvasX + canvasWidth, finalCanvasY + cornerLength);
         ctx.stroke();
-        // Bottom-left
+        
+        // Canto inferior esquerdo
         ctx.beginPath();
-        ctx.moveTo(originX + cornerLength, originY + height);
-        ctx.lineTo(originX, originY + height);
-        ctx.lineTo(originX, originY + height - cornerLength);
+        ctx.moveTo(finalCanvasX + cornerRadius, finalCanvasY + canvasHeight);
+        ctx.lineTo(finalCanvasX + cornerLength, finalCanvasY + canvasHeight);
+        ctx.moveTo(finalCanvasX, finalCanvasY + canvasHeight - cornerLength);
+        ctx.lineTo(finalCanvasX, finalCanvasY + canvasHeight - cornerRadius);
         ctx.stroke();
-        // Bottom-right
+        
+        // Canto inferior direito
         ctx.beginPath();
-        ctx.moveTo(originX + width - cornerLength, originY + height);
-        ctx.lineTo(originX + width, originY + height);
-        ctx.lineTo(originX + width, originY + height - cornerLength);
+        ctx.moveTo(finalCanvasX + canvasWidth - cornerLength, finalCanvasY + canvasHeight);
+        ctx.lineTo(finalCanvasX + canvasWidth - cornerRadius, finalCanvasY + canvasHeight);
+        ctx.moveTo(finalCanvasX + canvasWidth, finalCanvasY + canvasHeight - cornerLength);
+        ctx.lineTo(finalCanvasX + canvasWidth, finalCanvasY + canvasHeight - cornerRadius);
         ctx.stroke();
+        
+        // Adiciona um sutil brilho interno
+        ctx.strokeStyle = niceColor + '30'; // Muito transparente
+        ctx.lineWidth = 1;
+        ctx.setLineDash([5, 5]);
+        
+        // Desenha linhas internas para dar profundidade
+        const innerOffset = 15;
+        ctx.beginPath();
+        ctx.moveTo(finalCanvasX + innerOffset, finalCanvasY + innerOffset);
+        ctx.lineTo(finalCanvasX + canvasWidth - innerOffset, finalCanvasY + innerOffset);
+        ctx.moveTo(finalCanvasX + canvasWidth - innerOffset, finalCanvasY + innerOffset);
+        ctx.lineTo(finalCanvasX + canvasWidth - innerOffset, finalCanvasY + canvasHeight - innerOffset);
+        ctx.moveTo(finalCanvasX + canvasWidth - innerOffset, finalCanvasY + canvasHeight - innerOffset);
+        ctx.lineTo(finalCanvasX + innerOffset, finalCanvasY + canvasHeight - innerOffset);
+        ctx.moveTo(finalCanvasX + innerOffset, finalCanvasY + canvasHeight - innerOffset);
+        ctx.lineTo(finalCanvasX + innerOffset, finalCanvasY + innerOffset);
+        ctx.stroke();
+        
+        // Remove o padrão de linha tracejada
+        ctx.setLineDash([]);
+        
+        // Adiciona pontos de referência nos cantos
+        ctx.fillStyle = niceColor;
+        const dotRadius = 2;
+        const cornerDots = [
+            [finalCanvasX + cornerLength/2, finalCanvasY + cornerLength/2],
+            [finalCanvasX + canvasWidth - cornerLength/2, finalCanvasY + cornerLength/2],
+            [finalCanvasX + cornerLength/2, finalCanvasY + canvasHeight - cornerLength/2],
+            [finalCanvasX + canvasWidth - cornerLength/2, finalCanvasY + canvasHeight - cornerLength/2]
+        ];
+        
+        cornerDots.forEach(([x, y]) => {
+            ctx.beginPath();
+            ctx.arc(x, y, dotRadius, 0, 2 * Math.PI);
+            ctx.fill();
+        });
+        
+        // Adiciona animação sutil de pulso nos cantos
+        animationFrame++;
+        const pulseIntensity = Math.sin(animationFrame * 0.1) * 0.3 + 0.7;
+        ctx.strokeStyle = niceColor + Math.floor(pulseIntensity * 255).toString(16).padStart(2, '0');
+        ctx.lineWidth = lineWidth * pulseIntensity;
+        
+        // Redesenha apenas as pontas dos cantos com animação
+        const tipLength = cornerLength * 0.3;
+        const tips = [
+            // Superior esquerdo
+            [[finalCanvasX, finalCanvasY], [finalCanvasX + tipLength, finalCanvasY], [finalCanvasX, finalCanvasY + tipLength]],
+            // Superior direito
+            [[finalCanvasX + canvasWidth - tipLength, finalCanvasY], [finalCanvasX + canvasWidth, finalCanvasY], [finalCanvasX + canvasWidth, finalCanvasY + tipLength]],
+            // Inferior esquerdo
+            [[finalCanvasX, finalCanvasY + canvasHeight - tipLength], [finalCanvasX + tipLength, finalCanvasY + canvasHeight], [finalCanvasX, finalCanvasY + canvasHeight]],
+            // Inferior direito
+            [[finalCanvasX + canvasWidth - tipLength, finalCanvasY + canvasHeight], [finalCanvasX + canvasWidth, finalCanvasY + canvasHeight - tipLength], [finalCanvasX + canvasWidth, finalCanvasY + canvasHeight]]
+        ];
+        
+        tips.forEach(tip => {
+            ctx.beginPath();
+            ctx.moveTo(tip[0][0], tip[0][1]);
+            ctx.lineTo(tip[1][0], tip[1][1]);
+            ctx.moveTo(tip[0][0], tip[0][1]);
+            ctx.lineTo(tip[2][0], tip[2][1]);
+            ctx.stroke();
+        });
+        
+        // Adiciona um sutil brilho de borda
+        ctx.shadowColor = niceColor;
+        ctx.shadowBlur = 8;
+        ctx.shadowOffsetX = 0;
+        ctx.shadowOffsetY = 0;
+        
+        // Desenha uma borda sutil com brilho
+        ctx.strokeStyle = niceColor + '20';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(finalCanvasX - 2, finalCanvasY - 2, canvasWidth + 4, canvasHeight + 4);
+        
+        // Remove o shadow para não afetar outros elementos
+        ctx.shadowColor = 'transparent';
+        ctx.shadowBlur = 0;
+        
         // Desenha os pontos faciais (landmarks)
-        if (keypoints && Array.isArray(keypoints)) {
+        if (keypoints && Array.isArray(keypoints) && keypoints.length > 0) {
+            console.log('Desenhando pontos faciais:', keypoints.length);
             ctx.fillStyle = '#1976d2';
-            keypoints.forEach(pt => {
+            keypoints.forEach((pt, index) => {
                 // pt.x e pt.y são normalizados (0-1), converter para coordenadas do canvas
                 const x = pt.x * overlay.width;
                 const y = pt.y * overlay.height;
+                
+                // Desenha círculo para cada ponto
                 ctx.beginPath();
-                ctx.arc(x, y, 5, 0, 2 * Math.PI);
+                ctx.arc(x, y, 6, 0, 2 * Math.PI);
                 ctx.fill();
+                
+                // Adiciona número do ponto para debug
+                ctx.fillStyle = '#ffffff';
+                ctx.font = '10px Arial';
+                ctx.fillText(index.toString(), x + 8, y + 4);
+                ctx.fillStyle = '#1976d2';
             });
+        }
+        
+        // Debug: Mostra informações de debug se disponível
+        if (debugInfo) {
+            ctx.fillStyle = '#ffffff';
+            ctx.font = '12px Arial';
+            ctx.fillText(`Rosto detectado`, 10, 25);
+            if (debugInfo.faceWidthPercent !== null) {
+                ctx.fillText(`Tamanho: ${debugInfo.faceWidthPercent.toFixed(3)}`, 10, 40);
+            }
+            if (debugInfo.spoofingScore !== null) {
+                const scoreColor = debugInfo.spoofingScore > 0.5 ? '#ff6b6b' : '#51cf66';
+                ctx.fillStyle = scoreColor;
+                ctx.fillText(`Segurança: ${debugInfo.spoofingScore}`, 10, 55);
+            }
+            if (debugInfo.stabilityTime !== null) {
+                ctx.fillStyle = '#ffffff';
+                ctx.fillText(`Estabilidade: ${debugInfo.stabilityTime}ms`, 10, 70);
+            }
+            if (debugInfo.warnings) {
+                ctx.fillStyle = '#ff6b6b';
+                ctx.font = '10px Arial';
+                ctx.fillText(debugInfo.warnings, 10, 85);
+            }
         }
     }
 
@@ -254,27 +472,93 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         const detections = faceDetector.detectForVideo(video, Date.now()).detections;
+        
+        console.log(`Detecções encontradas: ${detections.length}`);
 
         if (detections.length > 0) {
             const face = detections[0].boundingBox;
             const keypoints = detections[0].keypoints || detections[0].normalizedKeypoints || [];
             const faceWidthPercent = face.width / video.videoWidth;
-
-            if (faceWidthPercent >= DESIRED_FACE_WIDTH_PERCENT) {
-                // Rosto está perto o suficiente
-                drawOverlay(face, '#28a745', keypoints); // Verde
-                updateStatus('🎯 Ótimo! Analisando seu rosto para identificação...', true, '#28a745');
-                isRecognitionPaused = true;
-                sendFrameForRecognition();
+            
+            console.log('Rosto detectado:', {
+                face: face,
+                keypointsCount: keypoints.length,
+                faceWidthPercent: faceWidthPercent.toFixed(3),
+                videoWidth: video.videoWidth,
+                videoHeight: video.videoHeight,
+                aspectRatio: (video.videoWidth / video.videoHeight).toFixed(2),
+                desiredWidthPercent: DESIRED_FACE_WIDTH_PERCENT,
+                isOptimalSize: faceWidthPercent >= DESIRED_FACE_WIDTH_PERCENT
+            });
+            
+            // Anti-Spoofing: Análise de segurança (condicional)
+            let spoofingAnalysis = { isSpoofing: false, score: 0, warnings: [], details: { stability: { isStable: true, stabilityTime: 0 } } };
+            
+            if (ANTI_SPOOFING_CONFIG.enabled) {
+                spoofingAnalysis = detectSpoofingAttempts(face, keypoints);
+                
+                // Log detalhado para debug
+                console.log('🔍 Análise Anti-Spoofing:', {
+                    score: spoofingAnalysis.score.toFixed(3),
+                    isSpoofing: spoofingAnalysis.isSpoofing,
+                    warnings: spoofingAnalysis.warnings,
+                    details: spoofingAnalysis.details
+                });
+                
+                if (spoofingAnalysis.isSpoofing) {
+                    console.log('🚨 TENTATIVA DE FRAUDE DETECTADA:', spoofingAnalysis);
+                    drawOverlay(face, '#dc3545', keypoints, { // Vermelho para fraude
+                        faceWidthPercent: faceWidthPercent,
+                        spoofingScore: spoofingAnalysis.score.toFixed(3),
+                        warnings: spoofingAnalysis.warnings.join(', ')
+                    });
+                    updateStatus('🚨 Tentativa de fraude detectada! Use seu rosto real.', false, '#dc3545');
+                    resetAntiSpoofing();
+                    return;
+                }
             } else {
-                // Rosto detectado, mas muito longe
-                drawOverlay(face, '#ffc107', keypoints); // Amarelo
-                updateStatus('📏 Aproxime-se um pouco mais da câmera para melhor detecção', false, '#ffc107');
+                console.log('🔓 Anti-Spoofing desabilitado - modo de teste');
+            }
+            
+            if (faceWidthPercent >= DESIRED_FACE_WIDTH_PERCENT) {
+                // Verifica se passou em todas as verificações de segurança (ou se Anti-Spoofing está desabilitado)
+                if (!ANTI_SPOOFING_CONFIG.enabled || (spoofingAnalysis.score < 0.5 && spoofingAnalysis.details.stability.isStable)) {
+                    console.log('✅ Anti-Spoofing: Rosto aprovado para reconhecimento');
+                    drawOverlay(face, '#28a745', keypoints, { // Verde
+                        faceWidthPercent: faceWidthPercent,
+                        spoofingScore: ANTI_SPOOFING_CONFIG.enabled ? spoofingAnalysis.score.toFixed(3) : 'DESABILITADO',
+                        stabilityTime: spoofingAnalysis.details.stability.stabilityTime
+                    });
+                    updateStatus('🎯 Ótimo! Analisando seu rosto para identificação...', true, '#28a745');
+                    isRecognitionPaused = true;
+                    sendFrameForRecognition();
+                } else {
+                    // Ainda não passou nas verificações de segurança
+                    const debugInfo = {
+                        faceWidthPercent: faceWidthPercent,
+                        spoofingScore: spoofingAnalysis.score.toFixed(3),
+                        stabilityTime: spoofingAnalysis.details.stability.stabilityTime,
+                        warnings: spoofingAnalysis.warnings.length > 0 ? spoofingAnalysis.warnings[0] : 'Aguardando estabilização'
+                    };
+                    console.log('Chamando drawOverlay: AMARELO (verificações de segurança)', debugInfo);
+                    drawOverlay(face, '#ffc107', keypoints, debugInfo);
+                    updateStatus('🔒 Verificando segurança... Mantenha o rosto estável', false, '#ffc107');
+                }
+            } else {
+                // Debug info para ajudar no ajuste da sensibilidade
+                const debugInfo = {
+                    faceWidthPercent: faceWidthPercent,
+                    spoofingScore: spoofingAnalysis.score.toFixed(3)
+                };
+                console.log('Chamando drawOverlay: AMARELO (distância)', debugInfo);
+                drawOverlay(face, '#ffc107', keypoints, debugInfo); // Amarelo com debug
+                updateStatus('📏 Aproxime-se da câmera - rosto deve ocupar ~25% da tela', false, '#ffc107');
             }
         } else {
-            // Nenhum rosto detectado
-            drawOverlay(null); 
+            console.log('Nenhum rosto detectado - limpando overlay');
+            drawOverlay(null);
             updateStatus('👤 Posicione seu rosto na área da câmera para iniciar identificação', false, '#6c757d');
+            resetAntiSpoofing(); // Reset das verificações de segurança
         }
 
         window.requestAnimationFrame(detectFacesLoop);
@@ -319,6 +603,189 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
     
+    // 6. Anti-Spoofing: Funções de detecção de fraudes
+    function analyzeFaceStability(face, keypoints) {
+        const currentTime = Date.now();
+        const faceCenter = {
+            x: face.originX + face.width / 2,
+            y: face.originY + face.height / 2
+        };
+        
+        // Adiciona à história de detecções
+        faceDetectionHistory.push({
+            time: currentTime,
+            position: faceCenter,
+            size: face.width * face.height,
+            keypoints: keypoints
+        });
+        
+        // Mantém apenas as últimas 30 detecções
+        if (faceDetectionHistory.length > 30) {
+            faceDetectionHistory.shift();
+        }
+        
+        // Verifica estabilidade do rosto (AJUSTADO PARA CÂMERA 800x800px)
+        if (lastFacePosition) {
+            const movement = Math.sqrt(
+                Math.pow(faceCenter.x - lastFacePosition.x, 2) + 
+                Math.pow(faceCenter.y - lastFacePosition.y, 2)
+            ) / Math.max(face.width, face.height);
+            
+            // Ajustado para proporção quadrada - movimento mais tolerante
+            if (movement > ANTI_SPOOFING_CONFIG.maxFaceMovementThreshold) {
+                spoofingScore += 0.03; // Reduzido para câmera quadrada
+                faceStabilityStartTime = null;
+            } else {
+                if (!faceStabilityStartTime) {
+                    faceStabilityStartTime = currentTime;
+                }
+                spoofingScore = Math.max(0, spoofingScore - 0.15); // Aumentado para câmera quadrada
+            }
+        }
+        
+        lastFacePosition = faceCenter;
+        consecutiveDetections++;
+        
+        return {
+            isStable: faceStabilityStartTime && 
+                     (currentTime - faceStabilityStartTime) >= ANTI_SPOOFING_CONFIG.minFaceStabilityTime,
+            stabilityTime: faceStabilityStartTime ? currentTime - faceStabilityStartTime : 0,
+            spoofingScore: spoofingScore,
+            consecutiveDetections: consecutiveDetections
+        };
+    }
+    
+    function analyzeNaturalMotion(keypoints) {
+        if (keypoints.length < 4) return { isNatural: true, score: 0.5 }; // Mais tolerante
+        
+        // Analisa movimento natural dos pontos faciais
+        const eyeCenter = {
+            x: (keypoints[0].x + keypoints[1].x) / 2,
+            y: (keypoints[0].y + keypoints[1].y) / 2
+        };
+        
+        const mouthCenter = {
+            x: keypoints[3].x,
+            y: keypoints[3].y
+        };
+        
+        // Verifica se há variação natural na distância entre olhos e boca
+        const eyeMouthDistance = Math.sqrt(
+            Math.pow(eyeCenter.x - mouthCenter.x, 2) + 
+            Math.pow(eyeCenter.y - mouthCenter.y, 2)
+        );
+        
+        // Se a distância for muito constante, pode ser uma foto
+        const distanceVariation = faceDetectionHistory.length > 5 ? 
+            Math.abs(eyeMouthDistance - faceDetectionHistory[faceDetectionHistory.length - 5].keypoints[3].y) : 0;
+        
+        // Mais tolerante para câmera quadrada: considera natural se houver qualquer variação ou se for a primeira detecção
+        const isNatural = distanceVariation > ANTI_SPOOFING_CONFIG.depthVariationThreshold || 
+                         faceDetectionHistory.length <= 5;
+        
+        return {
+            isNatural: isNatural,
+            score: Math.min(1, distanceVariation / 0.03) // Ajustado para câmera quadrada
+        };
+    }
+    
+    function detectSpoofingAttempts(face, keypoints) {
+        let totalScore = 0;
+        let warnings = [];
+        
+        // 1. Análise de estabilidade (AJUSTADA PARA CÂMERA 800x800px)
+        const stability = analyzeFaceStability(face, keypoints);
+        if (!stability.isStable) {
+            warnings.push('Rosto muito instável');
+            totalScore += 0.1; // Reduzido para câmera quadrada
+        }
+        
+        // 2. Análise de movimento natural (AJUSTADA PARA CÂMERA 800x800px)
+        const motion = analyzeNaturalMotion(keypoints);
+        if (!motion.isNatural) {
+            warnings.push('Movimento não natural detectado');
+            totalScore += 0.15; // Reduzido para câmera quadrada
+        }
+        
+        // 3. Verificação de detecções consecutivas (AJUSTADA PARA CÂMERA 800x800px)
+        if (consecutiveDetections < ANTI_SPOOFING_CONFIG.requiredDetections) {
+            warnings.push('Poucas detecções consecutivas');
+            totalScore += 0.08; // Reduzido para câmera quadrada
+        }
+        
+        // 4. Análise de tamanho consistente (AJUSTADA PARA CÂMERA 800x800px)
+        const sizeVariation = faceDetectionHistory.length > 5 ? 
+            Math.abs(face.width - faceDetectionHistory[faceDetectionHistory.length - 5].size) / face.width : 0;
+        
+        if (sizeVariation < 0.003) { // Reduzido para câmera quadrada
+            warnings.push('Tamanho do rosto muito constante');
+            totalScore += 0.1; // Reduzido para câmera quadrada
+        }
+        
+        // 5. Score de spoofing acumulado (AJUSTADO PARA CÂMERA 800x800px)
+        totalScore += stability.spoofingScore * 0.3; // Reduzido o peso do score acumulado
+        
+        return {
+            isSpoofing: totalScore > 0.85, // Aumentado para câmera quadrada
+            score: Math.min(1, totalScore),
+            warnings: warnings,
+            details: {
+                stability: stability,
+                motion: motion,
+                consecutiveDetections: consecutiveDetections,
+                sizeVariation: sizeVariation
+            }
+        };
+    }
+    
+    function resetAntiSpoofing() {
+        faceDetectionHistory = [];
+        faceStabilityStartTime = null;
+        lastFacePosition = null;
+        spoofingScore = 0;
+        consecutiveDetections = 0;
+        if (livenessCheckTimer) {
+            clearInterval(livenessCheckTimer);
+            livenessCheckTimer = null;
+        }
+    }
+
+    // 6.5. Função de debug para desenvolvimento
+    function setupDebugButton() {
+        debugBtn.style.display = 'block';
+        debugBtn.addEventListener('click', () => {
+            console.log('=== DEBUG INFO ===');
+            console.log('Sistema de reconhecimento facial ativo');
+            console.log('Video dimensions:', video.videoWidth, 'x', video.videoHeight);
+            console.log('Canvas dimensions:', overlay.width, 'x', overlay.height);
+            console.log('Aspect ratio:', (video.videoWidth / video.videoHeight).toFixed(2));
+            console.log('Desired face width percent:', DESIRED_FACE_WIDTH_PERCENT);
+            console.log('Camera container size: 800x800px');
+            
+            console.log('=== ANTI-SPOOFING INFO ===');
+            console.log('Anti-Spoofing enabled:', ANTI_SPOOFING_CONFIG.enabled);
+            console.log('Face detection history:', faceDetectionHistory.length, 'entries');
+            console.log('Consecutive detections:', consecutiveDetections);
+            console.log('Spoofing score:', spoofingScore);
+            console.log('Face stability time:', faceStabilityStartTime ? Date.now() - faceStabilityStartTime : 'N/A');
+            console.log('Last face position:', lastFacePosition);
+            
+            // Alterna o Anti-Spoofing
+            ANTI_SPOOFING_CONFIG.enabled = !ANTI_SPOOFING_CONFIG.enabled;
+            console.log('Anti-Spoofing toggled to:', ANTI_SPOOFING_CONFIG.enabled);
+            
+            if (!ANTI_SPOOFING_CONFIG.enabled) {
+                updateStatus('🔓 Debug: Anti-Spoofing desabilitado - modo de teste', false, '#ffc107');
+                resetAntiSpoofing();
+            } else {
+                updateStatus('🔒 Debug: Anti-Spoofing habilitado', false, '#28a745');
+            }
+            
+            // Atualiza o texto do botão
+            debugBtn.innerHTML = ANTI_SPOOFING_CONFIG.enabled ? '🔧 Debug (Anti-Spoofing ON)' : '🔧 Debug (Anti-Spoofing OFF)';
+        });
+    }
+
     // 7. Inicialização
     async function initialize() {
         try {
@@ -331,14 +798,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
             updateStatus('📹 Iniciando câmera e configurando detecção...', true, '#6c757d');
             const stream = await navigator.mediaDevices.getUserMedia({
-                video: { width: { ideal: 1280, max: 1920 }, height: { ideal: 720, max: 1080 } }
+                video: { 
+                    width: { ideal: 800, max: 1280 }, 
+                    height: { ideal: 800, max: 1280 },
+                    aspectRatio: { ideal: 1.0 } // Força proporção quadrada
+                }
             });
             video.srcObject = stream;
             video.addEventListener('loadeddata', () => {
                 // Aguarda um pouco para garantir que o vídeo esteja totalmente carregado
                 setTimeout(() => {
-                    // Configura o canvas overlay com as dimensões do elemento vídeo na tela
-                    const videoRect = video.getBoundingClientRect();
+                    // Configura o canvas overlay com as dimensões corretas
                     overlay.width = video.videoWidth;
                     overlay.height = video.videoHeight;
                     
@@ -346,30 +816,41 @@ document.addEventListener('DOMContentLoaded', () => {
                     overlay.style.width = '100%';
                     overlay.style.height = '100%';
                     
+                    // Garante que o canvas tenha as mesmas dimensões do vídeo
+                    console.log('Canvas configurado:', {
+                        videoSize: `${video.videoWidth}x${video.videoHeight}`,
+                        canvasSize: `${overlay.width}x${overlay.height}`,
+                        scale: `${overlay.width / video.videoWidth}x${overlay.height / video.videoHeight}`
+                    });
+                    
                     // Debug: Verifica se o canvas foi configurado corretamente
                     console.log(`Canvas configurado: ${overlay.width}x${overlay.height}`);
                     console.log(`Vídeo stream: ${video.videoWidth}x${video.videoHeight}`);
-                    console.log(`Vídeo elemento: ${videoRect.width}x${videoRect.height}`);
+                    console.log(`Contexto do canvas:`, ctx);
                     
                     // Garante que o contexto do canvas está limpo
                     ctx.clearRect(0, 0, overlay.width, overlay.height);
                     
-                    // Teste visual: desenha um pequeno retângulo para verificar se o canvas está funcionando
+                    // Teste visual: desenha um retângulo de teste para verificar se o canvas está funcionando
                     ctx.fillStyle = '#ff0000';
-                    ctx.fillRect(20, 20, 10, 10);
-                    console.log('Teste visual: ponto vermelho desenhado');
+                    ctx.fillRect(20, 20, 50, 30);
+                    ctx.strokeStyle = '#00ff00';
+                    ctx.lineWidth = 3;
+                    ctx.strokeRect(20, 20, 50, 30);
+                    console.log('Teste visual: retângulo vermelho com borda verde desenhado');
                     
                     setTimeout(() => {
                         ctx.clearRect(0, 0, overlay.width, overlay.height);
                         console.log('Teste visual removido, sistema pronto');
-                    }, 2000);
-                    
-                    updateStatus('🎉 Sistema pronto! Posicione seu rosto na câmera', false, '#28a745');
-                    setTimeout(() => {
-                        updateStatus('👤 Posicione seu rosto na área da câmera para iniciar identificação', false, '#6c757d');
-                        detectFacesLoop(); // Inicia o loop de detecção
+                        
+                        updateStatus('🎉 Sistema pronto! Posicione seu rosto na câmera', false, '#28a745');
+                        setupDebugButton(); // Ativa o botão de debug
+                        setTimeout(() => {
+                            updateStatus('👤 Posicione seu rosto na área da câmera para iniciar identificação', false, '#6c757d');
+                            detectFacesLoop(); // Inicia o loop de detecção
+                        }, 2000);
                     }, 3000);
-                }, 500);
+                }, 1000);
             });
 
         } catch (err) {

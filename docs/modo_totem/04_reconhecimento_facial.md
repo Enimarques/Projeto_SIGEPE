@@ -1,6 +1,6 @@
 # Detalhes do Reconhecimento Facial
 
-O reconhecimento facial é a tecnologia central do Modo Totem, implementado com tecnologias de ponta para máxima precisão e performance. A implementação é dividida entre o frontend (detecção com MediaPipe) e o backend (identificação com face_recognition).
+O reconhecimento facial é a tecnologia central do Modo Totem, implementado com tecnologias de ponta para máxima precisão, segurança e performance. A implementação é dividida entre o frontend (detecção com MediaPipe) e o backend (identificação com face_recognition), com sistema avançado de Anti-Spoofing para defesa contra fraudes.
 
 ## Frontend: Detecção Avançada com MediaPipe
 
@@ -8,42 +8,136 @@ O reconhecimento facial é a tecnologia central do Modo Totem, implementado com 
 -   **MediaPipe Tasks Vision**: Biblioteca de IA do Google, construída sobre TensorFlow Lite, que oferece detecção facial de alta precisão e baixa latência.
 -   **Importação via ES6 Modules**: `import { FaceDetector, FilesetResolver } from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision/vision_bundle.js"`
 -   **Processamento Local**: Toda detecção é feita no navegador, sem enviar vídeo para o servidor.
+-   **Resolução Otimizada**: 800x800px para proporção quadrada ideal.
 
 ### **Funcionalidades Implementadas:**
-1.  **Detecção em Tempo Real**: Loop otimizado com `requestAnimationFrame` para máxima performance.
-2.  **Feedback Visual Avançado**: 
-    -   🟡 **Amarelo**: Rosto detectado, precisa aproximar
-    -   🟢 **Verde**: Rosto na posição ideal, processando
-    -   **Canvas Overlay**: Cantos coloridos desenhados ao redor do rosto
-3.  **Controle de Proximidade**: Calcula se o rosto ocupa pelo menos 25% da largura da tela.
-4.  **Mensagens Dinâmicas**: Sistema de status com emojis e cores para guiar o usuário.
 
-### **Processo de Detecção:**
+#### **1. Detecção em Tempo Real:**
+- Loop otimizado com `requestAnimationFrame` para máxima performance (~60fps)
+- Detecção de múltiplos rostos com foco no principal
+- Controle de proximidade baseado em 25% da largura da tela
+
+#### **2. Sistema Anti-Spoofing Avançado:**
+```javascript
+const ANTI_SPOOFING_CONFIG = {
+    enabled: true,
+    stabilityThreshold: 1000, // ms
+    movementThreshold: 0.05,
+    consecutiveDetections: 5,
+    sizeVariationThreshold: 0.1,
+    spoofingScoreThreshold: 0.5
+};
+```
+
+**Camadas de Segurança:**
+- **Análise de Estabilidade**: Monitora se o rosto permanece estável por 1 segundo
+- **Detecção de Movimento Natural**: Verifica movimentos sutis e naturais
+- **Análise de Detecções Consecutivas**: Requer múltiplas detecções consistentes
+- **Variação de Tamanho**: Detecta mudanças suspeitas no tamanho do rosto
+- **Score de Spoofing**: Calcula probabilidade de fraude (0-1)
+
+#### **3. Overlay Visual Moderno:**
+```javascript
+// Design avançado com gradientes e animações
+const cornerLength = Math.min(canvasWidth, canvasHeight) * 0.25;
+const lineWidth = 3;
+const cornerRadius = 2;
+
+// Gradiente dinâmico
+const gradient = ctx.createLinearGradient(finalCanvasX, finalCanvasY, 
+                                        finalCanvasX + canvasWidth, finalCanvasY + canvasHeight);
+gradient.addColorStop(0, niceColor);
+gradient.addColorStop(1, niceColor + '80');
+```
+
+**Características do Overlay:**
+- **Cantos arredondados**: Design moderno com raio de 2px
+- **Gradiente dinâmico**: Transição suave de cores
+- **Animação de pulso**: Efeito sutil nas pontas dos cantos
+- **Linhas internas**: Profundidade visual com linhas tracejadas
+- **Pontos de referência**: Pequenos círculos nos cantos
+- **Brilho de borda**: Efeito de sombra para destaque
+
+#### **4. Posicionamento Inteligente:**
+```javascript
+// Centralização automática no rosto
+const VERTICAL_OFFSET_PERCENT = 0.35; // Centraliza nos olhos
+const verticalOffset = -canvasHeight * VERTICAL_OFFSET_PERCENT;
+finalCanvasY += verticalOffset;
+```
+
+**Sistema de Centralização:**
+- **Offset vertical**: 35% para cima para centralizar nos olhos
+- **Escala automática**: Adapta-se à resolução da câmera
+- **Limites de canvas**: Previne overlay fora da área visível
+- **Logs detalhados**: Debug completo de posicionamento
+
+#### **5. Feedback Visual Avançado:**
+-   🟡 **Amarelo**: Rosto detectado, verificando segurança
+-   🟢 **Verde**: Rosto aprovado, processando identificação
+-   🔴 **Vermelho**: Tentativa de fraude detectada
+-   **Mensagens dinâmicas**: Sistema de status com emojis e cores
+
+### **Processo de Detecção Atualizado:**
 ```javascript
 async function detectFacesLoop() {
     const detections = faceDetector.detectForVideo(video, Date.now()).detections;
     
     if (detections.length > 0) {
         const face = detections[0].boundingBox;
+        const keypoints = detections[0].keypoints || [];
         const faceWidthPercent = face.width / video.videoWidth;
         
-        if (faceWidthPercent >= DESIRED_FACE_WIDTH_PERCENT) {
-            drawOverlay(face, '#28a745'); // Verde
-            updateStatus('🎯 Ótimo! Analisando...', true, '#28a745');
-            sendFrameForRecognition();
-        } else {
-            drawOverlay(face, '#ffc107'); // Amarelo
-            updateStatus('📏 Aproxime-se mais...', false, '#ffc107');
+        // Anti-Spoofing Analysis
+        let spoofingAnalysis = { isSpoofing: false, score: 0, warnings: [] };
+        
+        if (ANTI_SPOOFING_CONFIG.enabled) {
+            spoofingAnalysis = detectSpoofingAttempts(face, keypoints);
+            
+            if (spoofingAnalysis.isSpoofing) {
+                drawOverlay(face, '#dc3545', keypoints, {
+                    spoofingScore: spoofingAnalysis.score.toFixed(3),
+                    warnings: spoofingAnalysis.warnings.join(', ')
+                });
+                updateStatus('🚨 Tentativa de fraude detectada!', false, '#dc3545');
+                return;
+            }
         }
+        
+        if (faceWidthPercent >= DESIRED_FACE_WIDTH_PERCENT) {
+            if (!ANTI_SPOOFING_CONFIG.enabled || spoofingAnalysis.score < 0.5) {
+                drawOverlay(face, '#28a745', keypoints, {
+                    faceWidthPercent: faceWidthPercent,
+                    spoofingScore: spoofingAnalysis.score.toFixed(3)
+                });
+                updateStatus('🎯 Ótimo! Analisando...', true, '#28a745');
+                sendFrameForRecognition();
+            } else {
+                drawOverlay(face, '#ffc107', keypoints, {
+                    spoofingScore: spoofingAnalysis.score.toFixed(3),
+                    warnings: 'Aguardando estabilização'
+                });
+                updateStatus('🔒 Verificando segurança...', false, '#ffc107');
+            }
+        } else {
+            drawOverlay(face, '#ffc107', keypoints, {
+                faceWidthPercent: faceWidthPercent
+            });
+            updateStatus('📏 Aproxime-se da câmera', false, '#ffc107');
+        }
+    } else {
+        drawOverlay(null);
+        updateStatus('👤 Posicione seu rosto na área da câmera', false, '#6c757d');
     }
 }
 ```
 
 ### **Configuração Otimizada:**
--   **Resolução da Câmera**: 1280x720 (ideal) até 1920x1080 (máximo)
--   **Modelo**: BlazeFace Short Range para detecção rápida em curta distância
+-   **Resolução da Câmera**: 800x800px (proporção quadrada)
+-   **Modelo**: BlazeFace Short Range para detecção rápida
 -   **Taxa de Atualização**: ~60fps com `requestAnimationFrame`
 -   **Tolerância**: 25% da largura da tela para proximidade mínima
+-   **Anti-Spoofing**: Habilitado por padrão com configurações rigorosas
 
 ## Backend: Identificação Robusta com `face_recognition`
 
@@ -65,6 +159,9 @@ def save_biometric_vector(visitante, foto):
         if encodings:
             visitante.biometric_vector = encodings[0].tolist()
             visitante.save()
+            logging.info(f"Vetor biométrico gerado para {visitante.nome_completo}")
+        else:
+            logging.warning(f"Nenhum rosto detectado na foto de {visitante.nome_completo}")
     except Exception as e:
         logging.error(f"Erro ao gerar vetor: {e}")
 ```
@@ -92,6 +189,7 @@ def api_reconhecer_rosto(request):
             distancia = face_recognition.face_distance([vetor_salvo], rosto_conhecido)[0]
             
             if distancia < TOLERANCIA_RECONHECIMENTO:  # ~0.6
+                logging.info(f"Visitante reconhecido: {visitante.nome_completo} (confiança: {round((1 - distancia) * 100, 2)}%)")
                 return JsonResponse({
                     'success': True,
                     'visitante_id': visitante.id,
@@ -99,8 +197,10 @@ def api_reconhecer_rosto(request):
                     'confianca': round((1 - distancia) * 100, 2)
                 })
         
+        logging.warning("Visitante não reconhecido - nenhuma correspondência encontrada")
         return JsonResponse({'success': False, 'error': 'Visitante não reconhecido'})
     except Exception as e:
+        logging.error(f"Erro no reconhecimento: {e}")
         return JsonResponse({'success': False, 'error': str(e)})
 ```
 
@@ -121,4 +221,59 @@ def api_reconhecer_rosto(request):
 -   **Imagem inválida**: Validação de formato e conteúdo
 -   **Múltiplos rostos**: Processo apenas o maior/mais central
 -   **Rosto não encontrado**: Feedback claro para reposicionamento
--   **Timeout**: Controle de tempo para evitar travamentos 
+-   **Timeout**: Controle de tempo para evitar travamentos
+
+## Sistema de Debug e Monitoramento
+
+### **Logs Detalhados:**
+```javascript
+// Logs de posicionamento
+console.log('🎯 Posicionamento do overlay:', {
+    original: { originX, originY, width, height },
+    canvas: { canvasX, canvasY, canvasWidth, canvasHeight },
+    final: { finalCanvasX, finalCanvasY },
+    verticalOffsetPixels: Math.round(-canvasHeight * VERTICAL_OFFSET_PERCENT),
+    note: 'Overlay centralizado nos olhos (35% para cima)'
+});
+
+// Logs de Anti-Spoofing
+console.log('🔍 Análise Anti-Spoofing:', {
+    score: spoofingAnalysis.score.toFixed(3),
+    isSpoofing: spoofingAnalysis.isSpoofing,
+    warnings: spoofingAnalysis.warnings,
+    details: spoofingAnalysis.details
+});
+```
+
+### **Botão de Debug:**
+- **Forçar reconhecimento**: Bypass temporário das verificações
+- **Informações de segurança**: Mostra score de spoofing em tempo real
+- **Logs visuais**: Debug overlay com informações técnicas
+- **Modo de teste**: Desabilita Anti-Spoofing para testes
+
+### **Métricas de Performance:**
+- **Taxa de detecção**: FPS e latência
+- **Precisão**: Taxa de falsos positivos/negativos
+- **Segurança**: Tentativas de fraude detectadas
+- **Usabilidade**: Tempo médio de reconhecimento
+
+## Configurações de Segurança
+
+### **Anti-Spoofing:**
+- **Estabilidade mínima**: 1000ms de rosto estável
+- **Movimento natural**: Detecção de micro-movimentos
+- **Detecções consecutivas**: Mínimo 5 detecções consistentes
+- **Variação de tamanho**: Máximo 10% de variação
+- **Score de fraude**: Threshold de 0.5 (50%)
+
+### **Reconhecimento:**
+- **Tolerância**: 0.6 (60% de similaridade mínima)
+- **Timeout**: 30 segundos para reconhecimento
+- **Retry**: Máximo 3 tentativas consecutivas
+- **Cache**: 5 minutos de cache de vetores
+
+### **Interface:**
+- **Feedback visual**: Cores e mensagens claras
+- **Animações**: Suaves e não distrativas
+- **Responsividade**: Adapta-se a diferentes resoluções
+- **Acessibilidade**: Contraste e tamanhos adequados 
