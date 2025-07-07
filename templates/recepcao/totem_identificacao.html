@@ -41,8 +41,6 @@
     margin: 1.25rem 0;
 }
 
-
-
 .main-subtitle {
     font-size: 1.3rem;
     font-weight: 400;
@@ -79,26 +77,33 @@
     height: 100%;
     pointer-events: none;
     z-index: 10;
+    transition: box-shadow 0.3s, border 0.3s;
 }
 
 #status-message {
+    font-family: 'Poppins', sans-serif;
     margin-top: 1.5rem;
     font-size: 1.2rem;
     font-weight: 500;
     color: #555;
-    min-height: 2rem; /* Reserva espaço para a mensagem */
-    transition: color 0.3s ease, transform 0.2s ease;
+    min-height: 2rem;
+    transition: color 0.3s, background 0.3s, transform 0.2s, box-shadow 0.3s;
     text-align: center;
-    padding: 0.5rem;
-    border-radius: 8px;
-    background: rgba(255, 255, 255, 0.1);
+    padding: 0.5rem 1.2rem;
+    border-radius: 12px;
+    background: rgba(255,255,255,0.13);
+    box-shadow: 0 2px 12px rgba(34,34,34,0.07);
     backdrop-filter: blur(5px);
+    letter-spacing: 0.01em;
 }
 
 .spinner-border {
-    width: 1.5rem;
-    height: 1.5rem;
-    vertical-align: text-bottom;
+    width: 2rem;
+    height: 2rem;
+    margin-bottom: 0.2rem;
+    color: #5e72e4 !important;
+    display: inline-block;
+    vertical-align: middle;
 }
 
 .btn-voltar {
@@ -107,19 +112,20 @@
     color: white;
     padding: 0.75rem 2rem;
     font-size: 1.1rem;
-    border-radius: 25px;
+    border-radius: 30px;
     text-decoration: none;
-    transition: all 0.3s ease;
-    box-shadow: 0 3px 10px rgba(108, 117, 125, 0.3);
+    transition: all 0.3s;
+    box-shadow: 0 2px 8px rgba(108, 117, 125, 0.18);
     display: inline-block;
+    font-family: 'Poppins', sans-serif;
 }
 
 .btn-voltar:hover {
     background-color: #5a6268;
     border-color: #545b62;
     color: white;
-    transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(108, 117, 125, 0.4);
+    transform: translateY(-2px) scale(1.03);
+    box-shadow: 0 5px 15px rgba(108, 117, 125, 0.22);
     text-decoration: none;
 }
 </style>
@@ -168,7 +174,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const spinner = document.getElementById('spinner');
     const ctx = overlay.getContext('2d');
 
-    const DESIRED_FACE_WIDTH_PERCENT = 0.25; // Reduzido de 0.35 para 0.25
+    const DESIRED_FACE_WIDTH_PERCENT = 0.16; // Ajustado para permitir reconhecimento a ~1,05m
     const RECOGNITION_PAUSE_MS = 2000; // Pausa após uma tentativa falha
 
     let faceDetector;
@@ -179,39 +185,34 @@ document.addEventListener('DOMContentLoaded', () => {
     function drawOverlay(box, color) {
         ctx.clearRect(0, 0, overlay.width, overlay.height);
         if (!box) return;
-
-        // Debug: Confirma que a função está sendo chamada
-        console.log(`Desenhando overlay: ${color}`, box);
-
+        // Suaviza a cor do overlay
+        let niceColor = color === '#28a745' ? '#3ec97a' : (color === '#ffc107' ? '#ffb347' : color);
+        overlay.style.boxShadow = color === '#28a745' ? '0 0 16px #3ec97a88' : (color === '#ffc107' ? '0 0 12px #ffb34788' : 'none');
+        overlay.style.border = color === '#28a745' ? '2px solid #3ec97a' : (color === '#ffc107' ? '2px solid #ffb347' : '2px solid #fff');
         const { originX, originY, width, height } = box;
         const cornerLength = width * 0.2;
         const lineWidth = 6;
-
-        ctx.strokeStyle = color;
+        ctx.strokeStyle = niceColor;
         ctx.lineWidth = lineWidth;
         ctx.lineCap = 'round';
-
         // Top-left
         ctx.beginPath();
         ctx.moveTo(originX + cornerLength, originY);
         ctx.lineTo(originX, originY);
         ctx.lineTo(originX, originY + cornerLength);
         ctx.stroke();
-
         // Top-right
         ctx.beginPath();
         ctx.moveTo(originX + width - cornerLength, originY);
         ctx.lineTo(originX + width, originY);
         ctx.lineTo(originX + width, originY + cornerLength);
         ctx.stroke();
-
         // Bottom-left
         ctx.beginPath();
         ctx.moveTo(originX + cornerLength, originY + height);
         ctx.lineTo(originX, originY + height);
         ctx.lineTo(originX, originY + height - cornerLength);
         ctx.stroke();
-
         // Bottom-right
         ctx.beginPath();
         ctx.moveTo(originX + width - cornerLength, originY + height);
@@ -223,11 +224,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // 4. Função para atualizar a mensagem de status
     function updateStatus(message, showSpinner = false, color = '#555') {
         let spinnerHtml = showSpinner ? `<div class="spinner-border text-primary" role="status"><span class="visually-hidden">...</span></div>` : '';
-        
-        // Efeito de fade para transição suave
         statusMessage.style.opacity = '0.7';
         statusMessage.style.transform = 'scale(0.98)';
-        
         setTimeout(() => {
             statusMessage.innerHTML = `${spinnerHtml} ${message}`;
             statusMessage.style.color = color;

@@ -10,95 +10,138 @@
     align-items: center;
     justify-content: center;
     min-height: calc(100vh - 2rem);
-    padding: 2rem;
+    padding: 1.5rem;
 }
 
 /* Container do comprovante */
 .comprovante-info{
     font-weight: 600;
     font-size: 1.1rem;
+    margin: 1.5rem 0;
+    color: #495057;
 }
 .ticket-container {
     background-color: white;
-    max-width: 450px;
+    max-width: 500px;
     width: 100%;
-    padding: 2.5rem;
-    border-radius: 15px;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+    padding: 3rem 2.5rem;
+    border-radius: 20px;
+    box-shadow: 0 15px 50px rgba(0, 0, 0, 0.12);
     text-align: center;
+    margin: 0 auto;
+}
+
+/* Header do comprovante */
+.ticket-header {
+    margin-bottom: 2rem;
 }
 .ticket-header img {
-    width: 60px;
-    margin-bottom: 1rem;
+    width: 70px;
+    height: auto;
+    margin-bottom: 1.5rem;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
 }
 .ticket-header .instituicao {
-    font-weight: 600;
-    font-size: 1.1rem;
+    font-weight: 700;
+    font-size: 1.3rem;
+    color: #2c3e50;
+    margin-bottom: 0.5rem;
+    letter-spacing: 0.5px;
 }
 .ticket-header .programa {
-    font-size: 0.9rem;
+    font-size: 1rem;
     color: #6c757d;
-    margin-bottom: 1.5rem;
+    margin-bottom: 1rem;
+    font-weight: 500;
 }
+
+/* Separadores */
 .separator {
-    border-top: 2px dashed #e9ecef;
-    margin: 1rem 0;
+    border-top: 3px dashed #e9ecef;
+    margin: 2rem 0;
+    width: 100%;
 }
+
+/* Nome do visitante */
 .ticket-visitor-name {
-    font-size: 1.8rem;
+    font-size: 2rem;
     font-weight: 700;
-    color: #343a40;
-    padding: 1rem 0;
+    color: #2c3e50;
+    padding: 1.5rem 0;
+    margin: 1rem 0;
+    line-height: 1.2;
+    letter-spacing: 0.5px;
+}
+
+/* Informações do ticket */
+.ticket-info {
+    margin: 2rem 0;
+    padding: 0 1rem;
 }
 .ticket-info p {
-    font-size: 1rem;
-    margin-bottom: 0.5rem;
+    font-size: 1.1rem;
+    margin-bottom: 1rem;
     color: #495057;
+    line-height: 1.5;
+    padding: 0.5rem 0;
 }
 .ticket-info p strong {
-    color: #343a40;
+    color: #2c3e50;
+    font-weight: 600;
+    margin-right: 0.5rem;
 }
 
 /* Rodapé com botões */
 .ticket-footer {
-    margin-top: 2.5rem; /* Mais espaço acima dos botões */
+    margin-top: 3rem;
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 0.75rem;
+    gap: 1rem;
+    padding: 0 1rem;
 }
 .ticket-footer .btn {
     width: 100%;
-    max-width: 350px;
-    padding: 0.75rem;
-    font-size: 1rem;
-    border-radius: 8px;
-    font-weight: 500;
-    transition: all 0.2s ease-in-out;
-    border: 1px solid transparent;
+    max-width: 400px;
+    padding: 1rem 1.5rem;
+    font-size: 1.1rem;
+    border-radius: 12px;
+    font-weight: 600;
+    transition: all 0.3s ease-in-out;
+    border: 2px solid transparent;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
 }
 .btn-print {
-    background-color: #4A90E2; /* Azul Elétrico */
+    background: linear-gradient(135deg, #4A90E2 0%, #357ABD 100%);
     color: white;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    box-shadow: 0 4px 15px rgba(74, 144, 226, 0.3);
 }
 .btn-print:hover {
-    background-color: #357ABD;
-    border-color: #357ABD;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    background: linear-gradient(135deg, #357ABD 0%, #2c5aa0 100%);
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(74, 144, 226, 0.4);
+    color: white;
+    text-decoration: none;
 }
 
 .btn-finish {
-    background-color: #fff; /* Outline */
-    color: #4A4A4A; /* Cinza Escuro */
-    border: 1px solid #4A4A4A;
+    background-color: #fff;
+    color: #495057;
+    border: 2px solid #e9ecef;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
 }
 .btn-finish:hover {
-    background-color: #4A4A4A; /* Preenche no hover */
-    color: #fff;
+    background-color: #f8f9fa;
+    border-color: #6c757d;
+    color: #495057;
     transform: translateY(-2px);
-    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+    text-decoration: none;
 }
 
 /* Estilos de Impressão Otimizados */
@@ -117,38 +160,59 @@
     
     .ticket-screen {
         min-height: auto;
-        padding: 10px;
+        padding: 0.5in;
         background: white !important;
+        display: block;
     }
     
     .ticket-container {
         max-width: none;
         width: auto;
         margin: 0;
-        padding: 20px;
+        padding: 0.5in;
         box-shadow: none;
-        border: 2px solid #e9ecef;
+        border: 2px solid #2c3e50;
         page-break-inside: avoid;
+        border-radius: 0;
     }
     
     /* Garante que o texto seja legível */
     .ticket-visitor-name {
         color: #000 !important;
+        font-size: 1.8rem !important;
     }
     
     .ticket-info p,
     .ticket-info p strong {
         color: #000 !important;
+        font-size: 1rem !important;
     }
     
     .instituicao {
         color: #000 !important;
+        font-size: 1.2rem !important;
+    }
+    
+    .programa {
+        color: #000 !important;
+        font-size: 0.9rem !important;
     }
     
     /* Otimiza o tamanho da página */
     @page {
-        margin: 0.5in;
+        margin: 0.75in;
         size: auto;
+    }
+    
+    /* Centraliza o conteúdo na impressão */
+    .ticket-header,
+    .ticket-info {
+        text-align: center !important;
+    }
+    
+    .separator {
+        margin: 1.5rem auto !important;
+        width: 80% !important;
     }
 }
 </style>
@@ -163,21 +227,29 @@
             <div class="programa">URUTAL - Comprovante de Visita</div>
             <p class="comprovante-info">Por favor, aguarde a impressão da sua Etiqueta.</p>
         </div>
+        
         <div class="separator"></div>
-        <div class="ticket-visitor-name">{{ visita.visitante.nome_social|default:visita.visitante.nome_completo|upper }}</div>
+        
+        <div class="ticket-visitor-name">
+            {{ visita.visitante.nome_social|default:visita.visitante.nome_completo|upper }}
+        </div>
+        
         <div class="separator"></div>
+        
         <div class="ticket-info">
-            <p><strong>Destino:</strong>  {% if visita.setor.tipo == 'gabinete' %}
-                {{ visita.setor.nome_vereador|upper }}
-            {% else %}
-                {{ visita.setor.nome_local|upper }}
-            {% endif %}</p>
+            <p><strong>Destino:</strong> 
+                {% if visita.setor.tipo == 'gabinete' %}
+                    {{ visita.setor.nome_vereador|upper }}
+                {% else %}
+                    {{ visita.setor.nome_local|upper }}
+                {% endif %}
+            </p>
             <p><strong>Local:</strong> {{ visita.get_localizacao_display }}</p>
             <p><strong>Data/Hora:</strong> {{ visita.data_entrada|date:"d/m/Y H:i" }}</p>
         </div>
 
         <div class="ticket-footer">
-            <button onclick="printTicket()" class="btn btn-print">
+            <button onclick="window.location.href='{% url 'recepcao:gerar_etiqueta' visita.id %}?auto_print=1'" class="btn btn-print">
                 <i class="fas fa-print me-2"></i>Imprimir Comprovante
             </button>
             
@@ -192,20 +264,10 @@
 {% block extra_js %}
 <script>
 window.onload = function() {
-    // Abre a etiqueta em uma nova janela e imprime automaticamente
-    var win = window.open("{% url 'recepcao:gerar_etiqueta' visita.id %}?auto_print=1", "_blank", "width=400,height=300");
     // Redireciona para a home do totem após 60 segundos
     setTimeout(function() {
         window.location.href = "{% url 'recepcao:totem_welcome' %}";
     }, 60000);
 }
-
-function printTicket() {
-    // Abre a página da etiqueta para impressão no formato 60x40mm
-    window.open("{% url 'recepcao:gerar_etiqueta' visita.id %}?auto_print=1", "_blank", "width=400,height=300");
-}
-
-
-
 </script>
 {% endblock %} 
