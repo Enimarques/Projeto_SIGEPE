@@ -33,11 +33,11 @@
 <body>
     {% if not hide_header_footer %}
     <!-- Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-dark" style="background: linear-gradient(075deg,rgb(69, 96, 218) 10%, #238b8b 100%);">
+    <nav class="navbar navbar-expand-lg navbar-dark" style="background: linear-gradient(135deg, #667eea 0%, #238b8b 100%); border-radius: 0 0 18px 18px; box-shadow: 0 4px 16px rgba(34,34,34,0.08);">
         <div class="container-fluid">
             <a class="navbar-brand" href="{% url 'main:home_sistema' %}">
                 <img src="{% static 'img/logo-urutau.png' %}" alt="Logo Urutau" style="height: 45px; max-width: 45px; object-fit: contain;" class="me-2 align-middle">
-                <span style="text-shadow: -1px -1px 0 #333, 1px -1px 0 #333, -1px 1px 0 #333, 1px 1px 0 #333;">URUTAU</span>
+                <span style="font-family: 'Poppins', sans-serif; font-weight: 700; font-size: 1.7rem; color: #fff; letter-spacing: 1px;">URUTAU</span>
             </a>
             {% if app_name %}
             <a class="nav-link text-white ms-3" href="{% if app_name == 'recepcao' %}{% url 'recepcao:home_recepcao' %}{% elif app_name == 'veiculos' %}{% url 'veiculos:home_veiculos' %}{% elif app_name == 'gabinetes' %}{% url 'recepcao:home_gabinetes' %}{% endif %}">
