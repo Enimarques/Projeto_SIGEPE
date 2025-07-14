@@ -40,7 +40,7 @@ INSTALLED_APPS = [
     'apps.autenticacao.apps.AutenticacaoConfig',
     'apps.recepcao.apps.RecepcaoConfig',
     'apps.veiculos.apps.VeiculosConfig',
-    'relatorios',
+    'apps.relatorios',
     'crispy_forms',
     'crispy_bootstrap5',
 ]
@@ -175,10 +175,6 @@ LOGGING = {
     },
 }
 
-# Certifica que o diretório de logs existe
-logs_dir = os.path.join(BASE_DIR, 'logs')
-os.makedirs(logs_dir, exist_ok=True)
-
 # Configurações de segurança
 SECURE_BROWSER_XSS_FILTER = True
 SECURE_CONTENT_TYPE_NOSNIFF = True
@@ -200,3 +196,39 @@ LOGOUT_REDIRECT_URL = 'autenticacao:login_sistema'
 # Session settings
 SESSION_COOKIE_AGE = 86400  # 24 hours in seconds
 SESSION_EXPIRE_AT_BROWSER_CLOSE = False
+
+# =====================
+# Configurações customizadas de imagens, cache e upload (vindas de config/settings.py)
+# =====================
+
+# Cache configuration
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'LOCATION': 'unique-snowflake',
+    }
+}
+
+# Media files configuration (já existe, mas mantido para referência)
+# MEDIA_URL = '/media/'
+# MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+# Maximum upload size (5MB)
+MAX_UPLOAD_SIZE = 5 * 1024 * 1024  # 5MB in bytes
+
+# Allowed image types
+ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp']
+
+# Image sizes configuration
+IMAGE_SIZES = {
+    'thumbnail': (100, 100),
+    'medium': (300, 300),
+    'large': (800, 800)
+}
+
+# Image quality settings
+IMAGE_QUALITY = {
+    'thumbnail': 75,
+    'medium': 85,
+    'large': 90
+}
