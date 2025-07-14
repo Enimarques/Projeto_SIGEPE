@@ -341,8 +341,13 @@ async function carregarSetores() {
             return [];
         }
     };
-    const gabinetes = await fetchSetores('gabinete');
-    const departamentos = await fetchSetores('departamento');
+    let gabinetes = await fetchSetores('gabinete');
+    let departamentos = await fetchSetores('departamento');
+
+    // FORÇA ORDEM ALFABÉTICA PELO NOME
+    gabinetes = gabinetes.sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
+    departamentos = departamentos.sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
+
     renderGrid('gabinetes-grid', gabinetes);
     renderGrid('departamentos-grid', departamentos);
 }

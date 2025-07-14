@@ -61,6 +61,10 @@ def home_recepcao(request):
     veiculos_no_estacionamento = Veiculo.objects.filter(status='presente').count()
     total_veiculos_cadastrados = Veiculo.objects.count()
     
+    # Contagem de gabinetes abertos
+    gabinetes = Setor.objects.filter(tipo='gabinete', ativo=True)
+    gabinetes_abertos = sum(1 for g in gabinetes if g.esta_aberto())
+    
     context = get_base_context()
     context.update({
         'visitas_hoje': visitas_hoje,
@@ -68,7 +72,8 @@ def home_recepcao(request):
         'visitas_finalizadas_hoje': visitas_finalizadas_hoje,
         'total_visitantes': total_visitantes,
         'veiculos_no_estacionamento': veiculos_no_estacionamento,
-        'total_veiculos_cadastrados': total_veiculos_cadastrados
+        'total_veiculos_cadastrados': total_veiculos_cadastrados,
+        'gabinetes_abertos': gabinetes_abertos,
     })
     return render(request, 'recepcao/home_recepcao.html', context)
 
@@ -292,6 +297,8 @@ def buscar_setores(request):
         dados = {
             'id': setor.id,
             'nome': setor.nome_vereador if tipo == 'gabinete' else setor.nome_local,
+            'nome_vereador': setor.nome_vereador if tipo == 'gabinete' else None,
+            'nome_local': setor.nome_local if tipo == 'departamento' else None,
             'tipo': setor.tipo,
             'localizacao': setor.get_localizacao_display(),
             'funcao': setor.get_funcao_display() if setor.funcao else None,
@@ -1320,12 +1327,17 @@ def api_get_setores(request):
     if tipo not in ['departamento', 'gabinete']:
         return JsonResponse({'success': False, 'error': 'Tipo inválido'}, status=400)
     
-    setores = Setor.objects.filter(tipo=tipo, ativo=True).order_by('id')
+    if tipo == 'gabinete':
+        setores = Setor.objects.filter(tipo=tipo, ativo=True).order_by('nome_vereador')
+    else:
+        setores = Setor.objects.filter(tipo=tipo, ativo=True).order_by('nome_local')
     setores_data = []
     for setor in setores:
         dados = {
             'id': setor.id,
             'nome': setor.nome_vereador if tipo == 'gabinete' else setor.nome_local,
+            'nome_vereador': setor.nome_vereador if tipo == 'gabinete' else None,
+            'nome_local': setor.nome_local if tipo == 'departamento' else None,
             'tipo': setor.tipo,
             'localizacao': setor.get_localizacao_display(),
             'funcao': setor.get_funcao_display() if setor.funcao else None,

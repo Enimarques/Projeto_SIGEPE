@@ -100,7 +100,7 @@ body, html {
     color: #fff;
     border-radius: 18px;
     padding: 28px 18px;
-    margin-bottom: 25px;
+    margin-bottom: 0px;
     box-shadow: 0 4px 15px rgba(103,119,239,0.08);
     transition: all 0.3s ease;
     border: none;
@@ -171,6 +171,61 @@ body, html {
         </div>
     </div>
 
+       <!-- Dashboard -->
+       <div class="row justify-content-center mb-5">
+        {% if is_guarita %}
+            <!-- Veículos no Estacionamento -->
+            <div class="col-xl-3 col-md-6 mb-4">
+                <div class="stat-card stat-card-visitas-andamento">
+                    <i class="fas fa-car stat-icon"></i>
+                    <h3>{{ veiculos_no_estacionamento }}</h3>
+                    <p>Veículos no Estacionamento</p>
+                </div>
+            </div>
+            <!-- Total de Veículos -->
+            <div class="col-xl-3 col-md-6 mb-4">
+                <div class="stat-card stat-card-total-visitas">
+                    <i class="fas fa-car-side stat-icon"></i>
+                    <h3>{{ total_veiculos }}</h3>
+                    <p>Veículos Cadastrados</p>
+                </div>
+            </div>
+        {% else %}
+            <!-- Visitas em Andamento -->
+            <div class="col-xl-3 col-md-6 mb-4">
+                <div class="stat-card stat-card-visitas-andamento">
+                    <i class="fas fa-clock stat-icon"></i>
+                    <h3>{{ visitas_em_andamento }}</h3>
+                    <p>Visitas em Andamento</p>
+                </div>
+            </div>
+            <!-- Total de Visitantes -->
+            <div class="col-xl-3 col-md-6 mb-4">
+                <div class="stat-card stat-card-visitas-hoje">
+                    <i class="fas fa-users stat-icon"></i>
+                    <h3>{{ total_visitantes }}</h3>
+                    <p>Visitantes Cadastrados</p>
+                </div>
+            </div>
+            <!-- Veículos no Estacionamento -->
+            <div class="col-xl-3 col-md-6 mb-4">
+                <div class="stat-card stat-card-total-visitas">
+                    <i class="fas fa-car stat-icon"></i>
+                    <h3>{{ veiculos_no_estacionamento }}</h3>
+                    <p>Veículos no Estacionamento</p>
+                </div>
+            </div>
+            <!-- Total de Veículos -->
+            <div class="col-xl-3 col-md-6 mb-4">
+                <div class="stat-card stat-card-visitas-mes">
+                    <i class="fas fa-car-side stat-icon"></i>
+                    <h3>{{ total_veiculos }}</h3>
+                    <p>Veículos Cadastrados</p>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+
     <!-- Bloco de cards reais dos módulos -->
     <div class="row justify-content-center">
         <div class="col-md-4 mb-4">
@@ -229,59 +284,6 @@ body, html {
         </div>
     </div>
 
-    <!-- Dashboard -->
-    <div class="row justify-content-center mb-5">
-        {% if is_guarita %}
-            <!-- Veículos no Estacionamento -->
-            <div class="col-xl-3 col-md-6 mb-4">
-                <div class="stat-card stat-card-visitas-andamento">
-                    <i class="fas fa-car stat-icon"></i>
-                    <h3>{{ veiculos_no_estacionamento }}</h3>
-                    <p>Veículos no Estacionamento</p>
-                </div>
-            </div>
-            <!-- Total de Veículos -->
-            <div class="col-xl-3 col-md-6 mb-4">
-                <div class="stat-card stat-card-total-visitas">
-                    <i class="fas fa-car-side stat-icon"></i>
-                    <h3>{{ total_veiculos }}</h3>
-                    <p>Veículos Cadastrados</p>
-                </div>
-            </div>
-        {% else %}
-            <!-- Visitas em Andamento -->
-            <div class="col-xl-3 col-md-6 mb-4">
-                <div class="stat-card stat-card-visitas-andamento">
-                    <i class="fas fa-clock stat-icon"></i>
-                    <h3>{{ visitas_em_andamento }}</h3>
-                    <p>Visitas em Andamento</p>
-                </div>
-            </div>
-            <!-- Total de Visitantes -->
-            <div class="col-xl-3 col-md-6 mb-4">
-                <div class="stat-card stat-card-visitas-hoje">
-                    <i class="fas fa-users stat-icon"></i>
-                    <h3>{{ total_visitantes }}</h3>
-                    <p>Visitantes Cadastrados</p>
-                </div>
-            </div>
-            <!-- Veículos no Estacionamento -->
-            <div class="col-xl-3 col-md-6 mb-4">
-                <div class="stat-card stat-card-total-visitas">
-                    <i class="fas fa-car stat-icon"></i>
-                    <h3>{{ veiculos_no_estacionamento }}</h3>
-                    <p>Veículos no Estacionamento</p>
-                </div>
-            </div>
-            <!-- Total de Veículos -->
-            <div class="col-xl-3 col-md-6 mb-4">
-                <div class="stat-card stat-card-visitas-mes">
-                    <i class="fas fa-car-side stat-icon"></i>
-                    <h3>{{ total_veiculos }}</h3>
-                    <p>Veículos Cadastrados</p>
-                </div>
-            </div>
-        {% endif %}
-    </div>
+
 </div>
 {% endblock %}

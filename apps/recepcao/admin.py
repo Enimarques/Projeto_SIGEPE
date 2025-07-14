@@ -17,7 +17,7 @@ class SetorAdmin(admin.ModelAdmin):
     list_display = ('get_nome_display', 'tipo', 'localizacao', 'get_nome_responsavel', 'funcao', 'get_horario_trabalho', 'get_status_presenca', 'ativo', 'excluir_com_visitas')
     list_filter = ('tipo', 'localizacao', 'ativo')
     search_fields = ('nome_vereador', 'nome_local', 'nome_responsavel', 'email')
-    ordering = ['tipo', 'id']
+    ordering = ['tipo', 'nome_vereador', 'nome_local']
     readonly_fields = ('data_criacao', 'data_atualizacao')
 
     def get_fieldsets(self, request, obj=None):
@@ -55,7 +55,7 @@ class SetorAdmin(admin.ModelAdmin):
                 # Formulário de adição: remove horário_entrada e horário_saida
                 return (
                     ('Informações do Setor', {
-                        'fields': ('tipo', 'localizacao', 'foto', 'nome_local', 'horario_abertura', 'horario_fechamento'),
+                        'fields': ('tipo', 'localizacao', 'foto', 'nome_local', 'nome_vereador', 'email_vereador', 'horario_abertura', 'horario_fechamento'),
                         'description': 'Informações básicas do setor'
                     }),
                     ('Informações do Responsável', {

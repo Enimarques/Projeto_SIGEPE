@@ -115,11 +115,32 @@ class SetorForm(forms.ModelForm):
         hide_responsavel = kwargs.pop('hide_responsavel', False)
         super().__init__(*args, **kwargs)
         instance = getattr(self, 'instance', None)
-        
+        tipo = None
+        # Tenta pegar o tipo do POST, do instance ou do initial
+        if 'tipo' in self.data:
+            tipo = self.data.get('tipo')
+        elif instance and instance.pk:
+            tipo = instance.tipo
+        elif 'tipo' in self.initial:
+            tipo = self.initial['tipo']
+
+        # Esconde campos de acordo com o tipo e remove obrigatoriedade
+        if tipo == 'gabinete':
+            if 'nome_local' in self.fields:
+                self.fields['nome_local'].widget = forms.HiddenInput()
+                self.fields['nome_local'].required = False
+        elif tipo == 'departamento':
+            if 'nome_vereador' in self.fields:
+                self.fields['nome_vereador'].widget = forms.HiddenInput()
+                self.fields['nome_vereador'].required = False
+            if 'email_vereador' in self.fields:
+                self.fields['email_vereador'].widget = forms.HiddenInput()
+                self.fields['email_vereador'].required = False
+
         # Se for edição de gabinete pelo assessor, esconde o campo
         if hide_responsavel or (instance and instance.tipo == 'gabinete'):
             self.fields.pop('nome_responsavel', None)
-        
+
         # Mostra/esconde campos baseado no tipo
         if instance:
             if instance.tipo == 'gabinete':

@@ -121,6 +121,10 @@
         background: linear-gradient(135deg, #e67e22, #e74c3c);
     }
 
+    .stat-card-gabinetes-abertos {
+        background: linear-gradient(135deg, #8e54e9, #4776e6);
+    }
+
     /* Seção de ações rápidas */
     .quick-actions {
         background: #f8f9fa;
@@ -379,32 +383,34 @@
                     <p>Visitantes Cadastrados</p>
                 </div>
             </div>
-            
+                        
             <div class="col-xl-3 col-md-6 mb-4">
-                <div class="stat-card stat-card-veiculos-estacionamento">
-                    <i class="fas fa-car stat-icon"></i>
-                    <h3 id="veiculos-estacionamento">{{ veiculos_no_estacionamento }}</h3>
-                    <p>Veículos no Estacionamento</p>
+                <div class="stat-card stat-card-total-visitas">
+                    <i class="fas fa-user-check stat-icon"></i>
+                    <h3 id="visitas-hoje">{{ visitas_hoje }}</h3>
+                    <p>Visitas Hoje</p>
                 </div>
             </div>
-            
+
             <div class="col-xl-3 col-md-6 mb-4">
-                <div class="stat-card stat-card-total-veiculos">
-                    <i class="fas fa-car-side stat-icon"></i>
-                    <h3 id="total-veiculos">{{ total_veiculos_cadastrados }}</h3>
-                    <p>Veículos Cadastrados</p>
+                <div class="stat-card stat-card-gabinetes-abertos">
+                    <i class="fas fa-door-open stat-icon"></i>
+                    <h3 id="gabinetes-abertos">{{ gabinetes_abertos }}</h3>
+                    <p>Gabinetes Abertos</p>
                 </div>
             </div>
         </div>
 
+       
+
         <!-- Alertas e Notificações -->
-        {% if visitas_em_andamento > 10 or veiculos_no_estacionamento > 15 %}
+        {% if visitas_em_andamento > 100 or veiculos_no_estacionamento > 20 %}
         <div class="alerts-section">
             <h5 class="mb-3">
                 <i class="fas fa-exclamation-triangle me-2"></i>
                 Alertas do Sistema
             </h5>
-            {% if visitas_em_andamento > 10 %}
+            {% if visitas_em_andamento > 100 %}
             <div class="alert-item warning">
                 <i class="fas fa-exclamation-triangle"></i>
                 <div>
@@ -413,7 +419,7 @@
                 </div>
             </div>
             {% endif %}
-            {% if veiculos_no_estacionamento > 15 %}
+            {% if veiculos_no_estacionamento > 20 %}
             <div class="alert-item warning">
                 <i class="fas fa-car"></i>
                 <div>
