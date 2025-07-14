@@ -6,7 +6,10 @@ import os
 from pathlib import Path
 import sys
 from django.utils.translation import gettext_lazy as _
-# import environ # Removendo ou comentando a importação de environ
+from dotenv import load_dotenv
+
+# Carregar variáveis de ambiente do .env se existir
+load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -18,12 +21,13 @@ sys.path.insert(0, str(BASE_DIR / 'apps'))
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-&#33ll&))(8!w+g_-qil#t#_@j02+b6r!ca!l8pfms4mqxk6(^'
+SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'troque-esta-chave-em-producao')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
-ALLOWED_HOSTS = ['127.0.0.1', 'localhost']
+# Adicione aqui o(s) domínio(s) ou IP(s) do seu servidor
+ALLOWED_HOSTS = os.environ.get('DJANGO_ALLOWED_HOSTS', '127.0.0.1,localhost, 192.168.1.25').split(',')
 
 # Application definition
 
@@ -157,7 +161,7 @@ LOGGING = {
         },
         'file': {
             'class': 'logging.FileHandler',
-            'filename': os.path.join(BASE_DIR, 'info.log'),  # Alterado para um arquivo na raiz
+            'filename': os.path.join(BASE_DIR, 'logs', 'info.log'),
             'formatter': 'verbose',
         },
     },
@@ -175,12 +179,31 @@ LOGGING = {
     },
 }
 
-# Configurações de segurança
+# Certifica que o diretório de logs existe
+logs_dir = os.path.join(BASE_DIR, 'logs')
+os.makedirs(logs_dir, exist_ok=True)
+
+# SMTP (exemplo, revise para seu provedor)
+# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+# EMAIL_HOST = 'smtp.seuprovedor.com'
+# EMAIL_PORT = 587
+# EMAIL_HOST_USER = 'usuario@dominio.com'
+# EMAIL_HOST_PASSWORD = 'sua_senha'
+# EMAIL_USE_TLS = True
+
+# Outras opções de segurança recomendadas para produção:
+CSRF_COOKIE_SECURE = True
+SESSION_COOKIE_SECURE = True
 SECURE_BROWSER_XSS_FILTER = True
 SECURE_CONTENT_TYPE_NOSNIFF = True
 X_FRAME_OPTIONS = 'DENY'
-CSRF_COOKIE_SECURE = True
-SESSION_COOKIE_SECURE = True
+
+# Configurações de segurança
+# SECURE_BROWSER_XSS_FILTER = True
+# SECURE_CONTENT_TYPE_NOSNIFF = True
+# X_FRAME_OPTIONS = 'DENY'
+# CSRF_COOKIE_SECURE = True
+# SESSION_COOKIE_SECURE = True
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
