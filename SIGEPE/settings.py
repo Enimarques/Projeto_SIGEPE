@@ -24,7 +24,7 @@ sys.path.insert(0, str(BASE_DIR / 'apps'))
 SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'troque-esta-chave-em-producao')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
 # Adicione aqui o(s) domínio(s) ou IP(s) do seu servidor
 ALLOWED_HOSTS = os.environ.get('DJANGO_ALLOWED_HOSTS', '127.0.0.1,localhost, 192.168.1.25').split(',')

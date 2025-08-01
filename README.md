@@ -24,6 +24,7 @@ O SIGEPE é um sistema modular para controle de visitantes, veículos, departame
 - Python 3.9+
 - Git
 - Visual Studio Build Tools 2022 (com C++)
+- cmake
 
 ### Passos
 
