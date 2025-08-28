@@ -84,7 +84,7 @@
         <div class="row align-items-center">
             <div class="col-md-3 text-center">
                 {% if gabinete.foto %}
-                <img src="{{ gabinete.foto.url }}" alt="{{ gabinete.nome }}" class="profile-img">
+                <img src="{{ gabinete.foto.url }}" alt="{{ gabinete.nome_vereador }}" class="profile-img">
                 {% else %}
                 <div class="profile-img-placeholder">
                     <i class="fas fa-user-tie fa-4x text-secondary"></i>
@@ -92,7 +92,7 @@
                 {% endif %}
             </div>
             <div class="col-md-9">
-                <h2 class="mb-2">{{ gabinete.nome }}</h2>
+                <h2 class="mb-2">{{ gabinete.nome_vereador }}</h2>
                 <p class="text-muted mb-3">
                     <i class="fas fa-map-marker-alt me-2"></i>{{ gabinete.get_localizacao_display }}
                 </p>
@@ -125,9 +125,7 @@
             </button>
         </li>
         <li class="nav-item" role="presentation">
-            <button class="nav-link" id="assessores-tab" data-bs-toggle="tab" data-bs-target="#assessores" type="button" role="tab" aria-controls="assessores" aria-selected="false">
-                <i class="fas fa-users me-2"></i>Assessores
-            </button>
+            
         </li>
         {% if has_access %}
         <li class="nav-item" role="presentation">
@@ -158,13 +156,13 @@
                     <div class="row">
                         <div class="col-md-6">
                             <h6 class="mb-3">Dados Gerais</h6>
-                            <p><strong>Nome:</strong> {{ gabinete.nome }}</p>
+                            <p><strong>Nome:</strong> {{ gabinete.nome_vereador }}</p>
                             <p><strong>Localização:</strong> {{ gabinete.get_localizacao_display }}</p>
                             <p><strong>Horário de Funcionamento:</strong> {{ gabinete.horario_abertura|time:"H:i" }} - {{ gabinete.horario_fechamento|time:"H:i" }}</p>
                         </div>
                         <div class="col-md-6">
                             <h6 class="mb-3">Estatísticas</h6>
-                            <p><strong>Total de Assessores:</strong> {{ assessores|length }}</p>
+        
                             <p><strong>Visitas Hoje:</strong> {{ visitas_hoje }}</p>
                             <p><strong>Total de Visitas:</strong> {{ total_visitas }}</p>
                         </div>
@@ -173,33 +171,7 @@
             </div>
         </div>
         
-        <!-- Aba de Assessores -->
-        <div class="tab-pane fade" id="assessores" role="tabpanel" aria-labelledby="assessores-tab">
-            <div class="row">
-                {% for assessor in assessores %}
-                <div class="col-md-4">
-                    <div class="assessor-card">
-                        <div class="card-body">
-                            <h5 class="card-title">{{ assessor.nome }}</h5>
-                            <p class="card-text text-muted">{{ assessor.get_funcao_display }}</p>
-                            <p class="card-text"><i class="fas fa-clock me-2"></i>{{ assessor.horario_entrada|time:"H:i" }} - {{ assessor.horario_saida|time:"H:i" }}</p>
-                            {% if assessor.usuario %}
-                            <div class="mt-2">
-                                <span class="badge bg-success"><i class="fas fa-check-circle me-1"></i>Acesso ao Sistema</span>
-                            </div>
-                            {% endif %}
-                        </div>
-                    </div>
-                </div>
-                {% empty %}
-                <div class="col-12">
-                    <div class="alert alert-info">
-                        <i class="fas fa-info-circle me-2"></i>Não há assessores cadastrados para este gabinete.
-                    </div>
-                </div>
-                {% endfor %}
-            </div>
-        </div>
+
         
         <!-- Aba de Visitantes Aguardando -->
         <div class="tab-pane fade" id="visitantes" role="tabpanel" aria-labelledby="visitantes-tab">

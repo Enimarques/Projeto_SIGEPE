@@ -203,6 +203,51 @@
 .info-item span {
     word-break: break-all; /* Breaks long emails */
 }
+
+/* Estilos do Modal de Confirmação */
+#confirmacaoModal .modal-content {
+    border-radius: 15px;
+    border: none;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+}
+
+#confirmacaoModal .modal-header {
+    border-bottom: 2px solid #e9ecef;
+    padding: 1.5rem 2rem;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-radius: 15px 15px 0 0;
+}
+
+#confirmacaoModal .modal-body {
+    background-color: #ffffff;
+}
+
+#confirmacaoModal .modal-footer {
+    border-top: 2px solid #e9ecef;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-radius: 0 0 15px 15px;
+}
+
+#confirmacaoModal .btn {
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    transition: all 0.3s ease;
+}
+
+#confirmacaoModal .btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+#confirmacaoModal .btn-close {
+    opacity: 0.7;
+    transition: opacity 0.3s ease;
+}
+
+#confirmacaoModal .btn-close:hover {
+    opacity: 1;
+}
 /* Botão removido - card é totalmente clicável */
 </style>
 {% endblock %}
@@ -233,18 +278,20 @@
 
 <!-- Modal de Confirmação -->
 <div class="modal fade" id="confirmacaoModal" tabindex="-1" aria-labelledby="confirmacaoModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title" id="confirmacaoModalLabel">Confirmar Visita</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <h3 class="modal-title" id="confirmacaoModalLabel" style="font-size: 1.8rem; font-weight: 600; color: #2c3e50;">Confirmar Visita</h3>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" style="transform: scale(1.2);"></button>
       </div>
-      <div class="modal-body">
-        Você confirma o registro da visita para <strong id="modal-setor-nome"></strong>?
+      <div class="modal-body" style="padding: 2rem;">
+        <p style="font-size: 1.4rem; color: #495057; line-height: 1.6; margin: 0;">
+          Você confirma o registro da visita para <strong id="modal-setor-nome" style="color: #2c3e50; font-size: 1.5rem;"></strong>?
+        </p>
       </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-        <button type="button" class="btn btn-primary" id="btn-confirmar-visita">Confirmar</button>
+      <div class="modal-footer" style="padding: 1.5rem 2rem;">
+        <button type="button" class="btn btn-secondary btn-lg" data-bs-dismiss="modal" style="font-size: 1.2rem; padding: 0.75rem 1.5rem; border-radius: 8px;">Cancelar</button>
+        <button type="button" class="btn btn-primary btn-lg" id="btn-confirmar-visita" style="font-size: 1.2rem; padding: 0.75rem 1.5rem; border-radius: 8px; font-weight: 600;">Confirmar</button>
       </div>
     </div>
   </div>

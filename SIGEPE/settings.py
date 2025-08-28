@@ -27,7 +27,7 @@ SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'troque-esta-chave-em-producao'
 DEBUG = True
 
 # Adicione aqui o(s) domínio(s) ou IP(s) do seu servidor
-ALLOWED_HOSTS = os.environ.get('DJANGO_ALLOWED_HOSTS', '127.0.0.1,localhost, 192.168.1.25').split(',')
+ALLOWED_HOSTS = os.environ.get('DJANGO_ALLOWED_HOSTS', '127.0.0.1,localhost, 192.168.1.131,*').split(',')
 
 # Application definition
 
@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'apps.main.apps.MainConfig',
     'apps.autenticacao.apps.AutenticacaoConfig',
     'apps.recepcao.apps.RecepcaoConfig',
+    'apps.gabinetes.apps.GabinetesConfig',
     'apps.veiculos.apps.VeiculosConfig',
     'apps.relatorios',
     'crispy_forms',
@@ -196,7 +197,7 @@ CSRF_COOKIE_SECURE = True
 SESSION_COOKIE_SECURE = True
 SECURE_BROWSER_XSS_FILTER = True
 SECURE_CONTENT_TYPE_NOSNIFF = True
-X_FRAME_OPTIONS = 'DENY'
+#X_FRAME_OPTIONS = 'DENY'
 
 # Configurações de segurança
 # SECURE_BROWSER_XSS_FILTER = True

@@ -3,8 +3,8 @@ from django.contrib.auth.decorators import login_required
 from django.utils import timezone
 from django.contrib import messages
 from datetime import datetime, timedelta
-from apps.recepcao.models import Visita, Setor, Assessor
-from apps.autenticacao.decorators import assessor_gabinete_access, block_assessor
+from apps.recepcao.models import Visita, Setor
+from apps.autenticacao.decorators import assessor_gabinete_access, block_assessor, assessor_own_gabinete_only
 import json
 
 @login_required(login_url='autenticacao:login_sistema')
@@ -23,75 +23,37 @@ def finalizar_visita(request, visita_id):
 @login_required(login_url='autenticacao:login_sistema')
 @block_assessor
 def home_gabinetes(request):
-    hoje = datetime.now().date()
+    """
+    View para a página inicial dos gabinetes.
+    Apenas administradores e recepcionistas podem acessar.
+    """
+    gabinetes = Setor.objects.filter(tipo__in=['gabinete', 'gabinete_vereador'])
     
-    # Contagem de visitas hoje
-    visitas_hoje = Visita.objects.filter(
-        data_entrada__date=hoje,
-        setor__tipo='gabinete_vereador'
-    ).count()
-    
-    # Visitas em andamento
-    visitas_andamento = Visita.objects.filter(
-        data_entrada__isnull=False,
-        data_saida__isnull=True,
-        setor__tipo='gabinete_vereador'
-    ).count()
-    
-    # Total de visitas
-    total_visitas = Visita.objects.filter(
-        setor__tipo='gabinete_vereador'
-    ).count()
-    
-    # Visitas do mês atual
-    visitas_mes = Visita.objects.filter(
-        data_entrada__year=hoje.year,
-        data_entrada__month=hoje.month,
-        setor__tipo='gabinete_vereador'
-    ).count()
-    
-    # Dados para o gráfico (últimos 7 dias)
-    labels = []
-    values = []
-    for i in range(6, -1, -1):
-        data = hoje - timedelta(days=i)
-        visitas = Visita.objects.filter(
-            data_entrada__date=data,
-            setor__tipo='gabinete_vereador'
+    # Calcular estatísticas para cada gabinete
+    for gabinete in gabinetes:
+        hoje = timezone.now().date()
+        gabinete.visitas_hoje = Visita.objects.filter(
+            setor=gabinete,
+            data_entrada__date=hoje
         ).count()
-        labels.append(data.strftime('%d/%m'))
-        values.append(visitas)
-    
-    # Obter todos os gabinetes
-    gabinetes = Setor.objects.filter(tipo='gabinete_vereador')
-    
-    # Verifica se há visitas
-    if visitas_hoje == 0 and visitas_andamento == 0:
-        mensagem = 'Não há visitas registradas para hoje.'
-    else:
-        mensagem = None
+        gabinete.visitas_em_andamento = Visita.objects.filter(
+            setor=gabinete,
+            data_saida__isnull=True
+        ).count()
+        gabinete.total_visitas = Visita.objects.filter(setor=gabinete).count()
     
     context = {
-        'visitas_hoje': visitas_hoje,
-        'visitas_andamento': visitas_andamento,
-        'total_visitas': total_visitas,
-        'visitas_mes': visitas_mes,
-        'labels': json.dumps(labels),
-        'values': json.dumps(values),
-        'mensagem': mensagem,
-        'gabinetes': gabinetes
+        'gabinetes': gabinetes,
+        'title': 'Gabinetes - URUTAU'
     }
     
     return render(request, 'gabinetes/home_gabinetes.html', context)
 
 @login_required(login_url='autenticacao:login_sistema')
-@assessor_gabinete_access
+@assessor_own_gabinete_only
 def detalhes_gabinete(request, pk):
     hoje = datetime.now().date()
-    gabinete = get_object_or_404(Setor, pk=pk, tipo='gabinete_vereador')
-    
-    # Obter assessores do gabinete
-    assessores = Assessor.objects.filter(departamento=gabinete)
+    gabinete = get_object_or_404(Setor, pk=pk, tipo__in=['gabinete', 'gabinete_vereador'])
     
     # Verificar se o usuário é um assessor e se tem acesso a este gabinete
     is_assessor = False
@@ -99,13 +61,13 @@ def detalhes_gabinete(request, pk):
     
     try:
         # Verifica se o usuário é um assessor
-        assessor = request.user.assessor
-        is_assessor = True
-        
-        # Verifica se o assessor pertence a este gabinete
-        if assessor.departamento.id != gabinete.id:
-            # Se não pertencer, não mostra dados de visitantes e histórico
-            has_access = False
+        if hasattr(request.user, 'setor_responsavel') and request.user.setor_responsavel:
+            is_assessor = True
+            
+            # Verifica se o assessor pertence a este gabinete
+            if request.user.setor_responsavel.id != gabinete.id:
+                # Se não pertencer, não mostra dados de visitantes e histórico
+                has_access = False
     except AttributeError:
         # Se não for assessor, permite o acesso normalmente (admin ou outros usuários)
         pass
@@ -140,53 +102,6 @@ def detalhes_gabinete(request, pk):
     if data_inicio:
         data_inicio = datetime.strptime(data_inicio, '%Y-%m-%d').date()
         historico_query = historico_query.filter(data_entrada__date__gte=data_inicio)
-    else:
-        # Padrão: último mês
-        data_inicio = hoje - timedelta(days=30)
-        historico_query = historico_query.filter(data_entrada__date__gte=data_inicio)
-    
-    if data_fim:
-        data_fim = datetime.strptime(data_fim, '%Y-%m-%d').date()
-        historico_query = historico_query.filter(data_entrada__date__lte=data_fim)
-    else:
-        data_fim = hoje
-    
-    historico_visitas = historico_query.order_by('-data_entrada')
-    
-    context = {
-        'gabinete': gabinete,
-        'has_access': has_access
-    }
-    
-    if has_access:
-        # Obter visitantes aguardando atendimento
-        visitantes_aguardando = Visita.objects.filter(
-            setor=gabinete,
-            data_entrada__isnull=False,
-            data_saida__isnull=True
-        ).order_by('data_entrada')
-        
-        # Estatísticas de visitas
-        visitas_hoje = Visita.objects.filter(
-            setor=gabinete,
-            data_entrada__date=hoje
-        ).count()
-        
-        total_visitas = Visita.objects.filter(setor=gabinete).count()
-        
-        # Histórico de visitas (com filtro de data opcional)
-        data_inicio = request.GET.get('data_inicio')
-        data_fim = request.GET.get('data_fim')
-        
-        historico_query = Visita.objects.filter(setor=gabinete)
-        
-        if data_inicio:
-            data_inicio = datetime.strptime(data_inicio, '%Y-%m-%d').date()
-            historico_query = historico_query.filter(data_entrada__date__gte=data_inicio)
-        else:
-            # Padrão: último mês
-            data_inicio = hoje - timedelta(days=30)
-            historico_query = historico_query.filter(data_entrada__date__gte=data_inicio)
         
         if data_fim:
             data_fim = datetime.strptime(data_fim, '%Y-%m-%d').date()
@@ -202,7 +117,7 @@ def detalhes_gabinete(request, pk):
     
     context = {
         'gabinete': gabinete,
-        'assessores': assessores,
+
         'visitantes_aguardando': visitantes_aguardando,
         'visitas_hoje': visitas_hoje,
         'total_visitas': total_visitas,
@@ -210,7 +125,8 @@ def detalhes_gabinete(request, pk):
         'data_inicio': data_inicio,
         'data_fim': data_fim,
         'is_assessor': is_assessor,
-        'has_access': has_access
+        'has_access': has_access,
+        'title': f'Gabinete {gabinete.nome_vereador} - URUTAU'
     }
     
     return render(request, 'gabinetes/detalhes_gabinete.html', context)

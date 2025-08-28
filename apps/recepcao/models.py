@@ -18,20 +18,56 @@ def get_visitor_upload_path(instance, filename):
     """
     Cria um caminho de upload usando nome, sobrenome e ano de nascimento.
     Ex: media/fotos_visitantes/ariel-silva-1988/foto.jpg
-    """
-    parts = instance.nome_completo.split()
-    nome = parts[0]
-    sobrenome = parts[-1] if len(parts) > 1 else ''
-    ano = instance.data_nascimento.year
-
-    base_folder_name = f"{nome} {sobrenome} {ano}"
-    safe_folder_name = slugify(base_folder_name)
     
-    return f'fotos_visitantes/{safe_folder_name}/{filename}'
+    Trata casos onde nome ou data de nascimento estão vazios.
+    """
+    try:
+        # Verifica se o nome completo existe e não está vazio
+        if not instance.nome_completo or not instance.nome_completo.strip():
+            # Fallback: usa ID do visitante se disponível, senão usa 'sem-nome'
+            folder_name = f"visitante-{instance.id}" if instance.id else "sem-nome"
+        else:
+            parts = instance.nome_completo.strip().split()
+            nome = parts[0] if parts else "sem-nome"
+            sobrenome = parts[-1] if len(parts) > 1 else ""
+            
+            # Verifica se a data de nascimento existe
+            if instance.data_nascimento:
+                ano = instance.data_nascimento.year
+                base_folder_name = f"{nome} {sobrenome} {ano}".strip()
+            else:
+                # Fallback: sem ano de nascimento
+                base_folder_name = f"{nome} {sobrenome}".strip()
+            
+            # Gera o slug e verifica se não ficou vazio
+            safe_folder_name = slugify(base_folder_name)
+            if not safe_folder_name:
+                # Fallback: usa nome original sem slugify
+                safe_folder_name = f"{nome}-{sobrenome}".replace(" ", "-").lower()
+                if not safe_folder_name or safe_folder_name == "-":
+                    safe_folder_name = f"visitante-{instance.id}" if instance.id else "sem-nome"
+            
+            folder_name = safe_folder_name
+        
+        return f'fotos_visitantes/{folder_name}/{filename}'
+        
+    except Exception as e:
+        # Log do erro para debug
+        logging.error(f"Erro ao gerar caminho de upload para visitante {getattr(instance, 'id', 'N/A')}: {e}")
+        # Fallback final: usa ID ou timestamp
+        fallback_id = getattr(instance, 'id', None)
+        if fallback_id:
+            folder_name = f"visitante-{fallback_id}"
+        else:
+            import time
+            folder_name = f"visitante-{int(time.time())}"
+        
+        return f'fotos_visitantes/{folder_name}/{filename}'
 
 class Setor(models.Model):
     TIPO_CHOICES = [
         ('gabinete', 'Gabinete'),
+        ('gabinete_vereador', 'Gabinete de Vereador'),
         ('departamento', 'Departamento')
     ]
 
@@ -90,7 +126,16 @@ class Setor(models.Model):
         ordering = ['tipo', 'localizacao']
 
     def __str__(self):
-        if self.tipo == 'gabinete':
+        if self.tipo in ['gabinete', 'gabinete_vereador']:
+            nome = self.nome_vereador or 'Gabinete sem nome'
+            return f"Gabinete: {nome} ({self.get_localizacao_display()})"
+        else:
+            nome = self.nome_local or 'Departamento sem nome'
+            return f"Departamento: {nome} ({self.get_localizacao_display()})"
+    
+    def nome_display(self):
+        """Retorna apenas o nome principal do setor"""
+        if self.tipo in ['gabinete', 'gabinete_vereador']:
             return self.nome_vereador or 'Gabinete sem nome'
         else:
             return self.nome_local or 'Departamento sem nome'
@@ -145,104 +190,7 @@ class Setor(models.Model):
         super().clean()
 
 
-class Assessor(models.Model):
-    """
-    Modelo para representar os assessores dos departamentos.
-    """
-    FUNCAO_CHOICES = [
-        ('assessor_1', 'Assessor I'),
-        ('assessor_2', 'Assessor II'),
-        ('assessor_3', 'Assessor III'),
-        ('assessor_4', 'Assessor IV'),
-        ('assessor_5', 'Assessor V'),
-        ('assessor_6', 'Assessor VI'),
-        ('assessor_7', 'Assessor VII'),
-        ('assessor_8', 'Assessor VIII'),
-        ('assessor_9', 'Assessor IX'),
-        ('assessor_10', 'Assessor X'),
-        ('agente_parlamentar', 'Agente Parlamentar'),
-        ('chefe_de_gabinete', 'Chefe de Gabinete'),
-        ('vereador', 'Vereador'),
-        ('outros', 'Outros')
-    ]
 
-    nome_responsavel = models.CharField('Nome', max_length=100)
-    departamento = models.ForeignKey(
-        'Setor',
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        verbose_name='Departamento'
-    )
-    funcao = models.CharField(
-        'Função',
-        max_length=20,
-        choices=FUNCAO_CHOICES,
-        default='assessor_1'
-    )
-    email = models.EmailField('E-mail', max_length=100, blank=True, null=True)
-    horario_entrada = models.TimeField('Horário de Entrada', null=True, blank=True)
-    horario_saida = models.TimeField('Horário de Saída', null=True, blank=True)
-    ativo = models.BooleanField('Ativo', default=True)
-    data_criacao = models.DateTimeField('Data de Criação', auto_now_add=True)
-    data_atualizacao = models.DateTimeField('Última Atualização', auto_now=True)
-    usuario = models.OneToOneField(
-        'auth.User',
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name='assessor',
-        verbose_name='Usuário'
-    )
-
-    class Meta:
-        verbose_name = 'Assessor'
-        verbose_name_plural = 'Assessores'
-        ordering = ['nome_responsavel']
-
-    def __str__(self):
-        if self.departamento:
-            if self.departamento.tipo == "gabinete":
-                departamento_nome = self.departamento.nome_vereador or 'Gabinete'
-            else:
-                departamento_nome = self.departamento.nome_local or 'Departamento'
-            return f'{self.nome_responsavel} - {self.get_funcao_display()} ({departamento_nome})'
-        return f'{self.nome_responsavel} - {self.get_funcao_display()} (Sem departamento)'
-
-    def clean(self):
-        if self.horario_entrada and self.horario_saida:
-            if self.horario_entrada >= self.horario_saida:
-                raise ValidationError({
-                    'horario_entrada': 'O horário de entrada deve ser anterior ao horário de saída.',
-                    'horario_saida': 'O horário de saída deve ser posterior ao horário de entrada.'
-                })
-
-            if self.departamento:
-                if self.horario_entrada < self.departamento.horario_abertura:
-                    raise ValidationError({
-                        'horario_entrada': 'O horário de entrada não pode ser anterior ao horário de abertura do departamento.'
-                    })
-                if self.horario_saida > self.departamento.horario_fechamento:
-                    raise ValidationError({
-                        'horario_saida': 'O horário de saída não pode ser posterior ao horário de fechamento do departamento.'
-                    })
-
-    def get_horario_trabalho(self):
-        """Retorna o horário de trabalho formatado."""
-        if self.horario_entrada and self.horario_saida:
-            return f'{self.horario_entrada.strftime("%H:%M")} - {self.horario_saida.strftime("%H:%M")}'
-        return 'Não definido'
-    get_horario_trabalho.short_description = 'Horário de Trabalho'
-
-    def get_status_presenca(self):
-        """Retorna o status de presença do assessor."""
-        if not self.horario_entrada or not self.horario_saida:
-            return False
-
-        hora_atual = timezone.localtime().time()
-        return self.horario_entrada <= hora_atual <= self.horario_saida
-    get_status_presenca.short_description = 'Presente'
-    get_status_presenca.boolean = True
 
 class Visitante(models.Model):
     ESTADOS_CHOICES = [
@@ -537,8 +485,6 @@ class Visitante(models.Model):
             raise ValidationError({'cidade': 'A cidade é obrigatória se o bairro for informado.'})
         if self.CEP and len(re.sub(r'[^0-9]', '', self.CEP)) != 8:
             raise ValidationError({'CEP': 'O CEP deve conter 8 dígitos.'})
-        if self.bairro and not self.logradouro:
-            raise ValidationError({'logradouro': 'O logradouro é obrigatório.'})
 
 class Visita(models.Model):
     STATUS_CHOICES = [

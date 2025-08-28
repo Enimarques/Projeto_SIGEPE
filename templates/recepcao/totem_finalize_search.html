@@ -357,10 +357,12 @@ document.addEventListener('DOMContentLoaded', () => {
             if (data.success) {
                 updateCameraStatus(`✅ Visitas de ${nomeVisitante} finalizadas com sucesso!`);
                 
-                // Mostrar mensagem de sucesso e redirecionar
+                // Mostrar mensagem de sucesso na tela e redirecionar automaticamente
                 setTimeout(() => {
-                    alert(`Visitas finalizadas com sucesso!\n\n${data.message}`);
-                    window.location.href = "{% url 'recepcao:totem_welcome' %}";
+                    updateCameraStatus(`✅ ${data.message}\n\nRedirecionando para o início...`);
+                    setTimeout(() => {
+                        window.location.href = "{% url 'recepcao:totem_welcome' %}";
+                    }, 3000); // Redireciona após 3 segundos
                 }, 2000);
             } else {
                 updateCameraStatus(`Erro: ${data.error}`);
@@ -471,15 +473,28 @@ document.addEventListener('DOMContentLoaded', () => {
 
             finalizeModal.hide();
             if (data.success) {
-                alert(data.message);
+                // Mostrar mensagem de sucesso na tela
+                searchStatus.textContent = `✅ ${data.message}`;
+                searchStatus.style.color = '#28a745';
+                searchStatus.style.fontWeight = '600';
+                
+                // Limpar campos e redirecionar após 3 segundos
                 searchInput.value = '';
-                searchStatus.textContent = '';
+                setTimeout(() => {
+                    window.location.href = "{% url 'recepcao:totem_welcome' %}";
+                }, 3000);
             } else {
-                alert(`Erro: ${data.error}`);
+                // Mostrar erro na tela
+                searchStatus.textContent = `❌ Erro: ${data.error}`;
+                searchStatus.style.color = '#dc3545';
+                searchStatus.style.fontWeight = '600';
             }
         } catch (error) {
             console.error("Erro ao finalizar visitas:", error);
-            alert("Erro de comunicação ao tentar finalizar as visitas.");
+            // Mostrar erro na tela
+            searchStatus.textContent = '❌ Erro de comunicação ao tentar finalizar as visitas.';
+            searchStatus.style.color = '#dc3545';
+            searchStatus.style.fontWeight = '600';
         }
     }
     

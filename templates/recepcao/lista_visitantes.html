@@ -35,34 +35,296 @@
         position: relative;
         z-index: 2;
     }
+    
+    /* Cards de estatísticas conforme documentação */
+    .stat-card {
+        color: white;
+        border-radius: 15px;
+        padding: 25px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        height: 180px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .stat-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+    }
+
+    .stat-card h3 {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin: 0.5rem 0;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+    }
+
+    .stat-card p {
+        font-size: 0.9rem;
+        margin: 0;
+        opacity: 0.9;
+        font-weight: 500;
+    }
+
+    .stat-icon {
+        font-size: 2rem;
+        opacity: 0.8;
+        color: white;
+        margin-bottom: 0.5rem;
+    }
+
+    /* Gradientes específicos conforme documentação */
+    .stat-card-total-visitantes {
+        background: linear-gradient(135deg, #6dd5ed, #2193b0);
+    }
+
+    .stat-card-visitas-andamento {
+        background: linear-gradient(135deg, #5cb85c, #28a745);
+    }
+
+    .stat-card-total-visitas {
+        background: linear-gradient(135deg, #f1c40f, #f39c12);
+    }
+    
+    /* Card principal da tabela */
+    .main-table-card {
+        overflow: hidden;
+        border-radius: 12px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    }
+    
+    .main-table-card .card-body {
+        padding: 1.5rem;
+    }
+    
+    /* Filtros responsivos */
+    .filters-section {
+        margin-bottom: 2rem;
+    }
+    
+    .filter-row {
+        margin-bottom: 1rem;
+    }
+    
+    .form-control, .form-select {
+        height: 42px;
+        font-size: 14px;
+        border-radius: 8px;
+        border: 1px solid #ddd;
+        transition: border-color 0.3s ease;
+    }
+    
+    .form-control:focus, .form-select:focus {
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+    
+    .form-label {
+        font-weight: 600;
+        color: #374151;
+        margin-bottom: 0.5rem;
+        font-size: 13px;
+    }
+    
+    /* Área da tabela responsiva */
+    .table-section {
+        position: relative;
+        overflow: hidden;
+        border-radius: 8px;
+        background: #fff;
+    }
+    
+    .table-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+    
+    .table-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: #374151;
+        margin: 0;
+    }
+    
+    /* Estilos responsivos para a tabela */
+    .visitor-info {
+        min-width: 180px;
+        max-width: 250px;
+    }
+    
+    .visitor-name {
+        font-weight: 500;
+        color: #495057;
+        line-height: 1.3;
+    }
+    
+    .visitor-avatar {
+        width: 36px;
+        height: 36px;
+        border: 2px solid #fff;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .table-actions {
+        min-width: 150px;
+        max-width: 200px;
+    }
+    
+    .action-button {
+        font-size: 0.8rem;
+        padding: 0.375rem 0.75rem;
+        border-radius: 6px;
+        min-width: 80px;
+    }
+    
+    /* Espaçamento entre botões */
+    .table-actions .d-flex {
+        gap: 0.75rem;
+    }
+    
+    .table-responsive {
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        border: 1px solid #dee2e6;
+        overflow-x: hidden;
+    }
+    
+    .table {
+        margin-bottom: 0;
+        width: 100%;
+        table-layout: fixed;
+    }
+    
+    .table thead th {
+        background-color: #f8f9fa;
+        border-bottom: 2px solid #dee2e6;
+        font-weight: 600;
+        color: #495057;
+        font-size: 0.875rem;
+        padding: 1rem 0.75rem;
+        vertical-align: middle;
+    }
+    
+    .table tbody td {
+        padding: 1rem 0.75rem;
+        vertical-align: middle;
+        border-bottom: 1px solid #f1f3f4;
+    }
+    
+    .table tbody tr:hover {
+        background-color: #f8f9fa;
+    }
+    
     @media (max-width: 768px) {
         .dashboard-header {
             padding: 1.5rem;
             margin-bottom: 1.5rem;
         }
+        
+        .stat-card {
+            height: 150px;
+            padding: 20px;
+        }
+        
+        .stat-card h3 {
+            font-size: 2rem;
+        }
+        
+        .stat-icon {
+            font-size: 1.5rem;
+        }
+        
+        /* Responsividade para mobile */
+        .visitor-info {
+            min-width: auto;
+            max-width: none;
+        }
+        
+        .visitor-name {
+            font-size: 0.9rem;
+        }
+        
+        .visitor-avatar {
+            width: 32px;
+            height: 32px;
+        }
+        
+        .table thead th {
+            font-size: 0.8rem;
+            padding: 0.75rem 0.5rem;
+        }
+        
+        .table tbody td {
+            padding: 0.75rem 0.5rem;
+            font-size: 0.875rem;
+        }
+        
+        .table-actions {
+            min-width: auto;
+            max-width: none;
+        }
+        
+        .action-button {
+            font-size: 0.75rem;
+            padding: 0.25rem 0.5rem;
+            min-width: 75px;
+        }
+        
+        .table-actions .d-flex {
+            gap: 0.5rem !important;
+        }
+        
+        .table-actions .d-flex {
+            flex-direction: column;
+            width: 100%;
+            gap: 0.5rem !important;
+        }
+        
+        .table-actions .btn {
+            border-radius: 6px !important;
+            width: 100%;
+        }
+        
+        /* Garantir que não haja scroll horizontal */
+        .table-responsive {
+            overflow-x: hidden;
+        }
+        
+        .table {
+            table-layout: auto;
+        }
     }
-    .circular-photo-container {
-        width: 40px;
-        height: 40px;
-        border-radius: 50%;
-        overflow: hidden;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        background-color: #f8f9fa;
-        border: 2px solid #e9ecef;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    }
-
-    .circular-photo-container img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-    }
-
-    .circular-photo-container i {
-        font-size: 1.5rem;
-        color: #dee2e6;
+    
+    @media (max-width: 575px) {
+        .table thead th,
+        .table tbody td {
+            padding: 0.5rem 0.25rem;
+            font-size: 0.8rem;
+        }
+        
+        .visitor-name {
+            font-size: 0.85rem;
+        }
+        
+        .action-button {
+            font-size: 0.7rem;
+            padding: 0.2rem 0.4rem;
+            min-width: 70px;
+        }
+        
+        .table-actions .d-flex {
+            gap: 0.4rem !important;
+        }
     }
 </style>
 {% endblock %}
@@ -78,106 +340,101 @@
                 Bem-vindo à lista de visitantes. Consulte, pesquise e gerencie todos os visitantes cadastrados no sistema.
             </div>
         </div>
-        <!-- Espaço para widget de relógio, se desejar -->
     </div>
 </div>
 <div class="container">
     <div class="d-flex justify-content-end mb-3">
         {% include 'includes/botao_voltar.html' %}
     </div>
-
-    <!-- Lista de Visitantes -->
-    <div class="card">
-        <div class="card-header bg-white">
-            <div class="d-flex justify-content-between align-items-center">
-                <h5 class="mb-0">Visitantes Cadastrados</h5>
-                <div class="input-group" style="max-width: 300px;">
-                    <span class="input-group-text">
-                        <i class="fas fa-search"></i>
-                    </span>
-                    <input type="text" id="searchInput" class="form-control" placeholder="Buscar visitante...">
-                </div>
+    
+    <!-- Estatísticas -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="stat-card stat-card-total-visitantes">
+                <i class="fas fa-users stat-icon"></i>
+                <h3>{{ visitantes.count }}</h3>
+                <p>Visitantes Cadastrados</p>
             </div>
         </div>
-        <div class="card-body p-0">
-            {% if visitantes %}
-            <div class="table-responsive">
-                <table class="table table-hover mb-0" id="visitantesTable">
-                    <thead>
-                        <tr>
-                            <th>Nome</th>
-                            <th>Documento</th>
-                            <th>Telefone</th>
-                            <th>Última Visita</th>
-                            <th>Ações</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for visitante in visitantes %}
-                        <tr>
-                            <td>
-                                <div class="d-flex align-items-center">
-                                    {% if visitante.foto_thumbnail %}
-                                    <div class="circular-photo-container me-2">
-                                        <img src="{{ visitante.foto_thumbnail.url }}" alt="{{ visitante.nome_completo }}">
-                                    </div>
-                                    {% else %}
-                                    <div class="circular-photo-container me-2">
-                                        <i class="fas fa-user"></i>
-                                    </div>
-                                    {% endif %}
-                                    <div>
-                                        <div class="fw-bold">
-                                            <a href="{% url 'recepcao:detalhes_visitante' pk=visitante.id %}" class="text-decoration-none">
-                                                {{ visitante.nome_completo }}
-                                            </a>
-                                        </div>
-                                        <small class="text-muted">ID: {{ visitante.id }}</small>
-                                    </div>
-                                </div>
-                            </td>
-                            <td>
-                                <div class="d-flex align-items-center">
-                                    <i class="fas fa-id-card me-2 text-muted"></i>
-                                    {{ visitante.CPF }}
-                                </div>
-                            </td>
-                            <td>
-                                <div class="d-flex align-items-center">
-                                    <i class="fas fa-phone me-2 text-muted"></i>
-                                    {{ visitante.telefone }}
-                                </div>
-                            </td>
-                            <td>
-                                {% with ultima_visita=visitante.visita_set.last %}
-                                {% if ultima_visita %}
-                                <div>{{ ultima_visita.data_entrada|date:"d/m/Y" }}</div>
-                                <small class="text-muted">{{ ultima_visita.data_entrada|time:"H:i" }}</small>
-                                {% else %}
-                                <span class="text-muted">Sem visitas</span>
-                                {% endif %}
-                                {% endwith %}
-                            </td>
-                            <td>
-                                <div class="btn-group">
-                                    <a href="{% url 'recepcao:registro_visitas' %}?visitante={{ visitante.id }}" class="btn btn-outline-success btn-sm">
-                                        <i class="fas fa-clipboard-list me-1"></i>Nova Visita
-                                    </a>
-                                    <a href="{% url 'recepcao:detalhes_visitante' visitante.id %}" class="btn btn-outline-primary btn-sm">
-                                        <i class="fas fa-info-circle me-1"></i>Detalhes
-                                    </a>
-                                </div>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+        <div class="col-md-4">
+            <div class="stat-card stat-card-visitas-andamento">
+                <i class="fas fa-clock stat-icon"></i>
+                <h3>{{ visitas_em_andamento|default:0 }}</h3>
+                <p>Visitas em Andamento</p>
             </div>
-            {% else %}
-            <div class="alert alert-warning" role="alert">
-                Não há visitantes registrados.
+        </div>
+        <div class="col-md-4">
+            <div class="stat-card stat-card-total-visitas">
+                <i class="fas fa-list stat-icon"></i>
+                <h3>{{ total_visitas|default:0 }}</h3>
+                <p>Total de Visitas</p>
             </div>
-            {% endif %}
+        </div>
+    </div>
+
+    <!-- Card único: Filtros + Tabela -->
+    <div class="card mb-4 main-table-card">
+        <div class="card-body">
+            <!-- Seção de Filtros -->
+            <div class="filters-section">
+                <h5 class="card-title mb-3">
+                    <i class="fas fa-filter me-2"></i>Filtros
+                </h5>
+                <form method="get" class="mb-0" id="formFiltros">
+                    <div class="row g-3 align-items-end filter-row">
+                        <div class="col-lg-6 col-md-8 col-12">
+                            <label for="busca" class="form-label">
+                                <i class="fas fa-search me-1"></i>Buscar Visitante
+                            </label>
+                            <div class="input-group">
+                                <input type="text" name="busca" id="busca" class="form-control" value="{{ busca|default:'' }}" placeholder="Nome ou CPF do visitante">
+                                <span class="input-group-text">
+                                    <i class="fas fa-search text-muted"></i>
+                                </span>
+                            </div>
+                        </div>
+                        <div class="col-lg-3 col-md-2 col-6">
+                            <div class="d-grid">
+                                <button type="button" class="btn btn-primary" id="btnFiltrar">
+                                    <i class="fas fa-filter me-2"></i>
+                                    <span class="d-none d-md-inline">Filtrar</span>
+                                    <span class="d-md-none">Buscar</span>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="col-lg-3 col-md-2 col-6">
+                            <div class="d-grid">
+                                <button type="button" class="btn btn-secondary" id="btnLimpar">
+                                    <i class="fas fa-times me-2"></i>
+                                    <span class="d-none d-md-inline">Limpar</span>
+                                    <span class="d-md-none">Limpar</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            
+            <!-- Seção da Tabela -->
+            <div class="table-section">
+                <div class="table-header">
+                    <h5 class="table-title mb-0">
+                        <i class="fas fa-list me-2"></i>
+                        Visitantes Cadastrados
+                        <span id="total-visitantes" class="badge bg-primary ms-2">{{ visitantes.count }}</span>
+                    </h5>
+                    <div class="btn-group">
+                        <a href="{% url 'recepcao:cadastro_visitantes' %}" class="btn btn-outline-success btn-sm">
+                            <i class="fas fa-plus me-1"></i>
+                            <span class="d-none d-sm-inline">Novo Visitante</span>
+                            <span class="d-sm-none">Novo</span>
+                        </a>
+                    </div>
+                </div>
+                <div id="tabela-container">
+                    {% include 'recepcao/includes/tabela_lista_visitantes.html' %}
+                </div>
+            </div>
         </div>
     </div>
 </div>
@@ -185,23 +442,37 @@
 
 {% block extra_js %}
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const searchInput = document.getElementById('searchInput');
-        const table = document.getElementById('visitantesTable');
-        
-        if (searchInput && table) {
-            searchInput.addEventListener('keyup', function() {
-                const searchText = this.value.toLowerCase();
-                const rows = table.getElementsByTagName('tr');
-                
-                Array.from(rows).forEach(function(row, index) {
-                    if (index === 0) return; // Skip header row
-                    
-                    const text = row.textContent.toLowerCase();
-                    row.style.display = text.includes(searchText) ? '' : 'none';
-                });
-            });
-        }
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Lista de visitantes carregado');
+    
+    const form = document.getElementById('formFiltros');
+    const btnFiltrar = document.getElementById('btnFiltrar');
+    const btnLimpar = document.getElementById('btnLimpar');
+    
+    // Eventos dos filtros
+    btnFiltrar.addEventListener('click', function(e) {
+        e.preventDefault();
+        console.log('Botão filtrar clicado');
+        form.submit();
     });
+    
+    btnLimpar.addEventListener('click', function(e) {
+        e.preventDefault();
+        console.log('Botão limpar clicado');
+        form.reset();
+        form.submit();
+    });
+    
+    // Filtrar ao pressionar Enter nos campos de texto
+    const textInputs = form.querySelectorAll('input[type="text"]');
+    textInputs.forEach(input => {
+        input.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                form.submit();
+            }
+        });
+    });
+});
 </script>
 {% endblock %}

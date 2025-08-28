@@ -29,20 +29,20 @@ O SIGEPE é um sistema modular para controle de visitantes, veículos, departame
 ### Passos
 
 ```sh
-git clone https://github.com/seu-usuario/SIGEPE.git
-cd SIGEPE
+https://github.com/TersanPlay/Urutal
+cd Urutal (nome da pasta que foi colocado 'Urutal')
+
+
+Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
+
 python -m venv venv
 venv\Scripts\activate
 pip install -r requirements.txt
-instalar.bat
-```
-- Siga as opções do instalador para instalação completa (com reconhecimento facial) ou básica.
-- Para iniciar:
-  ```sh
-  iniciar.bat
+
+python manage.py createsuperuser
+
+
   ```
-  Ou manualmente:
-  ```sh
   python manage.py makemigrations
   python manage.py migrate
   python manage.py runserver

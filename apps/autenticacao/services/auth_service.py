@@ -50,7 +50,7 @@ class AuthenticationService:
             bool: True se o usuário é um assessor ativo, False caso contrário
         """
         try:
-            return hasattr(user, 'assessor') and user.assessor.ativo
+            return hasattr(user, 'setor_responsavel') and user.setor_responsavel and user.setor_responsavel.ativo
         except:
             return False
     
@@ -66,8 +66,8 @@ class AuthenticationService:
             Setor: Objeto de departamento ou None se o usuário não for assessor
         """
         try:
-            if hasattr(user, 'assessor') and user.assessor.departamento:
-                return user.assessor.departamento
+            if hasattr(user, 'setor_responsavel') and user.setor_responsavel:
+                return user.setor_responsavel
             return None
         except:
             return None
@@ -88,8 +88,16 @@ class AuthenticationService:
             if not AuthenticationService.is_assessor(user):
                 return False
                 
-            return int(gabinete_id) == user.assessor.departamento.id
-        except:
+            setor = user.setor_responsavel
+            if not setor:
+                return False
+                
+            # Verifica se o setor do assessor é um gabinete e se o ID corresponde
+            if setor.tipo in ['gabinete', 'gabinete_vereador'] and int(gabinete_id) == setor.id:
+                return True
+                
+            return False
+        except Exception:
             return False
     
     @staticmethod

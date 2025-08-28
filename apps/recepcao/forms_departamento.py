@@ -1,5 +1,5 @@
 from django import forms
-from .models import Setor, Assessor
+from .models import Setor
 
 class AlterarHorarioSetorForm(forms.ModelForm):
     """

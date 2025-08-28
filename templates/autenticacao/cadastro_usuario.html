@@ -83,12 +83,12 @@
                             {% endif %}
                         </div>
                         
-                        <div class="form-group mb-3" id="assessor-field">
-                            <label for="{{ form.assessor.id_for_label }}">Assessor:</label>
-                            {{ form.assessor }}
-                            {% if form.assessor.errors %}
+                        <div class="form-group mb-3" id="setor-field">
+                            <label for="{{ form.setor.id_for_label }}">Setor:</label>
+                            {{ form.setor }}
+                            {% if form.setor.errors %}
                                 <div class="text-danger">
-                                    {{ form.assessor.errors }}
+                                    {{ form.setor.errors }}
                                 </div>
                             {% endif %}
                         </div>
@@ -105,24 +105,24 @@
 </div>
 
 <script>
-    // Script para mostrar/esconder o campo de assessor com base no tipo de usuário selecionado
+    // Script para mostrar/esconder o campo de setor com base no tipo de usuário selecionado
     document.addEventListener('DOMContentLoaded', function() {
         const tipoUsuarioSelect = document.getElementById('id_tipo_usuario');
-        const assessorField = document.getElementById('assessor-field');
+        const setorField = document.getElementById('setor-field');
         
-        function toggleAssessorField() {
+        function toggleSetorField() {
             if (tipoUsuarioSelect.value === 'assessor') {
-                assessorField.style.display = 'block';
+                setorField.style.display = 'block';
             } else {
-                assessorField.style.display = 'none';
+                setorField.style.display = 'none';
             }
         }
         
         // Executar na carga inicial
-        toggleAssessorField();
+        toggleSetorField();
         
         // Adicionar listener para mudanças
-        tipoUsuarioSelect.addEventListener('change', toggleAssessorField);
+        tipoUsuarioSelect.addEventListener('change', toggleSetorField);
     });
 </script>
 {% endblock %}

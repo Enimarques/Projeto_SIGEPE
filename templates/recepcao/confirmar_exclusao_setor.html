@@ -35,28 +35,7 @@
                             </div>
                         {% endif %}
                         
-                        {% if assessores_relacionados %}
-                            <div class="mt-3">
-                                <p class="mb-2"><strong>Atenção:</strong> Os seguintes assessores serão desvinculados deste setor:</p>
-                                <ul class="list-group">
-                                    {% for assessor in assessores_relacionados|slice:":5" %}
-                                        <li class="list-group-item">
-                                            <strong>{{ assessor.nome }}</strong> - {{ assessor.get_funcao_display }}
-                                        </li>
-                                    {% endfor %}
-                                    
-                                    {% if assessores_relacionados.count > 5 %}
-                                        <li class="list-group-item text-muted">
-                                            E mais {{ assessores_relacionados.count|add:"-5" }} assessor(es)...
-                                        </li>
-                                    {% endif %}
-                                </ul>
-                                
-                                <p class="mt-3 text-warning">
-                                    <strong>Total: {{ assessores_relacionados.count }} assessor(es) serão desvinculado(s).</strong>
-                                </p>
-                            </div>
-                        {% endif %}
+
                         
                         {% if visitas_relacionadas %}
                             <div class="mt-3">

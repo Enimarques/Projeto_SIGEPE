@@ -1,6 +1,6 @@
 from django.db import models
 from django.utils import timezone
-from apps.recepcao.models import Assessor, Setor
+from apps.recepcao.models import Setor
 
 class Gabinete(models.Model):
     """

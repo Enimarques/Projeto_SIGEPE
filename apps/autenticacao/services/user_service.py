@@ -5,7 +5,7 @@ from django.contrib.auth.models import User, Group
 from django.shortcuts import get_object_or_404
 from django.db import transaction
 from ..forms.user_forms import UserProfileForm, UsuarioForm
-from apps.recepcao.models import Assessor
+from apps.recepcao.models import Setor
 
 class Result:
     """Classe para representar o resultado de uma operação."""
@@ -126,12 +126,12 @@ class UserService:
         user = UserService.get_user_by_id(user_id)
         
         try:
-            # Desvincular assessor se existir
+            # Desvincular setor responsável se existir
             try:
-                if hasattr(user, 'assessor'):
-                    assessor = user.assessor
-                    assessor.usuario = None
-                    assessor.save()
+                if hasattr(user, 'setor_responsavel'):
+                    setor = user.setor_responsavel
+                    setor.usuario = None
+                    setor.save()
             except:
                 pass
                 
@@ -142,14 +142,14 @@ class UserService:
             return Result(False, f"Erro ao excluir usuário: {str(e)}")
     
     @staticmethod
-    def get_available_assessores():
+    def get_available_setores():
         """
-        Obtém assessores disponíveis para vinculação com usuários.
+        Obtém setores disponíveis para vinculação com usuários.
         
         Returns:
-            QuerySet: QuerySet com assessores disponíveis
+            QuerySet: QuerySet com setores disponíveis
         """
-        return Assessor.objects.filter(usuario__isnull=True, ativo=True)
+        return Setor.objects.filter(usuario__isnull=True, ativo=True)
     
     @staticmethod
     def get_user_profile_form(user, data=None):

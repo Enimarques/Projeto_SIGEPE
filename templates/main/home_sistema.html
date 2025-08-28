@@ -123,6 +123,12 @@ body, html {
 .stat-card-visitas-mes {
     background: linear-gradient(135deg, #e67e22, #e74c3c);
 }
+.stat-card-gabinete {
+    background: linear-gradient(135deg, #9b59b6, #8e44ad);
+}
+.stat-card-departamento {
+    background: linear-gradient(135deg, #3498db, #2980b9);
+}
 .stat-icon {
     font-size: 2.2rem;
     margin-bottom: 15px;
@@ -145,6 +151,14 @@ body, html {
 .action-card-link .action-card:hover {
     box-shadow: 0 12px 32px rgba(103,119,239,0.18);
     transform: translateY(-6px) scale(1.03);
+}
+.welcome-message {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 1.5rem;
+    border-radius: 16px;
+    margin-bottom: 2rem;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
 }
 </style>
 {% endblock %}
@@ -171,10 +185,39 @@ body, html {
         </div>
     </div>
 
-       <!-- Dashboard -->
-       <div class="row justify-content-center mb-5">
+    <!-- Mensagem de boas-vindas personalizada -->
+    {% if is_assessor and departamento %}
+    <div class="welcome-message">
+        <h4><i class="fas fa-user-tie me-2"></i>Bem-vindo, {{ user.first_name }}!</h4>
+        <p class="mb-0">
+            {% if is_gabinete %}
+                Você está logado como assessor do <strong>{{ departamento.nome_vereador }}</strong>
+            {% else %}
+                Você está logado como assessor do <strong>{{ departamento.nome_local }}</strong>
+            {% endif %}
+        </p>
+    </div>
+    {% elif is_guarita %}
+    <div class="welcome-message">
+        <h4><i class="fas fa-shield-alt me-2"></i>Bem-vindo, {{ user.first_name }}!</h4>
+        <p class="mb-0">Você está logado como Agente de Guarita</p>
+    </div>
+    {% elif is_recepcionista %}
+    <div class="welcome-message">
+        <h4><i class="fas fa-user-friends me-2"></i>Bem-vindo, {{ user.first_name }}!</h4>
+        <p class="mb-0">Você está logado como Recepcionista</p>
+    </div>
+    {% elif is_admin %}
+    <div class="welcome-message">
+        <h4><i class="fas fa-user-cog me-2"></i>Bem-vindo, {{ user.first_name }}!</h4>
+        <p class="mb-0">Você está logado como Administrador</p>
+    </div>
+    {% endif %}
+
+    <!-- Dashboard específico por tipo de usuário -->
+    <div class="row justify-content-center mb-5">
         {% if is_guarita %}
-            <!-- Veículos no Estacionamento -->
+            <!-- Dashboard para Agente de Guarita -->
             <div class="col-xl-3 col-md-6 mb-4">
                 <div class="stat-card stat-card-visitas-andamento">
                     <i class="fas fa-car stat-icon"></i>
@@ -182,7 +225,6 @@ body, html {
                     <p>Veículos no Estacionamento</p>
                 </div>
             </div>
-            <!-- Total de Veículos -->
             <div class="col-xl-3 col-md-6 mb-4">
                 <div class="stat-card stat-card-total-visitas">
                     <i class="fas fa-car-side stat-icon"></i>
@@ -190,8 +232,52 @@ body, html {
                     <p>Veículos Cadastrados</p>
                 </div>
             </div>
-        {% else %}
-            <!-- Visitas em Andamento -->
+            <div class="col-xl-3 col-md-6 mb-4">
+                <div class="stat-card stat-card-visitas-hoje">
+                    <i class="fas fa-sign-in-alt stat-icon"></i>
+                    <h3>{{ veiculos_entraram_hoje }}</h3>
+                    <p>Entraram Hoje</p>
+                </div>
+            </div>
+            <div class="col-xl-3 col-md-6 mb-4">
+                <div class="stat-card stat-card-visitas-mes">
+                    <i class="fas fa-sign-out-alt stat-icon"></i>
+                    <h3>{{ veiculos_sairam_hoje }}</h3>
+                    <p>Sairam Hoje</p>
+                </div>
+            </div>
+        {% elif is_assessor %}
+            <!-- Dashboard para Assessor -->
+            <div class="col-xl-3 col-md-6 mb-4">
+                <div class="stat-card stat-card-visitas-andamento">
+                    <i class="fas fa-clock stat-icon"></i>
+                    <h3>{{ visitas_em_andamento_gabinete }}</h3>
+                    <p>Visitas em Andamento</p>
+                </div>
+            </div>
+            <div class="col-xl-3 col-md-6 mb-4">
+                <div class="stat-card stat-card-visitas-hoje">
+                    <i class="fas fa-calendar-day stat-icon"></i>
+                    <h3>{{ visitas_hoje_gabinete }}</h3>
+                    <p>Visitas Hoje</p>
+                </div>
+            </div>
+            <div class="col-xl-3 col-md-6 mb-4">
+                <div class="stat-card stat-card-total-visitas">
+                    <i class="fas fa-chart-line stat-icon"></i>
+                    <h3>{{ total_visitas_gabinete }}</h3>
+                    <p>Total de Visitas</p>
+                </div>
+            </div>
+            <div class="col-xl-3 col-md-6 mb-4">
+                <div class="stat-card {% if is_gabinete %}stat-card-gabinete{% else %}stat-card-departamento{% endif %}">
+                    <i class="fas {% if is_gabinete %}fa-building{% else %}fa-briefcase{% endif %} stat-icon"></i>
+                    <h3>{% if is_gabinete %}Gabinete{% else %}Departamento{% endif %}</h3>
+                    <p>{% if is_gabinete %}{{ departamento.nome_vereador }}{% else %}{{ departamento.nome_local }}{% endif %}</p>
+                </div>
+            </div>
+        {% elif is_recepcionista %}
+            <!-- Dashboard para Recepcionista -->
             <div class="col-xl-3 col-md-6 mb-4">
                 <div class="stat-card stat-card-visitas-andamento">
                     <i class="fas fa-clock stat-icon"></i>
@@ -199,7 +285,36 @@ body, html {
                     <p>Visitas em Andamento</p>
                 </div>
             </div>
-            <!-- Total de Visitantes -->
+            <div class="col-xl-3 col-md-6 mb-4">
+                <div class="stat-card stat-card-visitas-hoje">
+                    <i class="fas fa-users stat-icon"></i>
+                    <h3>{{ visitantes_hoje }}</h3>
+                    <p>Visitantes Hoje</p>
+                </div>
+            </div>
+            <div class="col-xl-3 col-md-6 mb-4">
+                <div class="stat-card stat-card-total-visitas">
+                    <i class="fas fa-user-friends stat-icon"></i>
+                    <h3>{{ total_visitantes }}</h3>
+                    <p>Total de Visitantes</p>
+                </div>
+            </div>
+            <div class="col-xl-3 col-md-6 mb-4">
+                <div class="stat-card stat-card-visitas-mes">
+                    <i class="fas fa-calendar-check stat-icon"></i>
+                    <h3>{{ visitas_hoje }}</h3>
+                    <p>Visitas Hoje</p>
+                </div>
+            </div>
+        {% else %}
+            <!-- Dashboard para Administradores -->
+            <div class="col-xl-3 col-md-6 mb-4">
+                <div class="stat-card stat-card-visitas-andamento">
+                    <i class="fas fa-clock stat-icon"></i>
+                    <h3>{{ visitas_em_andamento }}</h3>
+                    <p>Visitas em Andamento</p>
+                </div>
+            </div>
             <div class="col-xl-3 col-md-6 mb-4">
                 <div class="stat-card stat-card-visitas-hoje">
                     <i class="fas fa-users stat-icon"></i>
@@ -207,7 +322,6 @@ body, html {
                     <p>Visitantes Cadastrados</p>
                 </div>
             </div>
-            <!-- Veículos no Estacionamento -->
             <div class="col-xl-3 col-md-6 mb-4">
                 <div class="stat-card stat-card-total-visitas">
                     <i class="fas fa-car stat-icon"></i>
@@ -215,75 +329,144 @@ body, html {
                     <p>Veículos no Estacionamento</p>
                 </div>
             </div>
-            <!-- Total de Veículos -->
             <div class="col-xl-3 col-md-6 mb-4">
                 <div class="stat-card stat-card-visitas-mes">
-                    <i class="fas fa-car-side stat-icon"></i>
-                    <h3>{{ total_veiculos }}</h3>
-                    <p>Veículos Cadastrados</p>
+                    <i class="fas fa-building stat-icon"></i>
+                    <h3>{{ total_gabinetes|add:total_departamentos }}</h3>
+                    <p>Setores Ativos</p>
                 </div>
             </div>
         {% endif %}
     </div>
 
-    <!-- Bloco de cards reais dos módulos -->
+    <!-- Cards dos módulos específicos por tipo de usuário -->
     <div class="row justify-content-center">
-        <div class="col-md-4 mb-4">
-            <a href="{% url 'recepcao:home_recepcao' %}" class="action-card-link">
-                <div class="action-card">
-                    <div class="action-icon" style="background: #0d6efd;"><i class="fas fa-users"></i></div>
-                    <div class="action-title">Módulo de Recepção</div>
-                    <div class="action-description">Gerencie visitantes e controle o fluxo de pessoas.</div>
-                </div>
-            </a>
-        </div>
-        <div class="col-md-4 mb-4">
-            <a href="{% url 'veiculos:home_veiculos' %}" class="action-card-link">
-                <div class="action-card">
-                    <div class="action-icon" style="background: #198754;"><i class="fas fa-car"></i></div>
-                    <div class="action-title">Módulo de Veículos</div>
-                    <div class="action-description">Controle o fluxo de veículos no estacionamento.</div>
-                </div>
-            </a>
-        </div>
-        <div class="col-md-4 mb-4">
-            <a href="{% url 'recepcao:home_gabinetes' %}" class="action-card-link">
-                <div class="action-card">
-                    <div class="action-icon" style="background: #ffc107;"><i class="fas fa-building"></i></div>
-                    <div class="action-title">Módulo de Gabinetes</div>
-                    <div class="action-description">Gerencie os gabinetes e seus assessores.</div>
-                </div>
-            </a>
-        </div>
-        <div class="col-md-4 mb-4">
-            <a href="{% url 'recepcao:home_departamentos' %}" class="action-card-link">
-                <div class="action-card">
-                    <div class="action-icon" style="background: #198754;"><i class="fas fa-building"></i></div>
-                    <div class="action-title">Módulo de Departamentos</div>
-                    <div class="action-description">Visualize estatísticas e gerencie as visitas aos departamentos.</div>
-                </div>
-            </a>
-        </div>
-        <div class="col-md-4 mb-4">
-            <a href="/relatorios/" class="action-card-link">
-                <div class="action-card">
-                    <div class="action-icon" style="background: #0dcaf0;"><i class="fas fa-chart-bar"></i></div>
-                    <div class="action-title">Relatórios e Analytics</div>
-                    <div class="action-description">Visualize métricas, gráficos e exporte relatórios do sistema.</div>
-                </div>
-            </a>
-        </div>
-        <div class="col-md-4 mb-4">
-            <a href="{% url 'recepcao:totem_welcome' %}" class="action-card-link" target="_blank">
-                <div class="action-card">
-                    <div class="action-icon" style="background: #dc3545;"><i class="fas fa-desktop"></i></div>
-                    <div class="action-title">Modo TOTEM</div>
-                    <div class="action-description">Interface de autoatendimento para visitantes se registrarem.</div>
-                </div>
-            </a>
-        </div>
+        {% if is_guarita %}
+            <!-- Cards apenas para Agente de Guarita -->
+            <div class="col-md-6 mb-4">
+                <a href="{% url 'veiculos:home_veiculos' %}" class="action-card-link">
+                    <div class="action-card">
+                        <div class="action-icon" style="background: #198754;"><i class="fas fa-car"></i></div>
+                        <div class="action-title">Módulo de Veículos</div>
+                        <div class="action-description">Controle o fluxo de veículos no estacionamento.</div>
+                    </div>
+                </a>
+            </div>
+            <div class="col-md-6 mb-4">
+                <a href="/relatorios/" class="action-card-link">
+                    <div class="action-card">
+                        <div class="action-icon" style="background: #0dcaf0;"><i class="fas fa-chart-bar"></i></div>
+                        <div class="action-title">Relatórios de Veículos</div>
+                        <div class="action-description">Visualize relatórios e estatísticas de veículos.</div>
+                    </div>
+                </a>
+            </div>
+        {% elif is_assessor %}
+            <!-- Cards específicos para Assessor -->
+            <div class="col-md-6 mb-4">
+                <a href="{% url 'gabinetes:detalhes_gabinete' departamento.id %}" class="action-card-link">
+                    <div class="action-card">
+                        <div class="action-icon" style="background: #ffc107;"><i class="fas fa-building"></i></div>
+                        <div class="action-title">{% if is_gabinete %}Meu Gabinete{% else %}Meu Departamento{% endif %}</div>
+                        <div class="action-description">Gerencie visitas e visualize informações do seu {% if is_gabinete %}gabinete{% else %}departamento{% endif %}.</div>
+                    </div>
+                </a>
+            </div>
+            <div class="col-md-6 mb-4">
+                <a href="/relatorios/" class="action-card-link">
+                    <div class="action-card">
+                        <div class="action-icon" style="background: #0dcaf0;"><i class="fas fa-chart-bar"></i></div>
+                        <div class="action-title">Relatórios do {% if is_gabinete %}Gabinete{% else %}Departamento{% endif %}</div>
+                        <div class="action-description">Visualize relatórios específicos do seu {% if is_gabinete %}gabinete{% else %}departamento{% endif %}.</div>
+                    </div>
+                </a>
+            </div>
+        {% elif is_recepcionista %}
+            <!-- Cards para Recepcionista -->
+            <div class="col-md-4 mb-4">
+                <a href="{% url 'recepcao:home_recepcao' %}" class="action-card-link">
+                    <div class="action-card">
+                        <div class="action-icon" style="background: #0d6efd;"><i class="fas fa-users"></i></div>
+                        <div class="action-title">Módulo de Recepção</div>
+                        <div class="action-description">Gerencie visitantes e controle o fluxo de pessoas.</div>
+                    </div>
+                </a>
+            </div>
+            <div class="col-md-4 mb-4">
+                <a href="{% url 'recepcao:home_gabinetes' %}" class="action-card-link">
+                    <div class="action-card">
+                        <div class="action-icon" style="background: #ffc107;"><i class="fas fa-building"></i></div>
+                        <div class="action-title">Módulo de Gabinetes</div>
+                        <div class="action-description">Visualize informações dos gabinetes.</div>
+                    </div>
+                </a>
+            </div>
+            <div class="col-md-4 mb-4">
+                <a href="{% url 'recepcao:totem_welcome' %}" class="action-card-link" target="_blank">
+                    <div class="action-card">
+                        <div class="action-icon" style="background: #dc3545;"><i class="fas fa-desktop"></i></div>
+                        <div class="action-title">Modo TOTEM</div>
+                        <div class="action-description">Interface de autoatendimento para visitantes.</div>
+                    </div>
+                </a>
+            </div>
+        {% else %}
+            <!-- Cards para Administradores (todos os módulos) -->
+            <div class="col-md-4 mb-4">
+                <a href="{% url 'recepcao:home_recepcao' %}" class="action-card-link">
+                    <div class="action-card">
+                        <div class="action-icon" style="background: #0d6efd;"><i class="fas fa-users"></i></div>
+                        <div class="action-title">Módulo de Recepção</div>
+                        <div class="action-description">Gerencie visitantes e controle o fluxo de pessoas.</div>
+                    </div>
+                </a>
+            </div>
+            <div class="col-md-4 mb-4">
+                <a href="{% url 'veiculos:home_veiculos' %}" class="action-card-link">
+                    <div class="action-card">
+                        <div class="action-icon" style="background: #198754;"><i class="fas fa-car"></i></div>
+                        <div class="action-title">Módulo de Veículos</div>
+                        <div class="action-description">Controle o fluxo de veículos no estacionamento.</div>
+                    </div>
+                </a>
+            </div>
+            <div class="col-md-4 mb-4">
+                <a href="{% url 'recepcao:home_gabinetes' %}" class="action-card-link">
+                    <div class="action-card">
+                        <div class="action-icon" style="background: #ffc107;"><i class="fas fa-building"></i></div>
+                        <div class="action-title">Módulo de Gabinetes</div>
+                        <div class="action-description">Gerencie os gabinetes e seus assessores.</div>
+                    </div>
+                </a>
+            </div>
+            <div class="col-md-4 mb-4">
+                <a href="{% url 'recepcao:home_departamentos' %}" class="action-card-link">
+                    <div class="action-card">
+                        <div class="action-icon" style="background: #198754;"><i class="fas fa-building"></i></div>
+                        <div class="action-title">Módulo de Departamentos</div>
+                        <div class="action-description">Visualize estatísticas e gerencie as visitas aos departamentos.</div>
+                    </div>
+                </a>
+            </div>
+            <div class="col-md-4 mb-4">
+                <a href="/relatorios/" class="action-card-link">
+                    <div class="action-card">
+                        <div class="action-icon" style="background: #0dcaf0;"><i class="fas fa-chart-bar"></i></div>
+                        <div class="action-title">Relatórios e Analytics</div>
+                        <div class="action-description">Visualize métricas, gráficos e exporte relatórios do sistema.</div>
+                    </div>
+                </a>
+            </div>
+            <div class="col-md-4 mb-4">
+                <a href="{% url 'recepcao:totem_welcome' %}" class="action-card-link" target="_blank">
+                    <div class="action-card">
+                        <div class="action-icon" style="background: #dc3545;"><i class="fas fa-desktop"></i></div>
+                        <div class="action-title">Modo TOTEM</div>
+                        <div class="action-description">Interface de autoatendimento para visitantes se registrarem.</div>
+                    </div>
+                </a>
+            </div>
+        {% endif %}
     </div>
-
-
 </div>
 {% endblock %}

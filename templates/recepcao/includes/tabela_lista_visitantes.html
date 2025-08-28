@@ -1,0 +1,106 @@
+{% if visitantes %}
+<div class="table-responsive">
+    <table class="table table-hover">
+        <thead>
+            <tr>
+                <th class="visitor-info">Visitante</th>
+                <th class="d-none d-md-table-cell">CPF</th>
+                <th class="d-none d-md-table-cell">Telefone</th>
+                <th class="d-none d-sm-table-cell">Última Visita</th>
+                <th class="table-actions text-center">Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for visitante in visitantes %}
+            <tr>
+                <td class="visitor-info">
+                    <div class="d-flex align-items-center">
+                        {% if visitante.foto_thumbnail %}
+                        <img src="{{ visitante.foto_thumbnail.url }}" alt="{{ visitante.nome_completo }}" 
+                             class="rounded-circle me-2 visitor-avatar">
+                        {% elif visitante.foto %}
+                        <img src="{{ visitante.foto.url }}" alt="{{ visitante.nome_completo }}" 
+                             class="rounded-circle me-2 visitor-avatar">
+                        {% else %}
+                        <div class="visitor-avatar me-2 bg-light rounded-circle d-flex align-items-center justify-content-center">
+                            <i class="fas fa-user text-muted"></i>
+                        </div>
+                        {% endif %}
+                        <div>
+                            <div class="visitor-name">
+                                <a href="{% url 'recepcao:detalhes_visitante' pk=visitante.id %}" class="text-decoration-none">
+                                    {{ visitante.nome_completo }}
+                                </a>
+                            </div>
+                            <div class="d-md-none">
+                                <small class="text-muted">{{ visitante.CPF }}</small><br>
+                                <small class="text-muted">{{ visitante.telefone }}</small><br>
+                                {% with ultima_visita=visitante.visita_set.last %}
+                                {% if ultima_visita %}
+                                <small class="text-muted">{{ ultima_visita.data_entrada|date:"d/m/Y H:i" }}</small>
+                                {% else %}
+                                <small class="text-muted">Sem visitas</small>
+                                {% endif %}
+                                {% endwith %}
+                            </div>
+                        </div>
+                    </div>
+                </td>
+                <td class="d-none d-md-table-cell">
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-id-card me-2 text-muted"></i>
+                        <span class="text-muted">{{ visitante.CPF }}</span>
+                    </div>
+                </td>
+                <td class="d-none d-md-table-cell">
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-phone me-2 text-muted"></i>
+                        <span class="text-muted">{{ visitante.telefone }}</span>
+                    </div>
+                </td>
+                <td class="d-none d-sm-table-cell">
+                    {% with ultima_visita=visitante.visita_set.last %}
+                    {% if ultima_visita %}
+                    <div>
+                        {{ ultima_visita.data_entrada|date:"d/m/Y" }}<br>
+                        <small class="text-muted">{{ ultima_visita.data_entrada|time:"H:i" }}</small>
+                    </div>
+                    {% else %}
+                    <span class="text-muted">Sem visitas</span>
+                    {% endif %}
+                    {% endwith %}
+                </td>
+                <td class="table-actions text-center">
+                    <div class="d-flex justify-content-center gap-2" role="group">
+                        <a href="{% url 'recepcao:registro_visitas' %}?visitante={{ visitante.id }}" class="btn btn-outline-success action-button">
+                            <i class="fas fa-clipboard-list me-1"></i>
+                            <span class="d-none d-sm-inline">Nova Visita</span>
+                        </a>
+                        <a href="{% url 'recepcao:detalhes_visitante' visitante.id %}" class="btn btn-outline-primary action-button">
+                            <i class="fas fa-info-circle me-1"></i>
+                            <span class="d-none d-sm-inline">Detalhes</span>
+                        </a>
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div class="text-center py-5">
+    <i class="fas fa-users fa-3x text-muted mb-3"></i>
+    <p class="lead text-muted">Nenhum visitante encontrado com os filtros aplicados.</p>
+    {% if busca %}
+    <p class="mb-3">Tente remover alguns filtros</p>
+    <a href="{% url 'recepcao:lista_visitantes' %}" class="btn btn-secondary">
+        <i class="fas fa-times me-2"></i>Limpar Filtros
+    </a>
+    {% else %}
+    <p class="mb-3">Cadastre um novo visitante</p>
+    <a href="{% url 'recepcao:cadastro_visitantes' %}" class="btn btn-primary">
+        <i class="fas fa-plus-circle me-2"></i>Cadastrar Novo Visitante
+    </a>
+    {% endif %}
+</div>
+{% endif %}

@@ -136,7 +136,7 @@
                 <div class="gabinete-card">
                     <div class="gabinete-img-container">
                         {% if gabinete.foto %}
-                        <img src="{{ gabinete.foto.url }}" alt="{{ gabinete.nome }}" class="gabinete-img">
+                        <img src="{{ gabinete.foto.url }}" alt="{{ gabinete.nome_vereador }}" class="gabinete-img">
                         {% else %}
                         <div class="gabinete-img-placeholder">
                             <i class="fas fa-user-tie fa-4x text-secondary"></i>
@@ -145,7 +145,7 @@
                         <div class="gabinete-status {% if gabinete.esta_aberto %}status-open{% else %}status-closed{% endif %}"></div>
                     </div>
                     <div class="gabinete-content">
-                        <h5 class="mb-2">{{ gabinete.nome }}</h5>
+                        <h5 class="mb-2">{{ gabinete.nome_vereador }}</h5>
                         <p class="mb-1 text-muted"><i class="fas fa-map-marker-alt me-2"></i>{{ gabinete.get_localizacao_display }}</p>
                         <p class="mb-1 text-muted"><i class="fas fa-clock me-2"></i>{{ gabinete.horario_abertura|time:"H:i" }} - {{ gabinete.horario_fechamento|time:"H:i" }}</p>
                         <p class="mb-0 {% if gabinete.esta_aberto %}text-success{% else %}text-danger{% endif %}">

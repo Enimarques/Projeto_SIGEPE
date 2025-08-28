@@ -78,6 +78,20 @@
             font-weight: 600;
             letter-spacing: 0.5px;
         }
+        
+        /* Estilos para debug */
+        .debug-info {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 12px;
+            z-index: 1000;
+            display: none;
+        }
     </style>
 </head>
 <body>
@@ -101,14 +115,119 @@
             {% endif %}
         </div>
     </div>
+    
+    <!-- Informações de debug -->
+    <div class="debug-info" id="debug-info">
+        <strong>Debug Info:</strong><br>
+        Auto Print: {{ request.GET.auto_print }}<br>
+        Visita ID: {{ visita.id }}<br>
+        Visitante: {{ nome_exibicao }}<br>
+        <button onclick="toggleDebug()">Toggle Debug</button>
+    </div>
+    
     {% if request.GET.auto_print %}
     <script>
+    console.log('=== ETIQUETA AUTOMÁTICA ===');
+    console.log('Parâmetro auto_print detectado:', '{{ request.GET.auto_print }}');
+    console.log('Visita ID:', '{{ visita.id }}');
+    console.log('Visitante:', '{{ nome_exibicao }}');
+    
+    let printAttempted = false;
+    let printTimeout = null;
+    
+    // Função para tentar impressão
+    function tentarImpressao() {
+        if (printAttempted) {
+            console.log('Impressão já foi tentada, não tentando novamente');
+            return;
+        }
+        
+        printAttempted = true;
+        console.log('Tentando impressão automática...');
+        
+        try {
+            // Aguarda um pouco para garantir que a página carregou completamente
+            setTimeout(function() {
+                console.log('Executando window.print()...');
+                window.print();
+            }, 500);
+            
+        } catch (error) {
+            console.error('Erro ao tentar imprimir:', error);
+            // Fallback: tenta novamente após um delay
+            setTimeout(function() {
+                console.log('Tentando impressão novamente após erro...');
+                try {
+                    window.print();
+                } catch (e) {
+                    console.error('Segunda tentativa falhou:', e);
+                }
+            }, 1000);
+        }
+    }
+    
+    // Função para redirecionar após impressão
+    function redirecionarAposImpressao() {
+        console.log('Redirecionando para welcome...');
+        // Aguarda um pouco antes de redirecionar
+        setTimeout(function() {
+            window.location.href = '/recepcao/totem/welcome/';
+        }, 2000);
+    }
+    
+    // Event listeners para impressão
+    window.addEventListener('beforeprint', function() {
+        console.log('Evento beforeprint disparado');
+    });
+    
+    window.addEventListener('afterprint', function() {
+        console.log('Evento afterprint disparado');
+        // Redireciona após impressão
+        redirecionarAposImpressao();
+    });
+    
+    // Fallback: se os eventos não funcionarem, redireciona após um tempo
+    printTimeout = setTimeout(function() {
+        console.log('Timeout de impressão atingido, redirecionando...');
+        if (!printAttempted) {
+            redirecionarAposImpressao();
+        }
+    }, 10000); // 10 segundos
+    
+    // Inicia impressão quando a página carrega
     window.onload = function() {
-        window.print();
+        console.log('Página de etiqueta carregada, iniciando impressão...');
+        
+        // Aguarda um pouco para garantir que tudo carregou
+        setTimeout(function() {
+            tentarImpressao();
+        }, 1000);
     };
-    window.onafterprint = function() {
-        window.location.href = '/recepcao/totem/welcome/';
-    };
+    
+    // Função para debug
+    function toggleDebug() {
+        const debugInfo = document.getElementById('debug-info');
+        if (debugInfo.style.display === 'none') {
+            debugInfo.style.display = 'block';
+        } else {
+            debugInfo.style.display = 'none';
+        }
+    }
+    
+    // Mostra debug se houver erro
+    window.addEventListener('error', function(e) {
+        console.error('Erro na página:', e);
+        document.getElementById('debug-info').style.display = 'block';
+    });
+    
+    </script>
+    {% else %}
+    <script>
+    console.log('Página de etiqueta carregada SEM auto_print');
+    console.log('Visita ID:', '{{ visita.id }}');
+    console.log('Visitante:', '{{ nome_exibicao }}');
+    
+    // Se não for auto_print, não faz nada automático
     </script>
     {% endif %}
 </body>

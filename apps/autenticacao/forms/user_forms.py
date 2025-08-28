@@ -4,7 +4,7 @@ Formulários relacionados ao gerenciamento de usuários.
 from django import forms
 from django.contrib.auth.models import User, Group
 from django.contrib.auth.forms import UserCreationForm
-from apps.recepcao.models import Assessor
+from apps.recepcao.models import Setor
 
 class UsuarioForm(UserCreationForm):
     """
@@ -26,19 +26,19 @@ class UsuarioForm(UserCreationForm):
         })
     )
     
-    assessor = forms.ModelChoiceField(
-        label='Assessor',
-        queryset=Assessor.objects.filter(usuario__isnull=True, ativo=True),
+    setor = forms.ModelChoiceField(
+        label='Setor',
+        queryset=Setor.objects.filter(usuario__isnull=True, ativo=True),
         required=False,
         widget=forms.Select(attrs={
             'class': 'form-control',
-            'id': 'id_assessor'
+            'id': 'id_setor'
         })
     )
     
     class Meta:
         model = User
-        fields = ['username', 'first_name', 'last_name', 'email', 'password1', 'password2', 'tipo_usuario', 'assessor']
+        fields = ['username', 'first_name', 'last_name', 'email', 'password1', 'password2', 'tipo_usuario', 'setor']
         widgets = {
             'username': forms.TextInput(attrs={
                 'class': 'form-control',
@@ -71,14 +71,14 @@ class UsuarioForm(UserCreationForm):
             # Pré-selecionar o tipo de usuário
             if self.instance.is_superuser or self.instance.groups.filter(name='Administradores').exists():
                 self.initial['tipo_usuario'] = 'admin'
-            elif hasattr(self.instance, 'assessor'):
+            elif hasattr(self.instance, 'setor_responsavel'):
                 self.initial['tipo_usuario'] = 'assessor'
-                self.initial['assessor'] = self.instance.assessor
+                self.initial['setor'] = self.instance.setor_responsavel
                 
-                # Atualizar o queryset para incluir o assessor atual
-                self.fields['assessor'].queryset = Assessor.objects.filter(
+                # Atualizar o queryset para incluir o setor atual
+                self.fields['setor'].queryset = Setor.objects.filter(
                     usuario__isnull=True, ativo=True
-                ) | Assessor.objects.filter(
+                ) | Setor.objects.filter(
                     usuario=self.instance, ativo=True
                 )
     
@@ -108,16 +108,16 @@ class UsuarioForm(UserCreationForm):
                 if user in grupo_assessor.user_set.all():
                     grupo_assessor.user_set.remove(user)
                     
-                # Desvincular qualquer assessor existente
+                # Desvincular qualquer setor responsável existente
                 try:
-                    if hasattr(user, 'assessor'):
-                        assessor = user.assessor
-                        assessor.usuario = None
-                        assessor.save()
+                    if hasattr(user, 'setor_responsavel'):
+                        setor = user.setor_responsavel
+                        setor.usuario = None
+                        setor.save()
                 except:
                     pass
             
-            # Se for assessor, vincula ao assessor selecionado
+            # Se for assessor, vincula ao setor selecionado
             elif self.cleaned_data['tipo_usuario'] == 'assessor':
                 # Garante que não é um superusuário (por segurança)
                 if user.is_superuser:
@@ -133,18 +133,18 @@ class UsuarioForm(UserCreationForm):
                 grupo_assessor = Group.objects.get(name='Assessores')
                 grupo_assessor.user_set.add(user)
                 
-                # Vincula ao assessor, se selecionado
-                if self.cleaned_data['assessor']:
-                    # Desvincular o assessor de qualquer outro usuário
-                    assessor = self.cleaned_data['assessor']
-                    if assessor.usuario and assessor.usuario != user:
-                        old_user = assessor.usuario
-                        assessor.usuario = None
-                        assessor.save()
+                # Vincula ao setor, se selecionado
+                if self.cleaned_data['setor']:
+                    # Desvincular o setor de qualquer outro usuário
+                    setor = self.cleaned_data['setor']
+                    if setor.usuario and setor.usuario != user:
+                        old_user = setor.usuario
+                        setor.usuario = None
+                        setor.save()
                     
                     # Vincular ao usuário atual
-                    assessor.usuario = user
-                    assessor.save()
+                    setor.usuario = user
+                    setor.save()
         
         return user
 

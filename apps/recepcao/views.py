@@ -8,7 +8,7 @@ from django.utils import timezone
 from django.db.models import Q
 from django.core.files.base import ContentFile
 from django.conf import settings
-from .models import Visitante, Visita, Setor, Assessor
+from .models import Visitante, Visita, Setor
 from .forms import VisitanteForm, VisitaForm
 from .forms_departamento import SetorForm
 from .misc_utils import gerar_etiqueta_pdf
@@ -18,7 +18,7 @@ from django.urls import reverse
 from datetime import datetime, timedelta
 from .forms_departamento import AlterarHorarioSetorForm
 from django.core.exceptions import PermissionDenied
-from apps.autenticacao.decorators import admin_required
+from apps.autenticacao.decorators import admin_required, block_assessor, assessor_or_admin_required, admin_or_recepcionista_only
 from reportlab.pdfgen import canvas
 from openpyxl import Workbook
 from openpyxl.utils import get_column_letter
@@ -48,6 +48,7 @@ def get_base_context(title_suffix=''):
     }
 
 @login_required(login_url='autenticacao:login_sistema')
+@admin_or_recepcionista_only
 def home_recepcao(request):
     hoje = timezone.localtime().date()
     
@@ -62,7 +63,7 @@ def home_recepcao(request):
     total_veiculos_cadastrados = Veiculo.objects.count()
     
     # Contagem de gabinetes abertos
-    gabinetes = Setor.objects.filter(tipo='gabinete', ativo=True)
+    gabinetes = Setor.objects.filter(tipo__in=['gabinete', 'gabinete_vereador'], ativo=True)
     gabinetes_abertos = sum(1 for g in gabinetes if g.esta_aberto())
     
     context = get_base_context()
@@ -78,6 +79,7 @@ def home_recepcao(request):
     return render(request, 'recepcao/home_recepcao.html', context)
 
 @login_required(login_url='autenticacao:login_sistema')
+@admin_or_recepcionista_only
 def lista_visitantes(request):
     # Obter parâmetros de busca
     busca = request.GET.get('busca', '')
@@ -96,15 +98,22 @@ def lista_visitantes(request):
     # Ordenar por nome
     visitantes = visitantes.order_by('nome_completo')
     
+    # Estatísticas para os cards
+    visitas_em_andamento = Visita.objects.filter(data_saida__isnull=True).count()
+    total_visitas = Visita.objects.count()
+    
     context = get_base_context('Lista de Visitantes')
     context.update({
         'visitantes': visitantes,
-        'busca': busca
+        'busca': busca,
+        'visitas_em_andamento': visitas_em_andamento,
+        'total_visitas': total_visitas
     })
     
     return render(request, 'recepcao/lista_visitantes.html', context)
 
 @login_required(login_url='autenticacao:login_sistema')
+@admin_or_recepcionista_only
 def cadastro_visitantes(request):
     if request.method == 'POST':
         form = VisitanteForm(request.POST, request.FILES)
@@ -138,6 +147,7 @@ def cadastro_visitantes(request):
     return render(request, 'recepcao/cadastro_visitantes.html', context)
 
 @login_required(login_url='autenticacao:login_sistema')
+@assessor_or_admin_required
 def detalhes_visitante(request, pk):
     visitante = get_object_or_404(Visitante, pk=pk)
     
@@ -152,6 +162,7 @@ def detalhes_visitante(request, pk):
     return render(request, 'recepcao/detalhes_visitante.html', context)
 
 @login_required(login_url='autenticacao:login_sistema')
+@admin_or_recepcionista_only
 def editar_visitante(request, pk):
     visitante = get_object_or_404(Visitante, pk=pk)
     
@@ -193,6 +204,7 @@ def editar_visitante(request, pk):
     return render(request, 'recepcao/cadastro_visitantes.html', context)
 
 @login_required(login_url='autenticacao:login_sistema')
+@admin_or_recepcionista_only
 def registro_visitas(request):
     # Verificar se tem visitante pré-selecionado
     visitante_id = request.GET.get('visitante')
@@ -240,6 +252,7 @@ def registro_visitas(request):
     return render(request, 'recepcao/registro_visitas.html', context)
 
 @login_required(login_url='autenticacao:login_sistema')
+@assessor_or_admin_required
 def buscar_visitante(request):
     query = request.GET.get('query', None)
     
@@ -279,6 +292,7 @@ def buscar_visitante(request):
     return JsonResponse({'success': True, 'visitantes': visitantes_data})
 
 @login_required(login_url='autenticacao:login_sistema')
+@assessor_or_admin_required
 def buscar_setores(request):
     tipo = request.GET.get('tipo', 'departamento')
     
@@ -296,19 +310,19 @@ def buscar_setores(request):
     for setor in setores:
         dados = {
             'id': setor.id,
-            'nome': setor.nome_vereador if tipo == 'gabinete' else setor.nome_local,
-            'nome_vereador': setor.nome_vereador if tipo == 'gabinete' else None,
+            'nome': setor.nome_vereador if tipo in ['gabinete', 'gabinete_vereador'] else setor.nome_local,
+            'nome_vereador': setor.nome_vereador if tipo in ['gabinete', 'gabinete_vereador'] else None,
             'nome_local': setor.nome_local if tipo == 'departamento' else None,
             'tipo': setor.tipo,
             'localizacao': setor.get_localizacao_display(),
             'funcao': setor.get_funcao_display() if setor.funcao else None,
-            'email': setor.email_vereador if tipo == 'gabinete' else setor.email,
+            'email': setor.email_vereador if tipo in ['gabinete', 'gabinete_vereador'] else setor.email,
             'foto_url': None, # Inicialmente nulo
             'aberto_agora': setor.esta_aberto()
         }
         
         # Prioridade: foto do gabinete (vereador), depois foto do assessor
-        if tipo == 'gabinete' and setor.foto:
+        if tipo in ['gabinete', 'gabinete_vereador'] and setor.foto:
             dados['foto_url'] = setor.foto.url
         elif setor.usuario and hasattr(setor.usuario, 'assessor') and setor.usuario.assessor.foto:
             dados['foto_url'] = setor.usuario.assessor.foto.url
@@ -321,6 +335,7 @@ def buscar_setores(request):
     })
 
 @login_required(login_url='autenticacao:login_sistema')
+@assessor_or_admin_required
 def historico_visitas(request):
     # Filtros
     status = request.GET.get('status')
@@ -389,6 +404,7 @@ def historico_visitas(request):
     return render(request, 'recepcao/historico_visitas.html', context)
 
 @login_required(login_url='autenticacao:login_sistema')
+@assessor_or_admin_required
 def status_visita(request):
     """
     Exibe as visitas em andamento com filtros.
@@ -485,6 +501,7 @@ def status_visita(request):
     return render(request, 'recepcao/status_visita.html', context)
 
 @login_required(login_url='autenticacao:login_sistema')
+@assessor_or_admin_required
 def finalizar_visita(request, visita_id):
     """
     Finaliza uma visita em andamento.
@@ -580,7 +597,7 @@ def excluir_setor(request, pk):
                 messages.warning(request, f'{qtd_assessores} assessor(es) relacionado(s) foram desassociados.')
                 
             # Depois excluir o setor
-            nome_setor = setor.nome_vereador if setor.tipo == 'gabinete' else setor.nome_local
+            nome_setor = setor.nome_vereador if setor.tipo in ['gabinete', 'gabinete_vereador'] else setor.nome_local
             setor.delete()
             messages.success(request, f'Setor "{nome_setor}" excluído com sucesso!')
             
@@ -595,7 +612,7 @@ def excluir_setor(request, pk):
         'setor': setor,
         'visitas_relacionadas': Visita.objects.filter(setor=setor),
         'objeto_tipo': 'Setor',
-        'objeto_nome': setor.nome_vereador if setor.tipo == 'gabinete' else setor.nome_local
+        'objeto_nome': setor.nome_vereador if setor.tipo in ['gabinete', 'gabinete_vereador'] else setor.nome_local
     }
     
     # Verificar se o setor está relacionado a um gabinete
@@ -640,6 +657,7 @@ def excluir_visitante(request, pk):
     return render(request, 'recepcao/confirmar_exclusao_visitante.html', context)
 
 @login_required(login_url='autenticacao:login_sistema')
+@assessor_or_admin_required
 def gerar_etiqueta(request, visita_id):
     visita = get_object_or_404(Visita, pk=visita_id)
     context = get_base_context('Etiqueta da Visita')
@@ -650,25 +668,29 @@ def gerar_etiqueta(request, visita_id):
     return render(request, 'recepcao/etiqueta_visita.html', context)
 
 @login_required(login_url='autenticacao:login_sistema')
+@assessor_or_admin_required
 def alterar_horario_departamento(request):
     # Verificar se o usuário é um assessor
     try:
-        assessor = Assessor.objects.get(nome_responsavel=request.user.get_full_name())
-    except Assessor.DoesNotExist:
+        setor = request.user.setor_responsavel
+        if not setor:
+            messages.error(request, 'Você não tem permissão para alterar horários de departamentos.')
+            return redirect('recepcao:home_recepcao')
+    except:
         messages.error(request, 'Você não tem permissão para alterar horários de departamentos.')
         return redirect('recepcao:home_recepcao')
     
     # Obter o departamento do assessor
-    departamento = assessor.departamento
+    departamento = setor
     
     if request.method == 'POST':
-        form = AlterarHorarioSetorForm(request.POST, instance=departamento, assessor=assessor)
+        form = AlterarHorarioSetorForm(request.POST, instance=departamento, assessor=setor)
         if form.is_valid():
             form.save()
             messages.success(request, 'Horário do departamento alterado com sucesso!')
             return redirect('recepcao:home_recepcao')
     else:
-        form = AlterarHorarioSetorForm(instance=departamento, assessor=assessor)
+        form = AlterarHorarioSetorForm(instance=departamento, assessor=setor)
     
     context = get_base_context('Alterar Horário do Departamento')
     context.update({
@@ -678,14 +700,17 @@ def alterar_horario_departamento(request):
     
     return render(request, 'recepcao/alterar_horario_departamento.html', context)
 
-@login_required
+@login_required(login_url='autenticacao:login_sistema')
+@assessor_or_admin_required
+@login_required(login_url='autenticacao:login_sistema')
+@admin_or_recepcionista_only
 def home_gabinetes(request):
     """View para a página inicial dos gabinetes."""
     # Se for assessor, mostra só o gabinete dele
-    if hasattr(request.user, 'assessor') and request.user.assessor.departamento and request.user.assessor.departamento.tipo == 'gabinete':
-        gabinetes = Setor.objects.filter(id=request.user.assessor.departamento.id, tipo='gabinete')
+    if hasattr(request.user, 'setor_responsavel') and request.user.setor_responsavel and request.user.setor_responsavel.tipo in ['gabinete', 'gabinete_vereador']:
+        gabinetes = Setor.objects.filter(id=request.user.setor_responsavel.id, tipo__in=['gabinete', 'gabinete_vereador'])
     else:
-        gabinetes = Setor.objects.filter(tipo='gabinete')
+        gabinetes = Setor.objects.filter(tipo__in=['gabinete', 'gabinete_vereador'])
 
     # Calcula estatísticas
     total_visitas = Visita.objects.count()
@@ -710,9 +735,10 @@ def home_gabinetes(request):
     }
     return render(request, 'recepcao/home_gabinetes.html', context)
 
-@login_required
+@login_required(login_url='autenticacao:login_sistema')
+@admin_or_recepcionista_only
 def detalhes_gabinete(request, gabinete_id):
-    gabinete = get_object_or_404(Setor, id=gabinete_id, tipo='gabinete')
+    gabinete = get_object_or_404(Setor, id=gabinete_id, tipo__in=['gabinete', 'gabinete_vereador'])
     
     # Obter filtros da requisição
     data_inicio = request.GET.get('data_inicio')
@@ -776,9 +802,9 @@ def detalhes_gabinete(request, gabinete_id):
 
 @login_required(login_url='autenticacao:login_sistema')
 def editar_gabinete(request, gabinete_id):
-    gabinete = get_object_or_404(Setor, id=gabinete_id, tipo='gabinete')
+    gabinete = get_object_or_404(Setor, id=gabinete_id, tipo__in=['gabinete', 'gabinete_vereador'])
     # Só o assessor responsável pode editar
-    if not hasattr(request.user, 'assessor') or request.user.assessor.departamento_id != gabinete.id:
+    if not hasattr(request.user, 'setor_responsavel') or request.user.setor_responsavel.id != gabinete.id:
         raise PermissionDenied('Você não tem permissão para editar este gabinete.')
 
     if request.method == 'POST':
@@ -954,6 +980,7 @@ def gerar_excel(visitas):
     )
 
 @login_required(login_url='autenticacao:login_sistema')
+@block_assessor
 def home_departamentos(request):
     departamentos = Setor.objects.filter(tipo='departamento')
     context = {
@@ -993,7 +1020,7 @@ def visitas_tabela_departamento(request, departamento_id):
 
 @login_required(login_url='autenticacao:login_sistema')
 def visitas_tabela_gabinete(request, gabinete_id):
-    gabinete = get_object_or_404(Setor, id=gabinete_id, tipo='gabinete')
+    gabinete = get_object_or_404(Setor, id=gabinete_id, tipo__in=['gabinete', 'gabinete_vereador'])
     visitas = Visita.objects.filter(setor=gabinete).order_by('-data_entrada')
     # Filtros
     data_inicio = request.GET.get('data_inicio')
@@ -1011,46 +1038,7 @@ def visitas_tabela_gabinete(request, gabinete_id):
     html = render_to_string('recepcao/includes/tabela_visitas_gabinete.html', {'visitas': visitas})
     return JsonResponse({'html': html})
 
-@login_required
-@staff_member_required
-def get_assessores_por_tipo(request):
-    """
-    Retorna uma lista de assessores filtrados por tipo de setor.
-    """
-    tipo = request.GET.get('tipo')
-    assessores = Assessor.objects.filter(
-        ativo=True,
-        departamento__tipo=tipo
-    ).order_by('nome_responsavel')
-    
-    data = [
-        {
-            'id': assessor.id,
-            'text': f"{assessor.nome_responsavel} ({assessor.get_funcao_display()})"
-        }
-        for assessor in assessores
-    ]
-    
-    return JsonResponse(data, safe=False)
 
-@login_required
-@staff_member_required
-def get_assessor_info(request):
-    """
-    Retorna as informações detalhadas de um assessor.
-    """
-    assessor_id = request.GET.get('assessor_id')
-    try:
-        assessor = Assessor.objects.get(id=assessor_id, ativo=True)
-        data = {
-            'email': assessor.email,
-            'funcao': assessor.funcao,
-            'horario_entrada': assessor.horario_entrada.strftime('%H:%M') if assessor.horario_entrada else '',
-            'horario_saida': assessor.horario_saida.strftime('%H:%M') if assessor.horario_saida else ''
-        }
-        return JsonResponse(data)
-    except Assessor.DoesNotExist:
-        return JsonResponse({'error': 'Assessor não encontrado'}, status=404)
 
 @login_required(login_url='autenticacao:login_sistema')
 def status_visita_ajax(request):
@@ -1246,7 +1234,7 @@ def api_reconhecer_rosto(request):
             return JsonResponse({'success': False, 'error': 'Nenhum visitante com dados faciais cadastrado.'})
 
         # Compara com os rostos conhecidos
-        matches = face_recognition.compare_faces(known_face_encodings, np.array(unknown_embedding), tolerance=0.6)
+        matches = face_recognition.compare_faces(known_face_encodings, np.array(unknown_embedding), tolerance=0.5)
         
         if True in matches:
             first_match_index = matches.index(True)
@@ -1268,6 +1256,7 @@ def api_reconhecer_rosto(request):
     except Exception as e:
         return JsonResponse({'success': False, 'error': f'Erro interno do servidor: {str(e)}'}, status=500)
 
+@block_assessor
 def totem_welcome(request):
     """
     Renderiza a página inicial de boas-vindas do totem.
@@ -1324,30 +1313,30 @@ def api_get_setores(request):
     API para retornar uma lista de setores (departamentos ou gabinetes) com todos os campos necessários para exibição de cards modernos.
     """
     tipo = request.GET.get('tipo')
-    if tipo not in ['departamento', 'gabinete']:
+    if tipo not in ['departamento', 'gabinete', 'gabinete_vereador']:
         return JsonResponse({'success': False, 'error': 'Tipo inválido'}, status=400)
     
-    if tipo == 'gabinete':
-        setores = Setor.objects.filter(tipo=tipo, ativo=True).order_by('nome_vereador')
+    if tipo in ['gabinete', 'gabinete_vereador']:
+        setores = Setor.objects.filter(tipo__in=['gabinete', 'gabinete_vereador'], ativo=True).order_by('nome_vereador')
     else:
         setores = Setor.objects.filter(tipo=tipo, ativo=True).order_by('nome_local')
     setores_data = []
     for setor in setores:
         dados = {
             'id': setor.id,
-            'nome': setor.nome_vereador if tipo == 'gabinete' else setor.nome_local,
-            'nome_vereador': setor.nome_vereador if tipo == 'gabinete' else None,
+            'nome': setor.nome_vereador if tipo in ['gabinete', 'gabinete_vereador'] else setor.nome_local,
+            'nome_vereador': setor.nome_vereador if tipo in ['gabinete', 'gabinete_vereador'] else None,
             'nome_local': setor.nome_local if tipo == 'departamento' else None,
             'tipo': setor.tipo,
             'localizacao': setor.get_localizacao_display(),
             'funcao': setor.get_funcao_display() if setor.funcao else None,
-            'email': setor.email_vereador if tipo == 'gabinete' else setor.email,
+            'email': setor.email_vereador if tipo in ['gabinete', 'gabinete_vereador'] else setor.email,
             'foto_url': None, # Inicialmente nulo
             'aberto_agora': setor.esta_aberto()
         }
         
         # Prioridade: foto do gabinete (vereador), depois foto do assessor
-        if tipo == 'gabinete' and setor.foto:
+        if tipo in ['gabinete', 'gabinete_vereador'] and setor.foto:
             dados['foto_url'] = setor.foto.url
         elif setor.usuario and hasattr(setor.usuario, 'assessor') and setor.usuario.assessor.foto:
             dados['foto_url'] = setor.usuario.assessor.foto.url
@@ -1506,7 +1495,7 @@ def api_buscar_visitante_ativo(request):
         visitas_em_andamento = visitante.visita_set.filter(status='em_andamento')
         visitas_data_list = [{
             'id': v.id,
-            'setor': v.setor.nome_vereador if v.setor.tipo == 'gabinete' else v.setor.nome_local,
+            'setor': v.setor.nome_vereador if v.setor.tipo in ['gabinete', 'gabinete_vereador'] else v.setor.nome_local,
             'data_entrada': v.data_entrada.strftime('%d/%m/%Y %H:%M')
         } for v in visitas_em_andamento]
 
@@ -1597,3 +1586,4 @@ def finalizar_multiplas_visitas(request):
     except Exception as e:
         logger.error(f"Erro ao finalizar visitas: {str(e)}")
         return JsonResponse({'success': False, 'error': f'Erro ao finalizar visitas: {str(e)}'}, status=500)
+

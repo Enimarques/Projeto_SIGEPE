@@ -34,10 +34,144 @@
         position: relative;
         z-index: 2;
     }
+    
+    /* Cards de estatísticas conforme documentação */
+    .stat-card {
+        color: white;
+        border-radius: 15px;
+        padding: 25px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        height: 180px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .stat-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+    }
+
+    .stat-card h3 {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin: 0.5rem 0;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+    }
+
+    .stat-card p {
+        font-size: 0.9rem;
+        margin: 0;
+        opacity: 0.9;
+        font-weight: 500;
+    }
+
+    .stat-icon {
+        font-size: 2rem;
+        opacity: 0.8;
+        color: white;
+        margin-bottom: 0.5rem;
+    }
+
+    /* Gradientes específicos conforme documentação */
+    .stat-card-visitas-andamento {
+        background: linear-gradient(135deg, #5cb85c, #28a745);
+    }
+
+    .stat-card-total-visitantes {
+        background: linear-gradient(135deg, #6dd5ed, #2193b0);
+    }
+
+    .stat-card-total-visitas {
+        background: linear-gradient(135deg, #f1c40f, #f39c12);
+    }
+    
+    /* Card principal da tabela */
+    .main-table-card {
+        overflow: hidden;
+        border-radius: 12px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    }
+    
+    .main-table-card .card-body {
+        padding: 1.5rem;
+    }
+    
+    /* Filtros responsivos */
+    .filters-section {
+        margin-bottom: 2rem;
+    }
+    
+    .filter-row {
+        margin-bottom: 1rem;
+    }
+    
+    .form-control, .form-select {
+        height: 42px;
+        font-size: 14px;
+        border-radius: 8px;
+        border: 1px solid #ddd;
+        transition: border-color 0.3s ease;
+    }
+    
+    .form-control:focus, .form-select:focus {
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+    
+    .form-label {
+        font-weight: 600;
+        color: #374151;
+        margin-bottom: 0.5rem;
+        font-size: 13px;
+    }
+    
+    /* Área da tabela responsiva */
+    .table-section {
+        position: relative;
+        overflow: hidden;
+        border-radius: 8px;
+        background: #fff;
+    }
+    
+    .table-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+    
+    .table-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: #374151;
+        margin: 0;
+    }
+    
     @media (max-width: 768px) {
         .dashboard-header {
             padding: 1.5rem;
             margin-bottom: 1.5rem;
+        }
+        
+        .stat-card {
+            height: 150px;
+            padding: 20px;
+        }
+        
+        .stat-card h3 {
+            font-size: 2rem;
+        }
+        
+        .stat-icon {
+            font-size: 1.5rem;
         }
     }
 </style>
@@ -70,65 +204,103 @@
             </div>
         </div>
         <div class="col-md-4">
-            <div class="stat-card stat-card-total-visitantes" style="background: linear-gradient(135deg, #6dd5ed, #2193b0); color: #fff;">
+            <div class="stat-card stat-card-total-visitantes">
                 <i class="fas fa-users stat-icon"></i>
                 <h3>{{ total_visitantes }}</h3>
                 <p>Visitantes Cadastrados</p>
             </div>
         </div>
         <div class="col-md-4">
-            <div class="stat-card stat-card-total-visitas" style="background: linear-gradient(135deg, #f1c40f, #f39c12); color: #fff;">
+            <div class="stat-card stat-card-total-visitas">
                 <i class="fas fa-list stat-icon"></i>
                 <h3>{{ total_visitas }}</h3>
                 <p>Total de Visitas</p>
             </div>
         </div>
     </div>
-    <div class="card quick-actions mb-4">
+    <!-- Card único: Filtros + Tabela -->
+    <div class="card mb-4 main-table-card">
         <div class="card-body">
-            <!-- Filtros -->
-            <form method="get" class="mb-0" id="formFiltros">
-                <div class="row g-3">
-                    <div class="col-md-3">
-                        <label for="status" class="form-label">Status</label>
-                        <select name="status" id="status" class="form-select">
-                            <option value="">Todos</option>
-                            <option value="em_andamento" {% if status_filtro == 'em_andamento' %}selected{% endif %}>Em Andamento</option>
-                            <option value="finalizada" {% if status_filtro == 'finalizada' %}selected{% endif %}>Finalizada</option>
-                        </select>
-                    </div>
-                    <div class="col-md-3">
-                        <label for="periodo" class="form-label">Período</label>
-                        <select name="periodo" id="periodo" class="form-select">
-                            <option value="">Todos</option>
-                            <option value="hoje" {% if periodo_filtro == 'hoje' %}selected{% endif %}>Hoje</option>
-                            <option value="semana" {% if periodo_filtro == 'semana' %}selected{% endif %}>Esta Semana</option>
-                            <option value="mes" {% if periodo_filtro == 'mes' %}selected{% endif %}>Este Mês</option>
-                        </select>
-                    </div>
-                    <div class="col-md-4">
-                        <label for="busca" class="form-label">Buscar Visitante</label>
-                        <input type="text" name="busca" id="busca" class="form-control" value="{{ busca|default:'' }}" placeholder="Nome ou CPF do visitante">
-                    </div>
-                    <div class="col-md-2 d-flex align-items-end">
-                        <div class="btn-group w-100">
-                            <button type="button" class="btn btn-primary" id="btnFiltrar">
-                                <i class="fas fa-search"></i> Filtrar
-                            </button>
-                            <button type="button" class="btn btn-secondary" id="btnLimpar">
-                                <i class="fas fa-times"></i>
-                            </button>
+            <!-- Seção de Filtros -->
+            <div class="filters-section">
+                <h5 class="card-title mb-3">
+                    <i class="fas fa-filter me-2"></i>Filtros
+                </h5>
+                <form method="get" class="mb-0" id="formFiltros">
+                    <div class="row g-3 align-items-end filter-row">
+                        <div class="col-lg-2 col-md-3 col-6">
+                            <label for="status" class="form-label">
+                                <i class="fas fa-info-circle me-1"></i>Status
+                            </label>
+                            <select name="status" id="status" class="form-select">
+                                <option value="">Todos</option>
+                                <option value="em_andamento" {% if status_filtro == 'em_andamento' %}selected{% endif %}>Em Andamento</option>
+                                <option value="finalizada" {% if status_filtro == 'finalizada' %}selected{% endif %}>Finalizada</option>
+                            </select>
+                        </div>
+                        <div class="col-lg-2 col-md-3 col-6">
+                            <label for="periodo" class="form-label">
+                                <i class="fas fa-calendar me-1"></i>Período
+                            </label>
+                            <select name="periodo" id="periodo" class="form-select">
+                                <option value="">Todos</option>
+                                <option value="hoje" {% if periodo_filtro == 'hoje' %}selected{% endif %}>Hoje</option>
+                                <option value="semana" {% if periodo_filtro == 'semana' %}selected{% endif %}>Esta Semana</option>
+                                <option value="mes" {% if periodo_filtro == 'mes' %}selected{% endif %}>Este Mês</option>
+                            </select>
+                        </div>
+                        <div class="col-lg-4 col-md-6 col-12">
+                            <label for="busca" class="form-label">
+                                <i class="fas fa-search me-1"></i>Buscar Visitante
+                            </label>
+                            <div class="input-group">
+                                <input type="text" name="busca" id="busca" class="form-control" value="{{ busca|default:'' }}" placeholder="Nome ou CPF do visitante">
+                                <span class="input-group-text">
+                                    <i class="fas fa-search text-muted"></i>
+                                </span>
+                            </div>
+                        </div>
+                        <div class="col-lg-2 col-md-6 col-6">
+                            <div class="d-grid">
+                                <button type="button" class="btn btn-primary" id="btnFiltrar">
+                                    <i class="fas fa-filter me-2"></i>
+                                    <span class="d-none d-md-inline">Filtrar</span>
+                                    <span class="d-md-none">Buscar</span>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="col-lg-2 col-md-6 col-6">
+                            <div class="d-grid">
+                                <button type="button" class="btn btn-secondary" id="btnLimpar">
+                                    <i class="fas fa-times me-2"></i>
+                                    <span class="d-none d-md-inline">Limpar</span>
+                                    <span class="d-md-none">Limpar</span>
+                                </button>
+                            </div>
                         </div>
                     </div>
+                </form>
+            </div>
+            
+            <!-- Seção da Tabela -->
+            <div class="table-section">
+                <div class="table-header">
+                    <h5 class="table-title mb-0">
+                        <i class="fas fa-list me-2"></i>
+                        Histórico de Visitas
+                        <span id="total-visitas" class="badge bg-primary ms-2">{{ page_obj.paginator.count }}</span>
+                    </h5>
+                    <div class="btn-group">
+                        <a href="{% url 'recepcao:status_visita' %}" class="btn btn-outline-primary btn-sm">
+                            <i class="fas fa-clock me-1"></i>
+                            <span class="d-none d-sm-inline">Visitas em Andamento</span>
+                            <span class="d-sm-none">Em Andamento</span>
+                        </a>
+                    </div>
                 </div>
-            </form>
-        </div>
-    </div>
-    <div class="card">
-        <div class="card-body p-0">
-            <!-- Tabela de visitas -->
-            <div id="tabela-container">
-                {% include 'recepcao/includes/tabela_historico_visitas.html' %}
+                <div id="tabela-container">
+                    {% include 'recepcao/includes/tabela_historico_visitas.html' %}
+                </div>
             </div>
         </div>
     </div>
@@ -161,98 +333,19 @@ document.addEventListener('DOMContentLoaded', function() {
     const form = document.getElementById('formFiltros');
     const btnFiltrar = document.getElementById('btnFiltrar');
     const btnLimpar = document.getElementById('btnLimpar');
-    const loadingOverlay = document.getElementById('loading-overlay');
-    const tabelaContainer = document.getElementById('tabela-container');
-    const statsContainer = document.getElementById('stats-container');
-    
-    // URL da view AJAX
-    const ajaxUrl = '{% url "recepcao:historico_visitas_ajax" %}';
-    
-    function showLoading() {
-        loadingOverlay.style.display = 'block';
-        tabelaContainer.style.opacity = '0.5';
-        statsContainer.style.opacity = '0.5';
-    }
-    
-    function hideLoading() {
-        loadingOverlay.style.display = 'none';
-        tabelaContainer.style.opacity = '1';
-        statsContainer.style.opacity = '1';
-    }
-    
-    function atualizarTabela(page = 1) {
-        console.log('Atualizando tabela, página:', page);
-        showLoading();
-        
-        const formData = new FormData(form);
-        if (page > 1) {
-            formData.append('page', page);
-        }
-        
-        const params = new URLSearchParams(formData);
-        
-        fetch(ajaxUrl + '?' + params.toString())
-            .then(response => {
-                console.log('Resposta recebida:', response.status);
-                if (!response.ok) {
-                    throw new Error('Erro na requisição: ' + response.status);
-                }
-                return response.json();
-            })
-            .then(data => {
-                console.log('Dados recebidos:', data);
-                if (data.success) {
-                    tabelaContainer.innerHTML = data.html;
-                    statsContainer.innerHTML = data.stats_html;
-                    
-                    // Reativar eventos de paginação
-                    ativarPaginacao();
-                } else {
-                    console.error('Erro nos dados:', data);
-                }
-            })
-            .catch(error => {
-                console.error('Erro na requisição:', error);
-                alert('Erro ao carregar dados. Tente novamente.');
-            })
-            .finally(() => {
-                hideLoading();
-            });
-    }
-    
-    function ativarPaginacao() {
-        const paginationLinks = document.querySelectorAll('.pagination a[data-page]');
-        paginationLinks.forEach(link => {
-            link.addEventListener('click', function(e) {
-                e.preventDefault();
-                const page = this.getAttribute('data-page');
-                atualizarTabela(page);
-            });
-        });
-        
-        // Ativar botões de exclusão usando event delegation
-        const botoesExcluir = document.querySelectorAll('.btn-excluir');
-        botoesExcluir.forEach(btn => {
-            btn.addEventListener('click', function(e) {
-                e.preventDefault();
-                const url = this.getAttribute('data-url');
-                confirmarExclusao(url);
-            });
-        });
-    }
     
     // Eventos dos filtros
     btnFiltrar.addEventListener('click', function(e) {
         e.preventDefault();
         console.log('Botão filtrar clicado');
-        atualizarTabela();
+        form.submit();
     });
     
     btnLimpar.addEventListener('click', function(e) {
         e.preventDefault();
         console.log('Botão limpar clicado');
         form.reset();
-        atualizarTabela();
+        form.submit();
     });
     
     // Filtrar ao pressionar Enter nos campos de texto
@@ -261,7 +354,7 @@ document.addEventListener('DOMContentLoaded', function() {
         input.addEventListener('keypress', function(e) {
             if (e.key === 'Enter') {
                 e.preventDefault();
-                atualizarTabela();
+                form.submit();
             }
         });
     });
@@ -270,12 +363,19 @@ document.addEventListener('DOMContentLoaded', function() {
     const selects = form.querySelectorAll('select');
     selects.forEach(select => {
         select.addEventListener('change', function() {
-            atualizarTabela();
+            form.submit();
         });
     });
     
-    // Ativar paginação inicial
-    ativarPaginacao();
+    // Ativar botões de exclusão
+    const botoesExcluir = document.querySelectorAll('.btn-excluir');
+    botoesExcluir.forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            const url = this.getAttribute('data-url');
+            confirmarExclusao(url);
+        });
+    });
 });
 
 // Função global para confirmação de exclusão

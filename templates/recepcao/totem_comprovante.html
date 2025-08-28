@@ -117,15 +117,17 @@
     justify-content: center;
 }
 .btn-print {
-    background: linear-gradient(135deg, #4A90E2 0%, #357ABD 100%);
-    color: white;
-    box-shadow: 0 4px 15px rgba(74, 144, 226, 0.3);
+    background-color: #fff;
+    color: #495057;
+    border: 2px solid #e9ecef;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
 }
 .btn-print:hover {
-    background: linear-gradient(135deg, #357ABD 0%, #2c5aa0 100%);
-    transform: translateY(-3px);
-    box-shadow: 0 8px 25px rgba(74, 144, 226, 0.4);
-    color: white;
+    background-color: #f8f9fa;
+    border-color: #6c757d;
+    color: #495057;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.15);
     text-decoration: none;
 }
 
@@ -144,76 +146,23 @@
     text-decoration: none;
 }
 
-/* Estilos de Impressão Otimizados */
-@media print {
-    /* Esconde elementos desnecessários */
-    .ticket-footer {
-        display: none !important;
-    }
-    
-    /* Otimiza a página para impressão */
-    body {
-        margin: 0;
-        padding: 0;
-        background: white !important;
-    }
-    
-    .ticket-screen {
-        min-height: auto;
-        padding: 0.5in;
-        background: white !important;
-        display: block;
-    }
-    
-    .ticket-container {
-        max-width: none;
-        width: auto;
-        margin: 0;
-        padding: 0.5in;
-        box-shadow: none;
-        border: 2px solid #2c3e50;
-        page-break-inside: avoid;
-        border-radius: 0;
-    }
-    
-    /* Garante que o texto seja legível */
-    .ticket-visitor-name {
-        color: #000 !important;
-        font-size: 1.8rem !important;
-    }
-    
-    .ticket-info p,
-    .ticket-info p strong {
-        color: #000 !important;
-        font-size: 1rem !important;
-    }
-    
-    .instituicao {
-        color: #000 !important;
-        font-size: 1.2rem !important;
-    }
-    
-    .programa {
-        color: #000 !important;
-        font-size: 0.9rem !important;
-    }
-    
-    /* Otimiza o tamanho da página */
-    @page {
-        margin: 0.75in;
-        size: auto;
-    }
-    
-    /* Centraliza o conteúdo na impressão */
-    .ticket-header,
-    .ticket-info {
-        text-align: center !important;
-    }
-    
-    .separator {
-        margin: 1.5rem auto !important;
-        width: 80% !important;
-    }
+/* Estilos de impressão removidos - página não será mais impressa diretamente */
+
+/* Indicador de impressão automática */
+.print-indicator {
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+    font-weight: 600;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.7; }
+    100% { opacity: 1; }
 }
 </style>
 {% endblock %}
@@ -225,7 +174,9 @@
             <img src="{% static 'img/logo_CMP.png' %}" alt="Logo Câmara">
             <div class="instituicao">Câmara Municipal de Parauapebas</div>
             <div class="programa">URUTAL - Comprovante de Visita</div>
-            <p class="comprovante-info">Por favor, aguarde a impressão da sua Etiqueta.</p>
+            <div class="print-indicator">
+                🖨️ Impressão automática em andamento...
+            </div>
         </div>
         
         <div class="separator"></div>
@@ -249,8 +200,13 @@
         </div>
 
         <div class="ticket-footer">
-            <button onclick="window.location.href='{% url 'recepcao:gerar_etiqueta' visita.id %}?auto_print=1'" class="btn btn-print">
-                <i class="fas fa-print me-2"></i>Imprimir Comprovante
+            <div class="print-note" style="text-align: center; margin-bottom: 1rem; color: #6c757d; font-size: 0.9rem; font-style: italic;">
+                <i class="fas fa-info-circle me-1"></i>
+                A impressão é automática. Use este botão apenas se necessário.
+            </div>
+            
+            <button onclick="imprimirComprovante()" class="btn btn-print">
+                <i class="fas fa-print me-2"></i>Imprimir Novamente
             </button>
             
             <a href="{% url 'recepcao:totem_welcome' %}" class="btn btn-finish">
@@ -263,11 +219,130 @@
 
 {% block extra_js %}
 <script>
+let printAttempted = false;
+let redirectTimer = null;
+let etiquetaWindow = null;
+
 window.onload = function() {
-    // Redireciona para a home do totem após 60 segundos
+    console.log('Página carregada, iniciando impressão automática...');
+    
+    // Inicia impressão automática após 1 segundo
     setTimeout(function() {
+        imprimirComprovante();
+    }, 1000);
+    
+    // Redireciona para a home do totem após 30 segundos
+    redirectTimer = setTimeout(function() {
+        console.log('Redirecionando para welcome após 30 segundos...');
         window.location.href = "{% url 'recepcao:totem_welcome' %}";
-    }, 60000);
+    }, 30000); // 30 segundos
 }
+
+function imprimirComprovante() {
+    if (printAttempted) {
+        console.log('Impressão já foi tentada, imprimindo novamente...');
+        // Se já tentou imprimir, imprime novamente
+        abrirJanelaEtiqueta();
+        return;
+    }
+    
+    console.log('Tentando impressão automática...');
+    printAttempted = true;
+    
+    // Atualiza o indicador
+    const indicator = document.querySelector('.print-indicator');
+    if (indicator) {
+        indicator.innerHTML = '🔄 Abrindo página de impressão...';
+        indicator.style.background = 'linear-gradient(135deg, #ffc107 0%, #fd7e14 100%)';
+    }
+    
+    // Abre a página de etiqueta para impressão
+    abrirJanelaEtiqueta();
+}
+
+function abrirJanelaEtiqueta() {
+    console.log('Abrindo página de etiqueta para impressão...');
+    
+    // Fecha janela anterior se existir
+    if (etiquetaWindow && !etiquetaWindow.closed) {
+        etiquetaWindow.close();
+    }
+    
+    // Abre nova janela com a página de etiqueta (invisível para o usuário)
+    etiquetaWindow = window.open("{% url 'recepcao:gerar_etiqueta' visita.id %}?auto_print=1", "_blank", "width=1,height=1,left=-10000,top=-10000");
+    
+    if (etiquetaWindow) {
+        // Atualiza o indicador
+        const indicator = document.querySelector('.print-indicator');
+        if (indicator) {
+            indicator.innerHTML = '🖨️ Imprimindo etiqueta...';
+            indicator.style.background = 'linear-gradient(135deg, #ffc107 0%, #fd7e14 100%)';
+        }
+        
+        // Monitora se a janela foi fechada
+        const checkClosed = setInterval(function() {
+            if (etiquetaWindow.closed) {
+                clearInterval(checkClosed);
+                console.log('Janela de etiqueta fechada');
+                
+                // Atualiza o indicador
+                const indicator = document.querySelector('.print-indicator');
+                if (indicator) {
+                    indicator.innerHTML = '✅ Etiqueta impressa!';
+                    indicator.style.background = 'linear-gradient(135deg, #28a745 0%, #20c997 100%)';
+                }
+                
+                // Aguarda um pouco e então atualiza o indicador
+                setTimeout(function() {
+                    const indicator = document.querySelector('.print-indicator');
+                    if (indicator) {
+                        indicator.innerHTML = '✅ Por favor, retire sua etiqueta.';
+                        indicator.style.background = 'linear-gradient(135deg, #28a745 0%, #20c997 100%)';
+                    }
+                }, 2000);
+            }
+        }, 100);
+        
+        // Fecha a janela automaticamente após 3 segundos (tempo suficiente para impressão)
+        setTimeout(function() {
+            if (etiquetaWindow && !etiquetaWindow.closed) {
+                console.log('Fechando janela de etiqueta automaticamente...');
+                etiquetaWindow.close();
+            }
+        }, 3000);
+        
+        // Timeout de segurança: se a janela não fechar em 8 segundos, considera como impressa
+        setTimeout(function() {
+            if (etiquetaWindow && !etiquetaWindow.closed) {
+                console.log('Timeout: considerando impressão como concluída');
+                etiquetaWindow.close();
+                
+                const indicator = document.querySelector('.print-indicator');
+                if (indicator) {
+                    indicator.innerHTML = '✅ Impressão concluída!';
+                    indicator.style.background = 'linear-gradient(135deg, #28a745 0%, #20c997 100%)';
+                }
+            }
+        }, 8000);
+        
+    } else {
+        console.error('Falha ao abrir janela de etiqueta');
+        const indicator = document.querySelector('.print-indicator');
+        if (indicator) {
+            indicator.innerHTML = '❌ Erro ao abrir impressão';
+            indicator.style.background = 'linear-gradient(135deg, #dc3545 0%, #c82333 100%)';
+        }
+    }
+}
+
+// Função para cancelar o redirecionamento se necessário
+function cancelarRedirecionamento() {
+    if (redirectTimer) {
+        clearTimeout(redirectTimer);
+        console.log('Redirecionamento cancelado');
+    }
+}
+
+// Event listeners removidos - não são mais necessários
 </script>
 {% endblock %} 

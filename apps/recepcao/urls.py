@@ -26,9 +26,7 @@ urlpatterns = [
     
     path('visitantes/<int:pk>/excluir/', views.excluir_visitante, name='excluir_visitante'),
     
-    # URLs para AJAX do admin
-    path('get_assessores/', views.get_assessores_por_tipo, name='get_assessores_por_tipo'),
-    path('get_assessor_info/', views.get_assessor_info, name='get_assessor_info'),
+
     path('gabinetes/', views.home_gabinetes, name='home_gabinetes'),
     path('gabinetes/<int:gabinete_id>/', views.detalhes_gabinete, name='detalhes_gabinete'),
     path('gabinetes/<int:gabinete_id>/editar/', views.editar_gabinete, name='editar_gabinete'),
