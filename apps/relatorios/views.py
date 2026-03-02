@@ -25,9 +25,13 @@ def dashboard(request):
         except:
             pass
     
+    # Buscar todos os setores para o filtro (apenas se não for assessor)
+    setores = Setor.objects.filter(ativo=True).order_by('tipo', 'nome_vereador', 'nome_local') if not is_assessor else []
+    
     context = {
         'is_assessor': is_assessor,
-        'departamento': departamento
+        'departamento': departamento,
+        'setores': setores
     }
     
     return render(request, 'relatorios/dashboard.html', context)
@@ -45,10 +49,51 @@ def api_cards(request):
         except:
             pass
     
+    # Obter filtros
+    data_inicio = request.GET.get('data_inicio')
+    data_fim = request.GET.get('data_fim')
+    setor_id = request.GET.get('setor')
+    localizacao = request.GET.get('localizacao')
+    objetivo = request.GET.get('objetivo')
+    status = request.GET.get('status')
+    
     # Filtrar visitas por departamento se for assessor
     visitas_queryset = Visita.objects.all()
     if departamento:
         visitas_queryset = visitas_queryset.filter(setor=departamento)
+    
+    # Aplicar filtros adicionais
+    if data_inicio:
+        from datetime import datetime
+        try:
+            data_inicio_obj = datetime.strptime(data_inicio, '%Y-%m-%d').date()
+            visitas_queryset = visitas_queryset.filter(data_entrada__date__gte=data_inicio_obj)
+        except (ValueError, TypeError):
+            pass
+    
+    if data_fim:
+        from datetime import datetime, time
+        try:
+            data_fim_obj = datetime.strptime(data_fim, '%Y-%m-%d').date()
+            data_fim_completa = datetime.combine(data_fim_obj, time.max)
+            visitas_queryset = visitas_queryset.filter(data_entrada__lte=data_fim_completa)
+        except (ValueError, TypeError):
+            pass
+    
+    if setor_id and not is_assessor:  # Assessores já têm filtro automático
+        try:
+            visitas_queryset = visitas_queryset.filter(setor_id=setor_id)
+        except (ValueError, TypeError):
+            pass
+    
+    if localizacao:
+        visitas_queryset = visitas_queryset.filter(localizacao=localizacao)
+    
+    if objetivo:
+        visitas_queryset = visitas_queryset.filter(objetivo=objetivo)
+    
+    if status:
+        visitas_queryset = visitas_queryset.filter(status=status)
     
     total_acessos = visitas_queryset.count()
     visitantes_unicos = visitas_queryset.values('visitante_id').distinct().count()
@@ -82,10 +127,51 @@ def api_graficos(request):
         except:
             pass
     
+    # Obter filtros
+    data_inicio = request.GET.get('data_inicio')
+    data_fim = request.GET.get('data_fim')
+    setor_id = request.GET.get('setor')
+    localizacao = request.GET.get('localizacao')
+    objetivo = request.GET.get('objetivo')
+    status = request.GET.get('status')
+    
     # Filtrar visitas por departamento se for assessor
     visitas_queryset = Visita.objects.all()
     if departamento:
         visitas_queryset = visitas_queryset.filter(setor=departamento)
+    
+    # Aplicar filtros adicionais
+    if data_inicio:
+        from datetime import datetime
+        try:
+            data_inicio_obj = datetime.strptime(data_inicio, '%Y-%m-%d').date()
+            visitas_queryset = visitas_queryset.filter(data_entrada__date__gte=data_inicio_obj)
+        except (ValueError, TypeError):
+            pass
+    
+    if data_fim:
+        from datetime import datetime, time
+        try:
+            data_fim_obj = datetime.strptime(data_fim, '%Y-%m-%d').date()
+            data_fim_completa = datetime.combine(data_fim_obj, time.max)
+            visitas_queryset = visitas_queryset.filter(data_entrada__lte=data_fim_completa)
+        except (ValueError, TypeError):
+            pass
+    
+    if setor_id and not is_assessor:  # Assessores já têm filtro automático
+        try:
+            visitas_queryset = visitas_queryset.filter(setor_id=setor_id)
+        except (ValueError, TypeError):
+            pass
+    
+    if localizacao:
+        visitas_queryset = visitas_queryset.filter(localizacao=localizacao)
+    
+    if objetivo:
+        visitas_queryset = visitas_queryset.filter(objetivo=objetivo)
+    
+    if status:
+        visitas_queryset = visitas_queryset.filter(status=status)
     
     # Pizza: distribuição por status
     pizza_labels = ['Em Andamento', 'Finalizada', 'Cancelada']
@@ -130,31 +216,76 @@ def api_tabela(request):
         except:
             pass
     
+    # Obter filtros
     data_filtro = request.GET.get('data')
+    data_inicio = request.GET.get('data_inicio')
+    data_fim = request.GET.get('data_fim')
     tipo_filtro = request.GET.get('tipo')
+    status = request.GET.get('status')
     usuario_filtro = request.GET.get('usuario')
+    setor_id = request.GET.get('setor')
+    localizacao = request.GET.get('localizacao')
+    objetivo = request.GET.get('objetivo')
     
-    qs = Visita.objects.select_related('visitante')
+    qs = Visita.objects.select_related('visitante', 'setor')
     
     # Filtrar por departamento se for assessor
     if departamento:
         qs = qs.filter(setor=departamento)
     
-    if data_filtro:
+    # Filtro de data específica (tem prioridade sobre data única)
+    if data_inicio or data_fim:
+        from datetime import datetime, time
+        if data_inicio:
+            try:
+                data_inicio_obj = datetime.strptime(data_inicio, '%Y-%m-%d').date()
+                qs = qs.filter(data_entrada__date__gte=data_inicio_obj)
+            except (ValueError, TypeError):
+                pass
+        if data_fim:
+            try:
+                data_fim_obj = datetime.strptime(data_fim, '%Y-%m-%d').date()
+                data_fim_completa = datetime.combine(data_fim_obj, time.max)
+                qs = qs.filter(data_entrada__lte=data_fim_completa)
+            except (ValueError, TypeError):
+                pass
+    elif data_filtro:
         qs = qs.filter(data_entrada__date=data_filtro)
-    if tipo_filtro:
+    
+    if status:
+        qs = qs.filter(status=status)
+    elif tipo_filtro:
         if tipo_filtro.lower() in ['em_andamento', 'finalizada', 'cancelada']:
             qs = qs.filter(status=tipo_filtro.lower())
         else:
             qs = qs.filter(objetivo__icontains=tipo_filtro)
+    
+    if setor_id and not is_assessor:  # Assessores já têm filtro automático
+        try:
+            qs = qs.filter(setor_id=setor_id)
+        except (ValueError, TypeError):
+            pass
+    
+    if localizacao:
+        qs = qs.filter(localizacao=localizacao)
+    
+    if objetivo:
+        qs = qs.filter(objetivo=objetivo)
+    
     if usuario_filtro:
-        qs = qs.filter(visitante__nome_completo__icontains=usuario_filtro)
+        qs = qs.filter(
+            Q(visitante__nome_completo__icontains=usuario_filtro) |
+            Q(visitante__CPF__icontains=usuario_filtro)
+        )
     
     rows = [
         {
             'data': v.data_entrada.strftime('%Y-%m-%d %H:%M'),
             'tipo': v.get_status_display(),
             'usuario': v.visitante.nome_completo,
+            'setor': str(v.setor),
+            'localizacao': v.get_localizacao_display(),
+            'objetivo': v.get_objetivo_display(),
             'descricao': v.objetivo,
         }
         for v in qs.order_by('-data_entrada')[:100]
@@ -175,25 +306,67 @@ def exportar_pdf(request):
         except:
             pass
     
+    # Obter filtros
     data_filtro = request.GET.get('data')
+    data_inicio = request.GET.get('data_inicio')
+    data_fim = request.GET.get('data_fim')
     tipo_filtro = request.GET.get('tipo')
+    status = request.GET.get('status')
     usuario_filtro = request.GET.get('usuario')
+    setor_id = request.GET.get('setor')
+    localizacao = request.GET.get('localizacao')
+    objetivo = request.GET.get('objetivo')
     
-    qs = Visita.objects.select_related('visitante')
+    qs = Visita.objects.select_related('visitante', 'setor')
     
     # Filtrar por departamento se for assessor
     if departamento:
         qs = qs.filter(setor=departamento)
     
-    if data_filtro:
+    # Filtro de data específica (tem prioridade sobre data única)
+    if data_inicio or data_fim:
+        from datetime import datetime, time
+        if data_inicio:
+            try:
+                data_inicio_obj = datetime.strptime(data_inicio, '%Y-%m-%d').date()
+                qs = qs.filter(data_entrada__date__gte=data_inicio_obj)
+            except (ValueError, TypeError):
+                pass
+        if data_fim:
+            try:
+                data_fim_obj = datetime.strptime(data_fim, '%Y-%m-%d').date()
+                data_fim_completa = datetime.combine(data_fim_obj, time.max)
+                qs = qs.filter(data_entrada__lte=data_fim_completa)
+            except (ValueError, TypeError):
+                pass
+    elif data_filtro:
         qs = qs.filter(data_entrada__date=data_filtro)
-    if tipo_filtro:
+    
+    if status:
+        qs = qs.filter(status=status)
+    elif tipo_filtro:
         if tipo_filtro.lower() in ['em_andamento', 'finalizada', 'cancelada']:
             qs = qs.filter(status=tipo_filtro.lower())
         else:
             qs = qs.filter(objetivo__icontains=tipo_filtro)
+    
+    if setor_id and not is_assessor:  # Assessores já têm filtro automático
+        try:
+            qs = qs.filter(setor_id=setor_id)
+        except (ValueError, TypeError):
+            pass
+    
+    if localizacao:
+        qs = qs.filter(localizacao=localizacao)
+    
+    if objetivo:
+        qs = qs.filter(objetivo=objetivo)
+    
     if usuario_filtro:
-        qs = qs.filter(visitante__nome_completo__icontains=usuario_filtro)
+        qs = qs.filter(
+            Q(visitante__nome_completo__icontains=usuario_filtro) |
+            Q(visitante__CPF__icontains=usuario_filtro)
+        )
     
     buffer = io.BytesIO()
     p = canvas.Canvas(buffer, pagesize=A4)
@@ -211,11 +384,11 @@ def exportar_pdf(request):
     p.drawString(50, height - 50, titulo)
     p.setFont('Helvetica', 10)
     y = height - 80
-    p.drawString(50, y, 'Data       | Tipo         | Usuário         | Descrição')
+    p.drawString(50, y, 'Data       | Tipo         | Usuário         | Setor              | Localização | Objetivo')
     y -= 15
     
     for v in qs.order_by('-data_entrada')[:100]:
-        linha = f"{v.data_entrada.strftime('%Y-%m-%d %H:%M')} | {v.get_status_display():<12} | {v.visitante.nome_completo[:15]:<15} | {v.objetivo}"
+        linha = f"{v.data_entrada.strftime('%Y-%m-%d %H:%M')} | {v.get_status_display():<12} | {v.visitante.nome_completo[:15]:<15} | {str(v.setor)[:20]:<20} | {v.get_localizacao_display():<10} | {v.get_objetivo_display()}"
         p.drawString(50, y, linha)
         y -= 15
         if y < 50:
@@ -248,32 +421,78 @@ def exportar_excel(request):
         except:
             pass
     
+    # Obter filtros
     data_filtro = request.GET.get('data')
+    data_inicio = request.GET.get('data_inicio')
+    data_fim = request.GET.get('data_fim')
     tipo_filtro = request.GET.get('tipo')
+    status = request.GET.get('status')
     usuario_filtro = request.GET.get('usuario')
+    setor_id = request.GET.get('setor')
+    localizacao = request.GET.get('localizacao')
+    objetivo = request.GET.get('objetivo')
     
-    qs = Visita.objects.select_related('visitante')
+    qs = Visita.objects.select_related('visitante', 'setor')
     
     # Filtrar por departamento se for assessor
     if departamento:
         qs = qs.filter(setor=departamento)
     
-    if data_filtro:
+    # Filtro de data específica (tem prioridade sobre data única)
+    if data_inicio or data_fim:
+        from datetime import datetime, time
+        if data_inicio:
+            try:
+                data_inicio_obj = datetime.strptime(data_inicio, '%Y-%m-%d').date()
+                qs = qs.filter(data_entrada__date__gte=data_inicio_obj)
+            except (ValueError, TypeError):
+                pass
+        if data_fim:
+            try:
+                data_fim_obj = datetime.strptime(data_fim, '%Y-%m-%d').date()
+                data_fim_completa = datetime.combine(data_fim_obj, time.max)
+                qs = qs.filter(data_entrada__lte=data_fim_completa)
+            except (ValueError, TypeError):
+                pass
+    elif data_filtro:
         qs = qs.filter(data_entrada__date=data_filtro)
-    if tipo_filtro:
+    
+    if status:
+        qs = qs.filter(status=status)
+    elif tipo_filtro:
         if tipo_filtro.lower() in ['em_andamento', 'finalizada', 'cancelada']:
             qs = qs.filter(status=tipo_filtro.lower())
         else:
             qs = qs.filter(objetivo__icontains=tipo_filtro)
+    
+    if setor_id and not is_assessor:  # Assessores já têm filtro automático
+        try:
+            qs = qs.filter(setor_id=setor_id)
+        except (ValueError, TypeError):
+            pass
+    
+    if localizacao:
+        qs = qs.filter(localizacao=localizacao)
+    
+    if objetivo:
+        qs = qs.filter(objetivo=objetivo)
+    
     if usuario_filtro:
-        qs = qs.filter(visitante__nome_completo__icontains=usuario_filtro)
+        qs = qs.filter(
+            Q(visitante__nome_completo__icontains=usuario_filtro) |
+            Q(visitante__CPF__icontains=usuario_filtro)
+        )
     
     data = [
         {
             'Data': v.data_entrada.strftime('%Y-%m-%d %H:%M'),
-            'Tipo': v.get_status_display(),
-            'Usuário': v.visitante.nome_completo,
-            'Descrição': v.objetivo,
+            'Status': v.get_status_display(),
+            'Visitante': v.visitante.nome_completo,
+            'CPF': v.visitante.CPF or '',
+            'Setor': str(v.setor),
+            'Localização': v.get_localizacao_display(),
+            'Objetivo': v.get_objetivo_display(),
+            'Observações': v.observacoes or '',
         }
         for v in qs.order_by('-data_entrada')[:100]
     ]

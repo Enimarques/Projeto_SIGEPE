@@ -199,7 +199,7 @@
     
     <div class="welcome-section">
         <div class="welcome-title">
-            <h1 class="main-title">Olá! Bem-Vindo(a).</h1>
+            <h1 class="main-title">Olá! Bem-Vindo(a)</h1>
             <div class="title-separator"></div>
         </div>
         <div class="welcome-subtitle">
@@ -220,3 +220,81 @@ Seus dados estão protegidos em conformidade com a Lei Geral de Proteção de Da
         Guardado e monitorado pelo Departamento de Tecnologia da Informação.    </div>
 </div>
 {% endblock %} 
+
+{% block extra_js %}
+<script>
+  (function() {
+    try {
+      // Dispara preload dos vetores faciais sem bloquear a UI
+      fetch('{% url "recepcao:api_preload_face_vectors" %}', { method: 'GET', credentials: 'same-origin' })
+        .then(r => r.json())
+        .then(data => {
+          console.log('Preload vetores:', data);
+        })
+        .catch(err => console.warn('Falha no preload de vetores:', err));
+    } catch (e) {
+      console.warn('Erro ao iniciar preload de vetores:', e);
+    }
+  })();
+</script>
+
+<!-- Preconnect/prefetch para reduzir latência do carregamento do modelo e WASM -->
+<link rel="preconnect" href="https://cdn.jsdelivr.net">
+<link rel="dns-prefetch" href="//cdn.jsdelivr.net">
+<link rel="preconnect" href="https://storage.googleapis.com">
+<link rel="dns-prefetch" href="//storage.googleapis.com">
+
+<!-- Tenta prefetch local primeiro, fallback para CDN -->
+<link rel="prefetch" href="{% static 'mediapipe/wasm' %}">
+<link rel="prefetch" href="{% static 'mediapipe/models/blaze_face_short_range.tflite' %}">
+<link rel="prefetch" href="https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm">
+<link rel="prefetch" href="https://storage.googleapis.com/mediapipe-models/face_detector/blaze_face_short_range/float16/1/blaze_face_short_range.tflite">
+
+<script>
+  // Aquecimento de câmera e cache do modelo (pode solicitar permissão já na tela de boas-vindas)
+  (async function warmupResources() {
+    try {
+      // Tenta pré-carregar assets locais primeiro
+      const WASM_LOCAL = "{% static 'mediapipe/wasm' %}";
+      const MODEL_LOCAL = "{% static 'mediapipe/models/blaze_face_short_range.tflite' %}";
+      const WASM_CDN = 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm';
+      const MODEL_CDN = 'https://storage.googleapis.com/mediapipe-models/face_detector/blaze_face_short_range/float16/1/blaze_face_short_range.tflite';
+      
+      // Verifica se os arquivos locais existem
+      try {
+        const wasmCheck = await fetch(WASM_LOCAL + "/vision_wasm_internal.wasm", { method: 'HEAD' });
+        if (wasmCheck.ok) {
+          fetch(WASM_LOCAL, { mode: 'no-cors' }).catch(()=>{});
+          console.log('✅ Pré-carregando WASM local');
+        } else {
+          fetch(WASM_CDN, { mode: 'no-cors' }).catch(()=>{});
+        }
+      } catch (e) {
+        fetch(WASM_CDN, { mode: 'no-cors' }).catch(()=>{});
+      }
+      
+      try {
+        const modelCheck = await fetch(MODEL_LOCAL, { method: 'HEAD' });
+        if (modelCheck.ok) {
+          fetch(MODEL_LOCAL, { mode: 'no-cors' }).catch(()=>{});
+          console.log('✅ Pré-carregando modelo local');
+        } else {
+          fetch(MODEL_CDN, { mode: 'no-cors' }).catch(()=>{});
+        }
+      } catch (e) {
+        fetch(MODEL_CDN, { mode: 'no-cors' }).catch(()=>{});
+      }
+
+      // Opcional: solicitar acesso à câmera antecipadamente e aquecer o dispositivo
+      if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: { width: { ideal: 640 }, height: { ideal: 640 } } });
+        // Para não manter a câmera ativa aqui: interrompe imediatamente (apenas aquecimento/permissão)
+        stream.getTracks().forEach(t => t.stop());
+        console.log('Câmera aquecida/permissão concedida na tela de boas-vindas');
+      }
+    } catch (e) {
+      console.warn('Warmup de câmera/modelo falhou ou foi negado:', e);
+    }
+  })();
+</script>
+{% endblock %}

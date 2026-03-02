@@ -7,7 +7,7 @@ from django.contrib.admin.widgets import RelatedFieldWidgetWrapper
 from django.urls import reverse
 from django.db import transaction
 from django.contrib import messages
-from .models import Visitante, Visita, Setor
+from .models import Visitante, Visita, Setor, VisitanteArquivado, VisitaArquivada
 from .forms_departamento import SetorForm
 from .misc_utils import generate_password_token
 
@@ -314,3 +314,118 @@ class VisitaAdmin(admin.ModelAdmin):
             ).values('max_id')
         )
         return qs
+
+
+@admin.register(VisitanteArquivado)
+class VisitanteArquivadoAdmin(admin.ModelAdmin):
+    """Admin para visitantes arquivados - apenas leitura para administradores"""
+    list_display = ('nome_completo', 'CPF', 'data_arquivamento', 'usuario_arquivou', 'dias_restantes', 'num_visitas')
+    list_filter = ('data_arquivamento', 'estado', 'cidade')
+    search_fields = ('nome_completo', 'nome_social', 'CPF', 'email')
+    readonly_fields = (
+        'nome_completo', 'nome_social', 'data_nascimento', 'CPF', 'telefone', 'email',
+        'estado', 'cidade', 'bairro', 'logradouro', 'numero', 'complemento', 'CEP',
+        'foto', 'foto_thumbnail', 'foto_medium', 'foto_large', 'biometric_vector',
+        'id_original', 'data_cadastro_original', 'data_arquivamento', 
+        'usuario_arquivou', 'data_exclusao_definitiva'
+    )
+    date_hierarchy = 'data_arquivamento'
+    
+    fieldsets = (
+        ("Informações Pessoais", {
+            'fields': ('nome_completo', 'nome_social', 'CPF', 'data_nascimento', 'telefone', 'email')
+        }),
+        ("Endereço", {
+            'fields': ('logradouro', 'numero', 'complemento', 'bairro', 'cidade', 'estado', 'CEP'),
+            'classes': ('collapse',)
+        }),
+        ("Foto", {
+            'fields': ('foto', 'foto_thumbnail', 'foto_medium', 'foto_large'),
+            'classes': ('collapse',)
+        }),
+        ("Dados de Arquivamento", {
+            'fields': (
+                'id_original', 'data_cadastro_original', 'data_arquivamento', 
+                'usuario_arquivou', 'data_exclusao_definitiva'
+            )
+        }),
+    )
+    
+    def has_add_permission(self, request):
+        return False  # Não permite adicionar manualmente
+    
+    def has_change_permission(self, request, obj=None):
+        return False  # Não permite editar
+    
+    def has_delete_permission(self, request, obj=None):
+        # Apenas superusuários podem deletar (exclusão definitiva manual)
+        return request.user.is_superuser
+    
+    def dias_restantes(self, obj):
+        """Calcula dias restantes até expiração"""
+        from datetime import timedelta
+        from django.utils import timezone
+        data_expiracao = obj.data_arquivamento + timedelta(days=180)
+        dias = (data_expiracao - timezone.now()).days
+        if dias <= 0:
+            return format_html('<span style="color: red;">Expirado</span>')
+        elif dias <= 30:
+            return format_html('<span style="color: orange;">{} dias</span>', dias)
+        return f"{dias} dias"
+    dias_restantes.short_description = 'Dias Restantes'
+    
+    def num_visitas(self, obj):
+        """Número de visitas arquivadas"""
+        return obj.visitas_arquivadas.count()
+    num_visitas.short_description = 'Visitas'
+
+
+@admin.register(VisitaArquivada)
+class VisitaArquivadaAdmin(admin.ModelAdmin):
+    """Admin para visitas arquivadas - apenas leitura"""
+    list_display = ('visitante_arquivado', 'nome_setor', 'data_entrada', 'data_saida', 'status', 'objetivo')
+    list_filter = ('status', 'objetivo', 'localizacao', 'data_entrada')
+    search_fields = (
+        'visitante_arquivado__nome_completo', 'visitante_arquivado__CPF',
+        'nome_setor', 'observacoes'
+    )
+    readonly_fields = (
+        'visitante_arquivado', 'id_original', 'nome_setor', 'localizacao', 
+        'objetivo', 'observacoes', 'data_entrada', 'data_saida', 'status', 
+        'data_arquivamento'
+    )
+    date_hierarchy = 'data_entrada'
+    
+    fieldsets = (
+        ('Visitante Arquivado', {
+            'fields': ('visitante_arquivado',)
+        }),
+        ('Informações da Visita', {
+            'fields': (
+                'nome_setor',
+                'objetivo',
+                'localizacao',
+                'observacoes'
+            )
+        }),
+        ('Status e Datas', {
+            'fields': (
+                'status',
+                'data_entrada',
+                'data_saida'
+            )
+        }),
+        ('Dados de Arquivamento', {
+            'fields': ('id_original', 'data_arquivamento'),
+            'classes': ('collapse',)
+        })
+    )
+    
+    def has_add_permission(self, request):
+        return False
+    
+    def has_change_permission(self, request, obj=None):
+        return False
+    
+    def has_delete_permission(self, request, obj=None):
+        return request.user.is_superuser

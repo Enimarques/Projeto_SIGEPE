@@ -1,5 +1,8 @@
 import face_recognition
 import numpy as np
+import logging
+
+logger = logging.getLogger(__name__)
 
 def get_face_embedding(image_file):
     """
@@ -38,5 +41,5 @@ def get_face_embedding(image_file):
         # Em caso de qualquer outro erro na biblioteca (ex: formato de imagem inválido)
         # logamos o erro e retornamos None ou relançamos a exceção.
         # Por enquanto, vamos relançar para ter mais detalhes durante o desenvolvimento.
-        print(f"Erro ao processar a imagem para reconhecimento facial: {e}")
+        logger.error(f"Erro ao processar a imagem para reconhecimento facial: {e}", exc_info=True)
         raise 

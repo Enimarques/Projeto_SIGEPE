@@ -326,6 +326,8 @@ class Visitante(models.Model):
     CPF = models.CharField(
         'CPF',
         max_length=14,
+        blank=True,
+        null=True,
         unique=True,
         validators=[
             RegexValidator(
@@ -337,6 +339,8 @@ class Visitante(models.Model):
     telefone = models.CharField(
         'Telefone',
         max_length=15,
+        blank=True,
+        null=True,
         validators=[
             RegexValidator(
                 regex=r'^\(\d{2}\) \d{5}-\d{4}$',
@@ -349,7 +353,7 @@ class Visitante(models.Model):
     # Endereço
     estado = models.CharField('Estado', max_length=2, choices=ESTADOS_CHOICES)
     cidade = models.CharField('Cidade', max_length=100)
-    bairro = models.CharField('Bairro', max_length=50, choices=BAIRROS_CHOICES, default='outros')
+    bairro = models.CharField('Bairro', max_length=50, choices=BAIRROS_CHOICES, default='OUTROS')
     logradouro = models.CharField('Logradouro', max_length=100, blank=True, null=True)
     numero = models.CharField('Número', max_length=10, blank=True, null=True)
     complemento = models.CharField('Complemento', max_length=50, blank=True, null=True)
@@ -385,6 +389,19 @@ class Visitante(models.Model):
                 old_instance = Visitante.objects.get(pk=self.pk)
             except Visitante.DoesNotExist:
                 pass  # O objeto é novo, não há instância antiga
+
+        # Normalização: padroniza campos textuais em CAIXA ALTA para consistência
+        for field_name in [
+            'nome_completo',
+            'nome_social',
+            'cidade',
+            'logradouro',
+            'numero',
+            'complemento',
+        ]:
+            value = getattr(self, field_name, None)
+            if isinstance(value, str) and value:
+                setattr(self, field_name, value.upper())
 
         # Se a foto foi alterada, a nova foto estará em self.foto
         # e a antiga em old_instance.foto
@@ -584,3 +601,139 @@ class Visita(models.Model):
         verbose_name = 'Visita'
         verbose_name_plural = 'Visitas'
         ordering = ['-data_entrada']
+
+
+class VisitanteArquivado(models.Model):
+    """
+    Modelo para armazenar visitantes arquivados após exclusão.
+    Os dados são mantidos por 6 meses antes da exclusão definitiva.
+    """
+    # Dados Pessoais (cópia dos dados originais)
+    nome_completo = models.CharField(max_length=255, verbose_name="Nome Completo")
+    nome_social = models.CharField('Nome Social', max_length=100, blank=True, null=True)
+    data_nascimento = models.DateField('Data de Nascimento')
+    CPF = models.CharField('CPF', max_length=14, blank=True, null=True)
+    telefone = models.CharField('Telefone', max_length=15, blank=True, null=True)
+    email = models.EmailField('E-mail', blank=True, null=True)
+    
+    # Endereço
+    estado = models.CharField('Estado', max_length=2)
+    cidade = models.CharField('Cidade', max_length=100)
+    bairro = models.CharField('Bairro', max_length=50, blank=True, null=True)
+    logradouro = models.CharField('Logradouro', max_length=100, blank=True, null=True)
+    numero = models.CharField('Número', max_length=10, blank=True, null=True)
+    complemento = models.CharField('Complemento', max_length=50, blank=True, null=True)
+    CEP = models.CharField('CEP', max_length=9, blank=True, null=True)
+
+    # Fotos (mantém referências aos arquivos)
+    foto = models.ImageField('Foto Original', upload_to='arquivados/fotos_visitantes/', blank=True, null=True)
+    foto_thumbnail = models.ImageField('Foto Thumbnail', upload_to='arquivados/fotos_visitantes/', blank=True, null=True)
+    foto_medium = models.ImageField('Foto Média', upload_to='arquivados/fotos_visitantes/', blank=True, null=True)
+    foto_large = models.ImageField('Foto Grande', upload_to='arquivados/fotos_visitantes/', blank=True, null=True)
+    biometric_vector = models.JSONField(verbose_name="Vetor Biométrico", null=True, blank=True)
+
+    # Dados de controle
+    id_original = models.IntegerField('ID Original', help_text='ID do visitante antes do arquivamento')
+    data_cadastro_original = models.DateTimeField('Data de Cadastro Original')
+    data_arquivamento = models.DateTimeField('Data de Arquivamento', auto_now_add=True)
+    usuario_arquivou = models.CharField('Usuário que Arquivou', max_length=150)
+    data_exclusao_definitiva = models.DateTimeField('Data de Exclusão Definitiva', null=True, blank=True)
+
+    class Meta:
+        verbose_name = "Visitante Arquivado"
+        verbose_name_plural = 'Visitantes Arquivados'
+        ordering = ['-data_arquivamento']
+        indexes = [
+            models.Index(fields=['data_arquivamento']),
+            models.Index(fields=['id_original']),
+        ]
+
+    def __str__(self):
+        return f'{self.nome_completo} (Arquivado em {self.data_arquivamento.date()})'
+
+    def delete(self, *args, **kwargs):
+        """Deleta os arquivos de foto ao excluir o registro arquivado"""
+        if self.foto:
+            self.foto.delete(save=False)
+        if self.foto_thumbnail:
+            self.foto_thumbnail.delete(save=False)
+        if self.foto_medium:
+            self.foto_medium.delete(save=False)
+        if self.foto_large:
+            self.foto_large.delete(save=False)
+        super().delete(*args, **kwargs)
+
+
+class VisitaArquivada(models.Model):
+    """
+    Modelo para armazenar visitas arquivadas após exclusão do visitante.
+    """
+    STATUS_CHOICES = [
+        ('agendada', 'Agendada'),
+        ('em_andamento', 'Em Andamento'),
+        ('finalizada', 'Finalizada'),
+        ('cancelada', 'Cancelada')
+    ]
+
+    OBJETIVO_CHOICES = [
+        ('reuniao', 'Reunião'),
+        ('manutencao', 'Manutenção'),
+        ('evento', 'Evento'),
+        ('entrega_documentos', 'Entrega de Documentos'),
+        ('outros', 'Outros')
+    ]
+
+    LOCALIZACAO_CHOICES = [
+        ('terreo', 'Térreo'),
+        ('plenario', 'Plenário'),
+        ('primeiro_piso', '1° Piso'),
+        ('segundo_piso', '2° Piso')
+    ]
+
+    # Referência ao visitante arquivado
+    visitante_arquivado = models.ForeignKey(
+        VisitanteArquivado,
+        on_delete=models.CASCADE,
+        related_name='visitas_arquivadas',
+        verbose_name='Visitante Arquivado'
+    )
+    
+    # Dados da visita (cópia dos dados originais)
+    id_original = models.IntegerField('ID Original', help_text='ID da visita antes do arquivamento')
+    nome_setor = models.CharField('Nome do Setor', max_length=255, help_text='Nome do setor no momento do arquivamento')
+    localizacao = models.CharField('Localização', max_length=20, choices=LOCALIZACAO_CHOICES, default='terreo')
+    objetivo = models.CharField('Objetivo', max_length=20, choices=OBJETIVO_CHOICES, default='outros')
+    observacoes = models.TextField('Observações', blank=True, null=True)
+    data_entrada = models.DateTimeField('Data/Hora de Entrada')
+    data_saida = models.DateTimeField('Data/Hora de Saída', blank=True, null=True)
+    status = models.CharField('Status', max_length=20, choices=STATUS_CHOICES, default='em_andamento')
+    
+    # Dados de controle
+    data_arquivamento = models.DateTimeField('Data de Arquivamento', auto_now_add=True)
+
+    class Meta:
+        verbose_name = 'Visita Arquivada'
+        verbose_name_plural = 'Visitas Arquivadas'
+        ordering = ['-data_entrada']
+        indexes = [
+            models.Index(fields=['data_arquivamento']),
+            models.Index(fields=['id_original']),
+        ]
+
+    def __str__(self):
+        return f'{self.visitante_arquivado.nome_completo} - {self.nome_setor} (Arquivada)'
+
+    def duracao(self):
+        """Calcula a duração da visita em formato legível."""
+        if not self.data_saida:
+            return None
+            
+        delta = self.data_saida - self.data_entrada
+        total_segundos = int(delta.total_seconds())
+        horas = total_segundos // 3600
+        minutos = (total_segundos % 3600) // 60
+        
+        if horas > 0:
+            return f"{horas}h {minutos}min"
+        else:
+            return f"{minutos}min"

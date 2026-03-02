@@ -13,33 +13,37 @@
                     </h4>
                 </div>
                 <div class="card-body">
-                    <p class="lead">Você está prestes a excluir permanentemente o visitante:</p>
+                    <p class="lead">Você está prestes a arquivar o visitante:</p>
                     <h3 class="text-center my-3">{{ visitante.nome_completo }}</h3>
                     
-                    <div class="alert alert-danger" role="alert">
-                        <h5 class="alert-heading">Atenção! Esta ação é irreversível.</h5>
+                    <div class="alert alert-warning" role="alert">
+                        <h5 class="alert-heading">Atenção! Esta ação arquivará os dados.</h5>
                         <p>
-                            Ao confirmar, você irá apagar <strong>TODOS</strong> os dados associados a este visitante, incluindo:
+                            Ao confirmar, os dados do visitante serão <strong>ARQUIVADOS</strong> ao invés de excluídos permanentemente:
                         </p>
                         <ul>
-                            <li>O cadastro principal do visitante.</li>
+                            <li>O cadastro principal do visitante será movido para arquivo.</li>
                             <li>
                                 O histórico completo de
                                 <strong>{{ visitas_relacionadas.count }}</strong>
-                                visita(s) registrada(s).
+                                visita(s) registrada(s) será arquivado junto.
                             </li>
-                            <li>Todos os arquivos de foto associados.</li>
+                            <li>Os arquivos de foto serão copiados para a pasta de arquivados.</li>
                         </ul>
                         <hr>
-                        <p class="mb-0">Tem certeza que deseja continuar?</p>
+                        <p class="mb-0">
+                            <strong>Os dados arquivados serão mantidos por 6 meses</strong> antes da exclusão definitiva 
+                            e estarão acessíveis apenas para administradores durante este período.
+                        </p>
+                        <p class="mt-2 mb-0">Tem certeza que deseja continuar?</p>
                     </div>
 
-                    <form method="post" class="text-center mt-4">
+                    <form method="post" class="text-center mt-4" id="formExcluir">
                         {% csrf_token %}
                         <a href="{% url 'recepcao:detalhes_visitante' pk=visitante.pk %}" class="btn btn-secondary me-3">
                             <i class="fas fa-times me-2"></i>Não, quero cancelar
                         </a>
-                        <button type="submit" class="btn btn-danger">
+                        <button type="submit" class="btn btn-danger" id="btnConfirmar">
                             <i class="fas fa-trash-alt me-2"></i>Sim, confirmar exclusão
                         </button>
                     </form>
@@ -48,4 +52,27 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('formExcluir');
+    const btnConfirmar = document.getElementById('btnConfirmar');
+    let submitted = false;
+    
+    form.addEventListener('submit', function(e) {
+        if (submitted) {
+            e.preventDefault();
+            return false;
+        }
+        
+        submitted = true;
+        btnConfirmar.disabled = true;
+        btnConfirmar.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Arquivando...';
+        
+        return true;
+    });
+});
+</script>
 {% endblock %}

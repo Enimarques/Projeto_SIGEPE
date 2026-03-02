@@ -1,0 +1,119 @@
+[sex 14 nov 2025 14:59:55 UTC] Iniciando backup do banco de dados
+[sex 14 nov 2025 14:59:55 UTC] Dump SQL criado e compactado: /opt/ProjetoSigepe/backups/sigepe_backup_20251114_145955.sql.gz
+[sex 14 nov 2025 14:59:55 UTC] Cópia do banco de dados criada: /opt/ProjetoSigepe/backups/sigepe_backup_20251114_145955.db
+[sex 14 nov 2025 14:59:55 UTC] Enviando backup para o servidor remoto...
+[sex 14 nov 2025 14:59:55 UTC] Arquivo sigepe_backup_20251114_145955.db enviado com sucesso para //192.168.1.14/backups - z/BACKUP-SIGEPE/
+[sex 14 nov 2025 14:59:55 UTC] Arquivo sigepe_backup_20251114_145955.sql.gz enviado com sucesso para //192.168.1.14/backups - z/BACKUP-SIGEPE/
+[sex 14 nov 2025 14:59:55 UTC] Backup concluído com sucesso
+[dom 16 nov 2025 02:00:01 UTC] Iniciando backup do banco de dados
+[dom 16 nov 2025 02:00:02 UTC] Dump SQL criado e compactado: /opt/ProjetoSigepe/backups/sigepe_backup_20251116_020001.sql.gz
+[dom 16 nov 2025 02:00:02 UTC] Cópia do banco de dados criada: /opt/ProjetoSigepe/backups/sigepe_backup_20251116_020001.db
+[dom 16 nov 2025 02:00:02 UTC] Enviando backup para o servidor remoto...
+[dom 16 nov 2025 02:00:02 UTC] Arquivo sigepe_backup_20251116_020001.db enviado com sucesso para //192.168.1.14/backups - z/BACKUP-SIGEPE/
+[dom 16 nov 2025 02:00:02 UTC] Arquivo sigepe_backup_20251116_020001.sql.gz enviado com sucesso para //192.168.1.14/backups - z/BACKUP-SIGEPE/
+[dom 16 nov 2025 02:00:02 UTC] Backup concluído com sucesso
+[dom 23 nov 2025 02:00:01 UTC] Iniciando backup do banco de dados
+[dom 23 nov 2025 02:00:02 UTC] Dump SQL criado e compactado: /opt/ProjetoSigepe/backups/sigepe_backup_20251123_020001.sql.gz
+[dom 23 nov 2025 02:00:02 UTC] Cópia do banco de dados criada: /opt/ProjetoSigepe/backups/sigepe_backup_20251123_020001.db
+[dom 23 nov 2025 02:00:02 UTC] Enviando backup para o servidor remoto...
+[dom 23 nov 2025 02:00:03 UTC] Arquivo sigepe_backup_20251123_020001.db enviado com sucesso para //192.168.1.14/backups - z/BACKUP-SIGEPE/
+[dom 23 nov 2025 02:00:03 UTC] Arquivo sigepe_backup_20251123_020001.sql.gz enviado com sucesso para //192.168.1.14/backups - z/BACKUP-SIGEPE/
+[dom 23 nov 2025 02:00:03 UTC] Backup concluído com sucesso
+[dom 30 nov 2025 02:00:01 UTC] Iniciando backup do banco de dados
+[dom 30 nov 2025 02:00:01 UTC] Dump SQL criado e compactado: /opt/ProjetoSigepe/backups/sigepe_backup_20251130_020001.sql.gz
+[dom 30 nov 2025 02:00:01 UTC] Cópia do banco de dados criada: /opt/ProjetoSigepe/backups/sigepe_backup_20251130_020001.db
+[dom 30 nov 2025 02:00:01 UTC] Enviando backup para o servidor remoto...
+[dom 30 nov 2025 02:00:03 UTC] Arquivo sigepe_backup_20251130_020001.db enviado com sucesso para //192.168.1.14/backups - z/BACKUP-SIGEPE/
+[dom 30 nov 2025 02:00:03 UTC] Arquivo sigepe_backup_20251130_020001.sql.gz enviado com sucesso para //192.168.1.14/backups - z/BACKUP-SIGEPE/
+[dom 30 nov 2025 02:00:03 UTC] Backup concluído com sucesso
+[dom 07 dez 2025 02:00:01 UTC] Iniciando backup do banco de dados
+[dom 07 dez 2025 02:00:01 UTC] Dump SQL criado e compactado: /opt/ProjetoSigepe/backups/sigepe_backup_20251207_020001.sql.gz
+[dom 07 dez 2025 02:00:01 UTC] Cópia do banco de dados criada: /opt/ProjetoSigepe/backups/sigepe_backup_20251207_020001.db
+[dom 07 dez 2025 02:00:01 UTC] Enviando backup para o servidor remoto...
+[dom 07 dez 2025 02:00:02 UTC] Arquivo sigepe_backup_20251207_020001.db enviado com sucesso para //192.168.1.14/backups - z/BACKUP-SIGEPE/
+[dom 07 dez 2025 02:00:02 UTC] Arquivo sigepe_backup_20251207_020001.sql.gz enviado com sucesso para //192.168.1.14/backups - z/BACKUP-SIGEPE/
+[dom 07 dez 2025 02:00:02 UTC] Backup concluído com sucesso
+[dom 14 dez 2025 02:00:01 UTC] Iniciando backup do banco de dados
+[dom 14 dez 2025 02:00:01 UTC] Dump SQL criado e compactado: /opt/ProjetoSigepe/backups/sigepe_backup_20251214_020001.sql.gz
+[dom 14 dez 2025 02:00:01 UTC] Cópia do banco de dados criada: /opt/ProjetoSigepe/backups/sigepe_backup_20251214_020001.db
+[dom 14 dez 2025 02:00:01 UTC] Enviando backup para o servidor remoto...
+[dom 14 dez 2025 02:00:01 UTC] Arquivo sigepe_backup_20251214_020001.db enviado com sucesso para //192.168.1.14/backups - z/BACKUP-SIGEPE/
+[dom 14 dez 2025 02:00:02 UTC] Arquivo sigepe_backup_20251214_020001.sql.gz enviado com sucesso para //192.168.1.14/backups - z/BACKUP-SIGEPE/
+[dom 14 dez 2025 02:00:02 UTC] Backup concluído com sucesso
+[dom 21 dez 2025 02:00:01 UTC] Iniciando backup do banco de dados
+[dom 21 dez 2025 02:00:01 UTC] Dump SQL criado e compactado: /opt/ProjetoSigepe/backups/sigepe_backup_20251221_020001.sql.gz
+[dom 21 dez 2025 02:00:01 UTC] Cópia do banco de dados criada: /opt/ProjetoSigepe/backups/sigepe_backup_20251221_020001.db
+[dom 21 dez 2025 02:00:01 UTC] Enviando backup para o servidor remoto...
+[dom 21 dez 2025 02:00:02 UTC] Arquivo sigepe_backup_20251221_020001.db enviado com sucesso para //192.168.1.14/backups - z/BACKUP-SIGEPE/
+[dom 21 dez 2025 02:00:04 UTC] Arquivo sigepe_backup_20251221_020001.sql.gz enviado com sucesso para //192.168.1.14/backups - z/BACKUP-SIGEPE/
+[dom 21 dez 2025 02:00:04 UTC] Backup concluído com sucesso
+[dom 28 dez 2025 02:00:01 UTC] Iniciando backup do banco de dados
+[dom 28 dez 2025 02:00:01 UTC] Dump SQL criado e compactado: /opt/ProjetoSigepe/backups/sigepe_backup_20251228_020001.sql.gz
+[dom 28 dez 2025 02:00:01 UTC] Cópia do banco de dados criada: /opt/ProjetoSigepe/backups/sigepe_backup_20251228_020001.db
+[dom 28 dez 2025 02:00:01 UTC] Enviando backup para o servidor remoto...
+[dom 28 dez 2025 02:00:01 UTC] Arquivo sigepe_backup_20251228_020001.db enviado com sucesso para //192.168.1.14/backups - z/BACKUP-SIGEPE/
+[dom 28 dez 2025 02:00:03 UTC] Arquivo sigepe_backup_20251228_020001.sql.gz enviado com sucesso para //192.168.1.14/backups - z/BACKUP-SIGEPE/
+[dom 28 dez 2025 02:00:03 UTC] Backup concluído com sucesso
+[dom 04 jan 2026 02:00:01 UTC] Iniciando backup do banco de dados
+[dom 04 jan 2026 02:00:01 UTC] Dump SQL criado e compactado: /opt/ProjetoSigepe/backups/sigepe_backup_20260104_020001.sql.gz
+[dom 04 jan 2026 02:00:01 UTC] Cópia do banco de dados criada: /opt/ProjetoSigepe/backups/sigepe_backup_20260104_020001.db
+[dom 04 jan 2026 02:00:01 UTC] Enviando backup para o servidor remoto...
+[dom 04 jan 2026 02:00:01 UTC] Arquivo sigepe_backup_20260104_020001.db enviado com sucesso para //192.168.1.14/backups - z/BACKUP-SIGEPE/
+[dom 04 jan 2026 02:00:03 UTC] Arquivo sigepe_backup_20260104_020001.sql.gz enviado com sucesso para //192.168.1.14/backups - z/BACKUP-SIGEPE/
+[dom 04 jan 2026 02:00:03 UTC] Backup concluído com sucesso
+[dom 11 jan 2026 02:00:01 UTC] Iniciando backup do banco de dados
+[dom 11 jan 2026 02:00:02 UTC] Dump SQL criado e compactado: /opt/ProjetoSigepe/backups/sigepe_backup_20260111_020001.sql.gz
+[dom 11 jan 2026 02:00:02 UTC] Cópia do banco de dados criada: /opt/ProjetoSigepe/backups/sigepe_backup_20260111_020001.db
+[dom 11 jan 2026 02:00:02 UTC] Enviando backup para o servidor remoto...
+[dom 11 jan 2026 02:00:02 UTC] Arquivo sigepe_backup_20260111_020001.db enviado com sucesso para //192.168.1.14/backups - z/BACKUP-SIGEPE/
+[dom 11 jan 2026 02:00:07 UTC] Arquivo sigepe_backup_20260111_020001.sql.gz enviado com sucesso para //192.168.1.14/backups - z/BACKUP-SIGEPE/
+[dom 11 jan 2026 02:00:07 UTC] Backup concluído com sucesso
+[dom 18 jan 2026 02:00:01 UTC] Iniciando backup do banco de dados
+[dom 18 jan 2026 02:00:01 UTC] Dump SQL criado e compactado: /opt/ProjetoSigepe/backups/sigepe_backup_20260118_020001.sql.gz
+[dom 18 jan 2026 02:00:01 UTC] Cópia do banco de dados criada: /opt/ProjetoSigepe/backups/sigepe_backup_20260118_020001.db
+[dom 18 jan 2026 02:00:01 UTC] Enviando backup para o servidor remoto...
+[dom 18 jan 2026 02:00:01 UTC] Arquivo sigepe_backup_20260118_020001.db enviado com sucesso para //192.168.1.14/backups - z/BACKUP-SIGEPE/
+[dom 18 jan 2026 02:00:03 UTC] Arquivo sigepe_backup_20260118_020001.sql.gz enviado com sucesso para //192.168.1.14/backups - z/BACKUP-SIGEPE/
+[dom 18 jan 2026 02:00:03 UTC] Backup concluído com sucesso
+[dom 25 jan 2026 02:00:01 UTC] Iniciando backup do banco de dados
+[dom 25 jan 2026 02:00:01 UTC] Dump SQL criado e compactado: /opt/ProjetoSigepe/backups/sigepe_backup_20260125_020001.sql.gz
+[dom 25 jan 2026 02:00:01 UTC] Cópia do banco de dados criada: /opt/ProjetoSigepe/backups/sigepe_backup_20260125_020001.db
+[dom 25 jan 2026 02:00:01 UTC] Enviando backup para o servidor remoto...
+[dom 25 jan 2026 02:00:02 UTC] Arquivo sigepe_backup_20260125_020001.db enviado com sucesso para //192.168.1.14/backups - z/BACKUP-SIGEPE/
+[dom 25 jan 2026 02:00:04 UTC] Arquivo sigepe_backup_20260125_020001.sql.gz enviado com sucesso para //192.168.1.14/backups - z/BACKUP-SIGEPE/
+[dom 25 jan 2026 02:00:04 UTC] Backup concluído com sucesso
+[dom 01 fev 2026 02:00:01 UTC] Iniciando backup do banco de dados
+[dom 01 fev 2026 02:00:01 UTC] Dump SQL criado e compactado: /opt/ProjetoSigepe/backups/sigepe_backup_20260201_020001.sql.gz
+[dom 01 fev 2026 02:00:01 UTC] Cópia do banco de dados criada: /opt/ProjetoSigepe/backups/sigepe_backup_20260201_020001.db
+[dom 01 fev 2026 02:00:01 UTC] Enviando backup para o servidor remoto...
+[dom 01 fev 2026 02:00:01 UTC] Arquivo sigepe_backup_20260201_020001.db enviado com sucesso para //192.168.1.14/backups - z/BACKUP-SIGEPE/
+[dom 01 fev 2026 02:00:02 UTC] Arquivo sigepe_backup_20260201_020001.sql.gz enviado com sucesso para //192.168.1.14/backups - z/BACKUP-SIGEPE/
+[dom 01 fev 2026 02:00:02 UTC] Backup concluído com sucesso
+[dom 08 fev 2026 02:00:01 UTC] Iniciando backup do banco de dados
+[dom 08 fev 2026 02:00:02 UTC] Dump SQL criado e compactado: /opt/ProjetoSigepe/backups/sigepe_backup_20260208_020001.sql.gz
+[dom 08 fev 2026 02:00:02 UTC] Cópia do banco de dados criada: /opt/ProjetoSigepe/backups/sigepe_backup_20260208_020001.db
+[dom 08 fev 2026 02:00:02 UTC] Enviando backup para o servidor remoto...
+[dom 08 fev 2026 02:00:03 UTC] Arquivo sigepe_backup_20260208_020001.db enviado com sucesso para //192.168.1.14/backups - z/BACKUP-SIGEPE/
+[dom 08 fev 2026 02:00:06 UTC] Arquivo sigepe_backup_20260208_020001.sql.gz enviado com sucesso para //192.168.1.14/backups - z/BACKUP-SIGEPE/
+[dom 08 fev 2026 02:00:06 UTC] Backup concluído com sucesso
+[dom 15 fev 2026 02:00:01 UTC] Iniciando backup do banco de dados
+[dom 15 fev 2026 02:00:01 UTC] Dump SQL criado e compactado: /opt/ProjetoSigepe/backups/sigepe_backup_20260215_020001.sql.gz
+[dom 15 fev 2026 02:00:02 UTC] Cópia do banco de dados criada: /opt/ProjetoSigepe/backups/sigepe_backup_20260215_020001.db
+[dom 15 fev 2026 02:00:02 UTC] Enviando backup para o servidor remoto...
+[dom 15 fev 2026 02:00:02 UTC] Arquivo sigepe_backup_20260215_020001.db enviado com sucesso para //192.168.1.14/backups - z/BACKUP-SIGEPE/
+[dom 15 fev 2026 02:00:03 UTC] Arquivo sigepe_backup_20260215_020001.sql.gz enviado com sucesso para //192.168.1.14/backups - z/BACKUP-SIGEPE/
+[dom 15 fev 2026 02:00:03 UTC] Backup concluído com sucesso
+[dom 22 fev 2026 02:00:01 UTC] Iniciando backup do banco de dados
+[dom 22 fev 2026 02:00:02 UTC] Dump SQL criado e compactado: /opt/ProjetoSigepe/backups/sigepe_backup_20260222_020001.sql.gz
+[dom 22 fev 2026 02:00:02 UTC] Cópia do banco de dados criada: /opt/ProjetoSigepe/backups/sigepe_backup_20260222_020001.db
+[dom 22 fev 2026 02:00:02 UTC] Enviando backup para o servidor remoto...
+[dom 22 fev 2026 02:00:02 UTC] Arquivo sigepe_backup_20260222_020001.db enviado com sucesso para //192.168.1.14/backups - z/BACKUP-SIGEPE/
+[dom 22 fev 2026 02:00:05 UTC] Arquivo sigepe_backup_20260222_020001.sql.gz enviado com sucesso para //192.168.1.14/backups - z/BACKUP-SIGEPE/
+[dom 22 fev 2026 02:00:05 UTC] Backup concluído com sucesso
+[dom 01 mar 2026 02:00:01 UTC] Iniciando backup do banco de dados
+[dom 01 mar 2026 02:00:01 UTC] Dump SQL criado e compactado: /opt/ProjetoSigepe/backups/sigepe_backup_20260301_020001.sql.gz
+[dom 01 mar 2026 02:00:01 UTC] Cópia do banco de dados criada: /opt/ProjetoSigepe/backups/sigepe_backup_20260301_020001.db
+[dom 01 mar 2026 02:00:01 UTC] Enviando backup para o servidor remoto...
+[dom 01 mar 2026 02:00:02 UTC] Arquivo sigepe_backup_20260301_020001.db enviado com sucesso para //192.168.1.14/backups - z/BACKUP-SIGEPE/
+[dom 01 mar 2026 02:00:03 UTC] Arquivo sigepe_backup_20260301_020001.sql.gz enviado com sucesso para //192.168.1.14/backups - z/BACKUP-SIGEPE/
+[dom 01 mar 2026 02:00:03 UTC] Backup concluído com sucesso

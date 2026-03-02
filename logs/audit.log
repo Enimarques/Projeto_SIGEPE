@@ -1,0 +1,13 @@
+INFO 2025-10-02 15:23:41,269 views 523969 139669160931328 user=admin action=DELETE_VISITANTE visitante_id=21 nome='TALINE ALMEIDA DA SILVA' visitas_apagadas=0 ip=192.168.1.138
+INFO 2025-10-03 12:34:07,763 views 542614 140007739162624 user=admin action=DELETE_VISITA visita_id=242 visitante_id=6 ip=192.168.1.138
+INFO 2025-10-04 13:56:36,983 admin 563235 140151644405760 user=admin action=DELETE_USER target_user_id=11 target_username='testerecepcao' ip=192.168.1.19
+INFO 2025-11-14 13:46:18,736 audit user=admin action=DELETE_VISITANTE visitante_id=11 nome='Juefferson pereira Souto' visitas_apagadas=26 ip=192.168.1.122
+INFO 2025-11-14 14:59:28,664 audit user=admin action=ARCHIVE_VISITANTE visitante_id=6 nome='ENIMARQUES VIEIRA DE OLIVEIRA FILHO' visitas_arquivadas=74 arquivado_id=3 ip=192.168.10.85
+INFO 2025-11-14 16:03:59,621 audit user=admin action=ARCHIVE_VISITANTE visitante_id=631 nome='ENIMARQUES VIEIRA DE OLIVEIRA FILHO' visitas_arquivadas=2 arquivado_id=4 ip=192.168.10.85
+INFO 2025-11-14 16:04:32,940 audit user=admin action=ARCHIVE_VISITANTE visitante_id=15 nome='Ariel SIlva Jairi' visitas_arquivadas=6 arquivado_id=5 ip=192.168.1.122
+INFO 2025-11-14 16:13:52,678 audit user=admin action=ARCHIVE_VISITANTE visitante_id=632 nome='ENIMARQUES FILHO' visitas_arquivadas=0 arquivado_id=6 ip=192.168.1.19
+INFO 2025-11-14 16:49:19,303 audit user=admin action=ARCHIVE_VISITANTE visitante_id=634 nome='ENI' visitas_arquivadas=2 arquivado_id=7 ip=192.168.1.19
+INFO 2025-11-14 17:08:14,929 audit user=admin action=ARCHIVE_VISITANTE visitante_id=635 nome='JUEFERSON SOUTO PEREIRA' visitas_arquivadas=0 arquivado_id=8 ip=192.168.10.85
+INFO 2025-11-14 17:49:08,903 audit user=admin action=ARCHIVE_VISITANTE visitante_id=636 nome='ENIMARQUES FILHO' visitas_arquivadas=1 arquivado_id=9 ip=192.168.1.19
+INFO 2025-11-17 10:11:54,230 audit user=admin action=ARCHIVE_VISITANTE visitante_id=13 nome='CINTIA DE SILVA PINHEIRO' visitas_arquivadas=7 arquivado_id=10 ip=192.168.10.85
+INFO 2025-11-17 10:59:10,818 audit user=enimarques.filho action=DELETE_USER target_user_id=1 target_username='admin' ip=192.168.10.85

@@ -1,0 +1,282 @@
+{% extends 'base_totem.html' %}
+{% load static %}
+
+{% block extra_css %}
+<style>
+.totem-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: calc(100vh - 1.05rerem);
+    text-align: center;
+    padding: 1rem 2rem;
+}
+
+.cpf-step, .face-step {
+    max-width: 500px;
+    width: 100%;
+}
+
+.cpf-input {
+    font-size: 2rem;
+    text-align: center;
+    letter-spacing: 0.15rem;
+    padding: 0.75rem 1rem;
+    border-radius: 0.75rem;
+    border: 2px solid #5e72e4;
+    width: 100%;
+    margin-bottom: 1rem;
+}
+
+.numpad {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.75rem;
+    margin-top: 0.5rem;
+}
+
+.numpad button {
+    font-size: 1.6rem;
+    padding: 0.9rem 0;
+    border-radius: 0.75rem;
+    border: none;
+    background: #f1f3f9;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+}
+
+.numpad button:active {
+    transform: scale(0.97);
+}
+
+.cpf-error {
+    margin-top: 0.75rem;
+    min-height: 1.5rem;
+}
+
+.camera-viewfinder {
+    position: relative;
+    width: 800px;
+    max-width: 100%;
+    height: 800px;
+    border-radius: 15px;
+    overflow: hidden;
+    background-color: #000;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+    border: 3px solid #fff;
+    margin-top: 1rem;
+}
+
+#video-face {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+#overlay-face {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+}
+
+#status-face {
+    margin-top: 1rem;
+    font-size: 1.1rem;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="totem-container">
+    <img src="{% static 'img/logo_CMP.png' %}" alt="Logo Câmara Municipal de Parauapebas" class="header-logo">
+    <h1 class="main-title">Identificação Alternativa</h1>
+    <div class="title-separator"></div>
+
+    <div id="step-cpf" class="cpf-step">
+        <p class="main-subtitle">
+            Não foi possível identificar seu rosto.<br>
+            <strong>Por favor, digite seu CPF para continuar.</strong>
+        </p>
+        <input id="cpf-input" class="cpf-input" type="text" autocomplete="off" inputmode="numeric" />
+        <div class="numpad">
+            <button data-key="1">1</button>
+            <button data-key="2">2</button>
+            <button data-key="3">3</button>
+            <button data-key="4">4</button>
+            <button data-key="5">5</button>
+            <button data-key="6">6</button>
+            <button data-key="7">7</button>
+            <button data-key="8">8</button>
+            <button data-key="9">9</button>
+            <button data-key="back">←</button>
+            <button data-key="0">0</button>
+            <button data-key="ok">OK</button>
+        </div>
+        <div id="cpf-error" class="cpf-error text-danger"></div>
+        <div style="margin-top: 1.5rem;">
+            <a href="{% url 'recepcao:totem_welcome' %}" class="btn-voltar">
+                <i class="fas fa-arrow-left me-2"></i>Voltar ao Início
+            </a>
+        </div>
+    </div>
+
+    <div id="step-face" class="face-step" style="display:none;">
+        <p class="main-subtitle" id="face-instructions">
+            <strong>Vamos atualizar sua foto.</strong><br>
+            Olhe para a câmera, mantenha o rosto centralizado e bem iluminado.
+            A captura será feita automaticamente.
+        </p>
+        <div class="camera-viewfinder">
+            <video id="video-face" autoplay playsinline muted></video>
+            <canvas id="overlay-face"></canvas>
+        </div>
+        <div id="status-face" class="text-muted">Iniciando câmera...</div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function() {
+    const cpfInput = document.getElementById('cpf-input');
+    const cpfError = document.getElementById('cpf-error');
+    const numpadButtons = document.querySelectorAll('.numpad button');
+    const stepCpf = document.getElementById('step-cpf');
+    const stepFace = document.getElementById('step-face');
+    const statusFace = document.getElementById('status-face');
+    const videoFace = document.getElementById('video-face');
+
+    let visitanteId = null;
+    let captureInterval = null;
+
+    function onlyDigits(value) {
+        return value.replace(/\D/g, '');
+    }
+
+    function formatCpf(value) {
+        const digits = onlyDigits(value).slice(0, 11);
+        let v = digits;
+        if (v.length > 3 && v.length <= 6) v = v.replace(/(\d{3})(\d+)/, '$1.$2');
+        else if (v.length > 6 && v.length <= 9) v = v.replace(/(\d{3})(\d{3})(\d+)/, '$1.$2.$3');
+        else if (v.length > 9) v = v.replace(/(\d{3})(\d{3})(\d{3})(\d{1,2})/, '$1.$2.$3-$4');
+        return v;
+    }
+
+    function updateCpfInput(newValue) {
+        cpfInput.value = formatCpf(newValue);
+    }
+
+    function handleNumpadClick(key) {
+        cpfError.textContent = '';
+        const currentDigits = onlyDigits(cpfInput.value);
+        if (key === 'back') {
+            updateCpfInput(currentDigits.slice(0, -1));
+        } else if (key === 'ok') {
+            validateCpf();
+        } else {
+            if (currentDigits.length < 11) {
+                updateCpfInput(currentDigits + key);
+            }
+        }
+    }
+
+    numpadButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const key = btn.getAttribute('data-key');
+            handleNumpadClick(key);
+        });
+    });
+
+    async function validateCpf() {
+        const digits = onlyDigits(cpfInput.value);
+        if (digits.length !== 11) {
+            cpfError.textContent = 'CPF inválido. Verifique os números digitados.';
+            return;
+        }
+        try {
+            cpfError.textContent = 'Validando CPF...';
+            const response = await fetch("{% url 'recepcao:api_validar_cpf_totem' %}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({ cpf: cpfInput.value })
+            });
+            const data = await response.json();
+            if (response.status === 404 || data.error === 'CPF_NOT_FOUND') {
+                cpfError.textContent = 'CPF não localizado. Procure a recepção.';
+                return;
+            }
+            if (!data.success) {
+                cpfError.textContent = data.error || 'Erro ao validar CPF.';
+                return;
+            }
+            visitanteId = data.visitante_id;
+            stepCpf.style.display = 'none';
+            stepFace.style.display = 'block';
+            startFaceRecapture();
+        } catch (e) {
+            cpfError.textContent = 'Erro de comunicação. Tente novamente.';
+        }
+    }
+
+    async function startFaceRecapture() {
+        try {
+            statusFace.textContent = 'Iniciando câmera...';
+            const stream = await navigator.mediaDevices.getUserMedia({
+                video: { width: { ideal: 800 }, height: { ideal: 800 } }
+            });
+            videoFace.srcObject = stream;
+            videoFace.addEventListener('loadeddata', () => {
+                statusFace.textContent = 'Posicione seu rosto no centro da tela. A captura será automática.';
+                startAutoCapture();
+            }, { once: true });
+        } catch (e) {
+            statusFace.textContent = 'Não foi possível acessar a câmera. Procure a recepção.';
+        }
+    }
+
+    function startAutoCapture() {
+        if (captureInterval) clearInterval(captureInterval);
+        captureInterval = setInterval(captureFrameAndSend, 2000);
+    }
+
+    async function captureFrameAndSend() {
+        if (!visitanteId) return;
+        const canvas = document.createElement('canvas');
+        canvas.width = videoFace.videoWidth;
+        canvas.height = videoFace.videoHeight;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(videoFace, 0, 0);
+        const imageDataUrl = canvas.toDataURL('image/jpeg');
+        try {
+            statusFace.textContent = 'Capturando nova foto...';
+            const response = await fetch("{% url 'recepcao:api_re_enroll_face' %}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({ image: imageDataUrl, visitante_id: visitanteId })
+            });
+            const data = await response.json();
+            if (data.success && data.visitante_id) {
+                clearInterval(captureInterval);
+                statusFace.textContent = `Foto atualizada com sucesso! Redirecionando para seleção de destino...`;
+                setTimeout(() => {
+                    window.location.href = `{% url 'recepcao:totem_destino' %}?visitante_id=${data.visitante_id}`;
+                }, 1500);
+            } else {
+                statusFace.textContent = data.error || 'Nenhum rosto detectado. Ajuste sua posição e aguarde.';
+            }
+        } catch (e) {
+            statusFace.textContent = 'Erro ao enviar a imagem. Tentando novamente...';
+        }
+    }
+})();
+</script>
+{% endblock %}

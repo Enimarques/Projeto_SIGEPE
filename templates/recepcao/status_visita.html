@@ -683,7 +683,7 @@
                             <label for="data" class="form-label">
                                 <i class="fas fa-calendar me-1"></i>Data
                             </label>
-                            <input type="date" class="form-control" id="data" name="data" value="{{ data_filtro|date:'Y-m-d' }}">
+                            <input type="date" class="form-control" id="data" name="data" value="{{ data_filtro }}">
                         </div>
                         <div class="col-lg-2 col-md-3 col-6">
                             <label for="hora_inicio" class="form-label">
@@ -734,11 +734,11 @@
                         </div>
                         <div class="col-lg-10 col-md-8 col-6">
                             <div class="d-flex justify-content-end">
-                                <a href="{% url 'recepcao:status_visita' %}" class="btn btn-outline-secondary btn-sm">
+                                <button type="button" class="btn btn-outline-secondary btn-sm" id="btn-limpar-filtros">
                                     <i class="fas fa-times me-1"></i>
                                     <span class="d-none d-sm-inline">Limpar Filtros</span>
                                     <span class="d-sm-none">Limpar</span>
-                                </a>
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -790,6 +790,21 @@ $(document).ready(function() {
         aplicarFiltros();
     });
     
+    // Atualizar URL quando filtros são aplicados (para permitir voltar/atualizar)
+    function atualizarURL() {
+        const formData = $('#filtro-form').serialize();
+        const newUrl = window.location.pathname + (formData ? '?' + formData : '');
+        window.history.pushState({path: newUrl}, '', newUrl);
+    }
+    
+    // Botão limpar filtros
+    $('#btn-limpar-filtros').on('click', function() {
+        // Limpar todos os campos do formulário
+        $('#filtro-form')[0].reset();
+        // Redirecionar para a página sem filtros
+        window.location.href = '{% url "recepcao:status_visita" %}';
+    });
+    
     // Busca automática por nome com debounce
     let timeoutBusca;
     $('#busca_nome').on('input', function() {
@@ -836,6 +851,9 @@ $(document).ready(function() {
                     
                     // Atualizar contador de visitas
                     $('#total-visitas').text(response.total_visitas);
+                    
+                    // Atualizar URL para preservar filtros
+                    atualizarURL();
                     
                     // Mostrar mensagem discreta apenas se há filtros aplicados
                     if (formData) {
@@ -890,6 +908,21 @@ $(document).ready(function() {
         setTimeout(function() {
             $('.alert').fadeOut();
         }, timeout);
+    }
+    
+    // Suporte ao botão voltar/avançar do navegador
+    window.addEventListener('popstate', function(event) {
+        if (event.state) {
+            // Recarregar a página quando o usuário usar botão voltar/avançar
+            window.location.reload();
+        }
+    });
+    
+    // Aplicar filtros automaticamente ao carregar a página se houver parâmetros na URL
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.toString()) {
+        console.log('Parâmetros encontrados na URL, aplicando filtros automaticamente...');
+        aplicarFiltros();
     }
     
     console.log('Sistema de filtros AJAX configurado com sucesso');

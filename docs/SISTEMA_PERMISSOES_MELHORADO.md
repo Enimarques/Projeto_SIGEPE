@@ -274,3 +274,8 @@ def api_cards(request):
 
 O sistema de permissões melhorado garante que cada usuário tenha acesso apenas às informações relevantes para sua função, melhorando a segurança, usabilidade e performance do sistema SIGEPE. A implementação é escalável e permite fácil adição de novos tipos de usuário e permissões conforme necessário.
 
+
+
+
+
+

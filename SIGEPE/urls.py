@@ -1,8 +1,9 @@
 from django.contrib import admin
-from django.urls import path, include
+from django.urls import path, include, re_path
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib.auth import views as auth_views
+from django.views.static import serve
 
 # Configuração do Admin
 admin.site.site_header = 'URUTAU - Administração'
@@ -26,7 +27,14 @@ urlpatterns = [
     path('', include('apps.main.urls')),
 ]
 
-# Configuração para servir arquivos estáticos e de mídia em desenvolvimento
+# Configuração para servir arquivos estáticos e de mídia
+# Em desenvolvimento, serve STATIC e MEDIA via Django
 if settings.DEBUG:
     urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+else:
+    # Em produção, WhiteNoise serve STATIC, mas MEDIA precisa de servidor web (ex.: Nginx)
+    # Fallback temporário para servir MEDIA via Django até configuração do Nginx
+    urlpatterns += [
+        re_path(r'^media/(?P<path>.*)$', serve, {'document_root': settings.MEDIA_ROOT}),
+    ]

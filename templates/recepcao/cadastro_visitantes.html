@@ -39,7 +39,7 @@
                     </div>
                     {% endif %}
 
-                    <form method="post" enctype="multipart/form-data" class="needs-validation" novalidate>
+                    <form method="post" enctype="multipart/form-data" autocomplete="off" class="needs-validation" novalidate>
                         {% csrf_token %}
                         
                         <!-- Bloco da Webcam e Preview -->
@@ -83,10 +83,10 @@
                                     {{ form.nome_completo.label_tag }}
                                     {{ form.nome_completo }}
                                 </div>
-                                <div class="mb-3">
+                                <!--<div class="mb-3">
                                     {{ form.nome_social.label_tag }}
                                     {{ form.nome_social }}
-                                </div>
+                                </div>-->
                                 <div class="mb-3">
                                     {{ form.CPF.label_tag }}
                                     <input type="text" name="CPF" id="{{ form.CPF.id_for_label }}" class="form-control" placeholder="000.000.000-00" data-mask="cpf" required maxlength="14" value="{{ form.CPF.value|default:'' }}" {% if is_editing %}readonly{% endif %}>

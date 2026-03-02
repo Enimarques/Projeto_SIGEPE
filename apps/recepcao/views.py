@@ -8,14 +8,14 @@ from django.utils import timezone
 from django.db.models import Q
 from django.core.files.base import ContentFile
 from django.conf import settings
-from .models import Visitante, Visita, Setor
+from .models import Visitante, Visita, Setor, VisitanteArquivado, VisitaArquivada
 from .forms import VisitanteForm, VisitaForm
 from .forms_departamento import SetorForm
 from .misc_utils import gerar_etiqueta_pdf
 import base64
 import json
 from django.urls import reverse
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, time
 from .forms_departamento import AlterarHorarioSetorForm
 from django.core.exceptions import PermissionDenied
 from apps.autenticacao.decorators import admin_required, block_assessor, assessor_or_admin_required, admin_or_recepcionista_only
@@ -39,6 +39,12 @@ from django.db.models.functions import Replace
 from django.utils.timezone import get_current_timezone
 import os
 from django.core.cache import cache
+import logging
+import shutil
+from pathlib import Path
+
+# Logger do módulo
+logger = logging.getLogger(__name__)
 
 # Contexto base para todas as views do app
 def get_base_context(title_suffix=''):
@@ -128,12 +134,13 @@ def cadastro_visitantes(request):
                 messages.success(request, 'Visitante cadastrado com sucesso!')
                 return redirect('recepcao:detalhes_visitante', pk=visitante.id)
             except Exception as e:
-                # Log do erro real no console do servidor para depuração
-                print(f"ERRO CRÍTICO AO SALVAR VISITANTE: {e}")
+                # Log do erro para depuração
+                logger.error("Erro crítico ao salvar visitante: %s", e)
                 messages.error(request, f"Ocorreu um erro inesperado ao salvar: {e}")
         else:
             # Log dos erros de validação para depuração
-            print("ERROS DE VALIDAÇÃO DO FORMULÁRIO:", form.errors.as_json())
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug("Erros de validação do formulário: %s", form.errors.as_json())
             messages.error(request, 'Por favor, corrija os erros no formulário.')
     else:
         form = VisitanteForm()
@@ -147,7 +154,7 @@ def cadastro_visitantes(request):
     return render(request, 'recepcao/cadastro_visitantes.html', context)
 
 @login_required(login_url='autenticacao:login_sistema')
-@assessor_or_admin_required
+@admin_or_recepcionista_only
 def detalhes_visitante(request, pk):
     visitante = get_object_or_404(Visitante, pk=pk)
     
@@ -252,7 +259,7 @@ def registro_visitas(request):
     return render(request, 'recepcao/registro_visitas.html', context)
 
 @login_required(login_url='autenticacao:login_sistema')
-@assessor_or_admin_required
+@admin_or_recepcionista_only
 def buscar_visitante(request):
     query = request.GET.get('query', None)
     
@@ -292,7 +299,7 @@ def buscar_visitante(request):
     return JsonResponse({'success': True, 'visitantes': visitantes_data})
 
 @login_required(login_url='autenticacao:login_sistema')
-@assessor_or_admin_required
+@admin_or_recepcionista_only
 def buscar_setores(request):
     tipo = request.GET.get('tipo', 'departamento')
     
@@ -335,28 +342,52 @@ def buscar_setores(request):
     })
 
 @login_required(login_url='autenticacao:login_sistema')
-@assessor_or_admin_required
+@admin_or_recepcionista_only
 def historico_visitas(request):
     # Filtros
     status = request.GET.get('status')
     periodo = request.GET.get('periodo')
     busca = request.GET.get('busca')
+    data_inicio = request.GET.get('data_inicio')
+    data_fim = request.GET.get('data_fim')
     
     # Query base
     visitas = Visita.objects.all()
-    print(f"Total de visitas antes dos filtros: {visitas.count()}")
+    if logger.isEnabledFor(logging.DEBUG):
+        logger.debug("Total de visitas antes dos filtros: %s", visitas.count())
     
     # Aplicar filtros
     if status:
-        print(f"Aplicando filtro de status: {status}")
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug("Aplicando filtro de status: %s", status)
         if status == 'em_andamento':
             visitas = visitas.filter(data_saida__isnull=True)
         elif status == 'finalizada':
             visitas = visitas.filter(data_saida__isnull=False)
-        print(f"Total após filtro de status: {visitas.count()}")
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug("Total após filtro de status: %s", visitas.count())
     
-    if periodo:
-        print(f"Aplicando filtro de período: {periodo}")
+    # Filtro de data específica (tem prioridade sobre período rápido)
+    if data_inicio or data_fim:
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug("Aplicando filtro de data específica: %s a %s", data_inicio, data_fim)
+        try:
+            if data_inicio:
+                data_inicio_obj = datetime.strptime(data_inicio, '%Y-%m-%d').date()
+                visitas = visitas.filter(data_entrada__date__gte=data_inicio_obj)
+            if data_fim:
+                data_fim_obj = datetime.strptime(data_fim, '%Y-%m-%d').date()
+                # Adicionar 1 dia e subtrair 1 segundo para incluir o dia inteiro
+                data_fim_completa = datetime.combine(data_fim_obj, time.max)
+                visitas = visitas.filter(data_entrada__lte=data_fim_completa)
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug("Total após filtro de data específica: %s", visitas.count())
+        except ValueError as e:
+            logger.warning(f"Erro ao processar filtro de data: {e}")
+    elif periodo:
+        # Filtro de período rápido (só aplica se não houver data específica)
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug("Aplicando filtro de período: %s", periodo)
         hoje = timezone.localtime().date()
         if periodo == 'hoje':
             visitas = visitas.filter(data_entrada__date=hoje)
@@ -366,15 +397,18 @@ def historico_visitas(request):
         elif periodo == 'mes':
             inicio_mes = hoje.replace(day=1)
             visitas = visitas.filter(data_entrada__date__gte=inicio_mes)
-        print(f"Total após filtro de período: {visitas.count()}")
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug("Total após filtro de período: %s", visitas.count())
     
     if busca:
-        print(f"Aplicando busca: {busca}")
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug("Aplicando busca: %s", busca)
         visitas = visitas.filter(
             Q(visitante__nome_completo__icontains=busca) |
             Q(visitante__CPF__icontains=busca)
         )
-        print(f"Total após busca: {visitas.count()}")
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug("Total após busca: %s", visitas.count())
     
     # Ordenação
     visitas = visitas.order_by('-data_entrada')
@@ -399,23 +433,25 @@ def historico_visitas(request):
         'status_filtro': status,
         'periodo_filtro': periodo,
         'busca': busca,
+        'data_inicio': data_inicio,
+        'data_fim': data_fim,
     })
     
     return render(request, 'recepcao/historico_visitas.html', context)
 
 @login_required(login_url='autenticacao:login_sistema')
-@assessor_or_admin_required
+@admin_or_recepcionista_only
 def status_visita(request):
     """
     Exibe as visitas em andamento com filtros.
     """
-    # Obter parâmetros do filtro
-    data = request.GET.get('data')
-    hora_inicio = request.GET.get('hora_inicio')
-    hora_fim = request.GET.get('hora_fim')
-    localizacao = request.GET.get('localizacao')
-    setor = request.GET.get('setor')
-    busca_nome = request.GET.get('busca_nome')
+    # Obter parâmetros do filtro (manter como string para preservar no template)
+    data_str = request.GET.get('data', '')
+    hora_inicio_str = request.GET.get('hora_inicio', '')
+    hora_fim_str = request.GET.get('hora_fim', '')
+    localizacao = request.GET.get('localizacao', '')
+    setor = request.GET.get('setor', '')
+    busca_nome = request.GET.get('busca_nome', '')
 
     # Iniciar queryset com visitas não finalizadas e status em andamento
     visitas = Visita.objects.filter(
@@ -424,26 +460,29 @@ def status_visita(request):
     )
 
     # Aplicar filtros
-    if data:
+    if data_str:
         try:
-            data = datetime.strptime(data, '%Y-%m-%d').date()
-            visitas = visitas.filter(data_entrada__date=data)
+            data_obj = datetime.strptime(data_str, '%Y-%m-%d').date()
+            visitas = visitas.filter(data_entrada__date=data_obj)
         except (ValueError, TypeError):
             messages.error(request, 'Data inválida')
+            data_str = ''  # Limpar se inválida
 
-    if hora_inicio:
+    if hora_inicio_str:
         try:
-            hora_inicio = datetime.strptime(hora_inicio, '%H:%M').time()
-            visitas = visitas.filter(data_entrada__time__gte=hora_inicio)
+            hora_inicio_obj = datetime.strptime(hora_inicio_str, '%H:%M').time()
+            visitas = visitas.filter(data_entrada__time__gte=hora_inicio_obj)
         except (ValueError, TypeError):
             messages.error(request, 'Hora de início inválida')
+            hora_inicio_str = ''  # Limpar se inválida
 
-    if hora_fim:
+    if hora_fim_str:
         try:
-            hora_fim = datetime.strptime(hora_fim, '%H:%M').time()
-            visitas = visitas.filter(data_entrada__time__lte=hora_fim)
+            hora_fim_obj = datetime.strptime(hora_fim_str, '%H:%M').time()
+            visitas = visitas.filter(data_entrada__time__lte=hora_fim_obj)
         except (ValueError, TypeError):
             messages.error(request, 'Hora de fim inválida')
+            hora_fim_str = ''  # Limpar se inválida
 
     if localizacao:
         visitas = visitas.filter(localizacao=localizacao)
@@ -452,7 +491,6 @@ def status_visita(request):
         visitas = visitas.filter(setor_id=setor)
 
     if busca_nome:
-        from django.db.models import Q
         visitas = visitas.filter(
             Q(visitante__nome_completo__icontains=busca_nome) |
             Q(visitante__nome_social__icontains=busca_nome)
@@ -489,10 +527,10 @@ def status_visita(request):
         'total_por_local': total_por_local,
         'setores': Setor.objects.filter(ativo=True).order_by('id'),
         'localizacoes': dict(Visita.LOCALIZACAO_CHOICES),
-        # Manter filtros selecionados
-        'data_filtro': data if data else None,
-        'hora_inicio_filtro': hora_inicio.strftime('%H:%M') if hora_inicio else '',
-        'hora_fim_filtro': hora_fim.strftime('%H:%M') if hora_fim else '',
+        # Manter filtros selecionados como strings originais
+        'data_filtro': data_str,
+        'hora_inicio_filtro': hora_inicio_str,
+        'hora_fim_filtro': hora_fim_str,
         'localizacao_filtro': localizacao,
         'setor_filtro': setor,
         'busca_nome_filtro': busca_nome
@@ -501,7 +539,7 @@ def status_visita(request):
     return render(request, 'recepcao/status_visita.html', context)
 
 @login_required(login_url='autenticacao:login_sistema')
-@assessor_or_admin_required
+@admin_or_recepcionista_only
 def finalizar_visita(request, visita_id):
     """
     Finaliza uma visita em andamento.
@@ -510,45 +548,32 @@ def finalizar_visita(request, visita_id):
         visita = Visita.objects.get(id=visita_id)
     except Visita.DoesNotExist:
         messages.error(request, 'Visita não encontrada. Ela pode ter sido finalizada ou excluída por outro usuário.')
-        return redirect('recepcao:status_visita')
-    
-    # Verificar a URL de origem para saber para onde redirecionar depois
-    referrer = request.META.get('HTTP_REFERER', '')
-    
-    # Verifica se a visita já foi finalizada
+        return redirect('recepcao:lista_visitantes')
+
+    # Se já finalizada, informa e volta para os detalhes do visitante
     if visita.data_saida or visita.status != 'em_andamento':
         messages.error(request, 'Esta visita já foi finalizada.')
-        # Redirecionar para a página de origem
-        if 'historico' in referrer:
-            return redirect('recepcao:historico_visitas')
-        elif 'detalhes_visitante' in referrer:
-            return redirect('recepcao:detalhes_visitante', pk=visita.visitante.id)
-        else:
-            return redirect('recepcao:status_visita')
-    
+        return redirect('recepcao:detalhes_visitante', pk=visita.visitante.id)
+
     try:
         # Finaliza a visita
         visita.data_saida = timezone.now()
         visita.status = 'finalizada'
         visita.save()
-        
+
         messages.success(request, 'Visita finalizada com sucesso!')
-        
-        # Redirecionar para a página de origem
-        if 'historico' in referrer:
-            return redirect('recepcao:historico_visitas')
-        elif 'detalhes_visitante' in referrer:
-            return redirect('recepcao:detalhes_visitante', pk=visita.visitante.id)
-        else:
-            return redirect('recepcao:status_visita')
+        return redirect('recepcao:detalhes_visitante', pk=visita.visitante.id)
     except Exception as e:
         messages.error(request, f'Erro ao finalizar visita: {str(e)}')
-        return redirect('recepcao:status_visita')
+        return redirect('recepcao:detalhes_visitante', pk=visita.visitante.id)
 
 @login_required(login_url='autenticacao:login_sistema')
 @admin_required
 def excluir_visita(request, pk):
     visita = get_object_or_404(Visita, pk=pk)
+    logging.getLogger('audit').info(
+        f"user={request.user.username} action=DELETE_VISITA visita_id={visita.id} visitante_id={visita.visitante.id} ip={request.META.get('REMOTE_ADDR')}"
+    )
     visita.delete()
     messages.success(request, 'Visita excluída com sucesso!')
     return redirect('recepcao:historico_visitas')
@@ -598,6 +623,9 @@ def excluir_setor(request, pk):
                 
             # Depois excluir o setor
             nome_setor = setor.nome_vereador if setor.tipo in ['gabinete', 'gabinete_vereador'] else setor.nome_local
+            logging.getLogger('audit').info(
+                f"user={request.user.username} action=DELETE_SETOR setor_id={setor.id} nome='{nome_setor}' ip={request.META.get('REMOTE_ADDR')}"
+            )
             setor.delete()
             messages.success(request, f'Setor "{nome_setor}" excluído com sucesso!')
             
@@ -627,26 +655,152 @@ def excluir_setor(request, pk):
     
     return render(request, 'recepcao/confirmar_exclusao_setor.html', context)
 
+def arquivar_visitante(visitante, usuario_arquivou):
+    """
+    Arquivar visitante e suas visitas relacionadas.
+    Move os dados para as tabelas de arquivo ao invés de deletar.
+    """
+    try:
+        # Verificar se o visitante já foi arquivado (proteção contra duplicação)
+        visitante_arquivado_existente = VisitanteArquivado.objects.filter(
+            id_original=visitante.id
+        ).first()
+        
+        if visitante_arquivado_existente:
+            logger.warning(
+                f"Visitante {visitante.id} ({visitante.nome_completo}) já foi arquivado anteriormente "
+                f"(ID arquivado: {visitante_arquivado_existente.id}). Retornando registro existente."
+            )
+            # Retornar o registro existente e contar as visitas já arquivadas
+            num_visitas = visitante_arquivado_existente.visitas_arquivadas.count()
+            return visitante_arquivado_existente, num_visitas
+        
+        # Criar visitante arquivado
+        visitante_arquivado = VisitanteArquivado(
+            nome_completo=visitante.nome_completo,
+            nome_social=visitante.nome_social,
+            data_nascimento=visitante.data_nascimento,
+            CPF=visitante.CPF,
+            telefone=visitante.telefone,
+            email=visitante.email,
+            estado=visitante.estado,
+            cidade=visitante.cidade,
+            bairro=visitante.bairro,
+            logradouro=visitante.logradouro,
+            numero=visitante.numero,
+            complemento=visitante.complemento,
+            CEP=visitante.CEP,
+            biometric_vector=visitante.biometric_vector,
+            id_original=visitante.id,
+            data_cadastro_original=visitante.data_cadastro,
+            usuario_arquivou=usuario_arquivou
+        )
+        
+        # Copiar arquivos de foto para a pasta de arquivados
+        foto_fields = ['foto', 'foto_thumbnail', 'foto_medium', 'foto_large']
+        for field_name in foto_fields:
+            original_field = getattr(visitante, field_name, None)
+            if original_field and original_field.name:
+                try:
+                    # Caminho original
+                    original_path = Path(original_field.path)
+                    if original_path.exists():
+                        # Criar caminho de destino
+                        filename = original_path.name
+                        dest_dir = Path(settings.MEDIA_ROOT) / 'arquivados' / 'fotos_visitantes'
+                        dest_dir.mkdir(parents=True, exist_ok=True)
+                        dest_path = dest_dir / filename
+                        
+                        # Copiar arquivo
+                        shutil.copy2(original_path, dest_path)
+                        
+                        # Atribuir ao campo do visitante arquivado
+                        relative_path = f'arquivados/fotos_visitantes/{filename}'
+                        setattr(visitante_arquivado, field_name, relative_path)
+                except Exception as e:
+                    logger.warning(f"Erro ao copiar {field_name} do visitante {visitante.id}: {e}")
+        
+        visitante_arquivado.save()
+        
+        # Arquivar visitas relacionadas
+        visitas_relacionadas = Visita.objects.filter(visitante=visitante)
+        num_visitas = 0
+        visitas_ids = []
+        
+        for visita in visitas_relacionadas:
+            visita_arquivada = VisitaArquivada(
+                visitante_arquivado=visitante_arquivado,
+                id_original=visita.id,
+                nome_setor=str(visita.setor),
+                localizacao=visita.localizacao,
+                objetivo=visita.objetivo,
+                observacoes=visita.observacoes,
+                data_entrada=visita.data_entrada,
+                data_saida=visita.data_saida,
+                status=visita.status
+            )
+            visita_arquivada.save()
+            visitas_ids.append(visita.id)
+            num_visitas += 1
+        
+        # Deletar as visitas originais primeiro (antes de deletar o visitante)
+        # Isso é necessário porque Visita tem on_delete=models.PROTECT
+        if visitas_ids:
+            Visita.objects.filter(id__in=visitas_ids).delete()
+        
+        # Agora deletar o visitante original (que vai deletar as fotos originais)
+        visitante.delete()
+        
+        return visitante_arquivado, num_visitas
+        
+    except Exception as e:
+        logger.error(f"Erro ao arquivar visitante {visitante.id}: {e}", exc_info=True)
+        raise
+
+
 @login_required(login_url='autenticacao:login_sistema')
 @admin_required
 def excluir_visitante(request, pk):
+    # Verificar se o visitante já foi arquivado antes de buscar
+    visitante_arquivado_existente = VisitanteArquivado.objects.filter(id_original=pk).first()
+    if visitante_arquivado_existente:
+        messages.info(
+            request,
+            f'Este visitante já foi arquivado anteriormente em {visitante_arquivado_existente.data_arquivamento.strftime("%d/%m/%Y %H:%M")}. '
+            f'Você pode visualizá-lo na lista de visitantes arquivados.'
+        )
+        return redirect('recepcao:lista_visitantes')
+    
     visitante = get_object_or_404(Visitante, pk=pk)
     visitas_relacionadas = Visita.objects.filter(visitante=visitante)
     
     if request.method == 'POST':
         try:
-            # Primeiro, deleta o histórico de visitas
-            num_visitas, _ = visitas_relacionadas.delete()
+            # Verificar novamente se não foi arquivado entre a requisição GET e POST
+            # (proteção contra múltiplas submissões)
+            if not Visitante.objects.filter(pk=pk).exists():
+                messages.warning(request, 'Este visitante já foi arquivado ou não existe mais.')
+                return redirect('recepcao:lista_visitantes')
             
-            # Finalmente, deleta o objeto visitante.
-            # O método delete() do modelo cuidará de apagar os arquivos de foto.
+            # Arquivar visitante ao invés de deletar
             nome_visitante = visitante.nome_completo
-            visitante.delete()
-
-            messages.success(request, f'Visitante "{nome_visitante}" e seu histórico de {num_visitas} visita(s) foram excluídos com sucesso!')
+            visitante_arquivado, num_visitas = arquivar_visitante(visitante, request.user.username)
+            
+            logging.getLogger('audit').info(
+                f"user={request.user.username} action=ARCHIVE_VISITANTE visitante_id={visitante_arquivado.id_original} "
+                f"nome='{nome_visitante}' visitas_arquivadas={num_visitas} arquivado_id={visitante_arquivado.id} "
+                f"ip={request.META.get('REMOTE_ADDR')}"
+            )
+            
+            messages.success(
+                request, 
+                f'Visitante "{nome_visitante}" e seu histórico de {num_visitas} visita(s) foram arquivados com sucesso! '
+                f'Os dados serão mantidos por 6 meses antes da exclusão definitiva.'
+            )
             return redirect('recepcao:lista_visitantes')
         except Exception as e:
-            messages.error(request, f'Erro ao excluir visitante: {str(e)}')
+            logger.error(f"Erro ao arquivar visitante: {e}", exc_info=True)
+            messages.error(request, f'Erro ao arquivar visitante: {str(e)}')
             return redirect('recepcao:detalhes_visitante', pk=pk)
     
     context = get_base_context('Excluir Visitante')
@@ -657,7 +811,75 @@ def excluir_visitante(request, pk):
     return render(request, 'recepcao/confirmar_exclusao_visitante.html', context)
 
 @login_required(login_url='autenticacao:login_sistema')
-@assessor_or_admin_required
+@admin_required
+def lista_visitantes_arquivados(request):
+    """Lista visitantes arquivados - apenas para administradores"""
+    busca = request.GET.get('busca', '')
+    
+    visitantes_arquivados = VisitanteArquivado.objects.all()
+    
+    if busca:
+        visitantes_arquivados = visitantes_arquivados.filter(
+            Q(nome_completo__icontains=busca) |
+            Q(CPF__icontains=busca) |
+            Q(email__icontains=busca)
+        )
+    
+    visitantes_arquivados = visitantes_arquivados.order_by('-data_arquivamento')
+    
+    # Paginação
+    paginator = Paginator(visitantes_arquivados, 20)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    
+    # Estatísticas
+    total_arquivados = VisitanteArquivado.objects.count()
+    from datetime import timedelta
+    from django.utils import timezone
+    cutoff = timezone.now() - timedelta(days=180)
+    proximos_a_expirar = VisitanteArquivado.objects.filter(data_arquivamento__lte=cutoff).count()
+    
+    context = get_base_context('Visitantes Arquivados')
+    context.update({
+        'page_obj': page_obj,
+        'busca': busca,
+        'total_arquivados': total_arquivados,
+        'proximos_a_expirar': proximos_a_expirar,
+    })
+    
+    return render(request, 'recepcao/lista_visitantes_arquivados.html', context)
+
+
+@login_required(login_url='autenticacao:login_sistema')
+@admin_required
+def detalhes_visitante_arquivado(request, pk):
+    """Detalhes de um visitante arquivado - apenas para administradores"""
+    visitante_arquivado = get_object_or_404(VisitanteArquivado, pk=pk)
+    
+    # Obter todas as visitas arquivadas relacionadas
+    visitas_arquivadas = VisitaArquivada.objects.filter(
+        visitante_arquivado=visitante_arquivado
+    ).order_by('-data_entrada')
+    
+    # Calcular dias até expiração
+    from datetime import timedelta
+    from django.utils import timezone
+    data_expiracao = visitante_arquivado.data_arquivamento + timedelta(days=180)
+    dias_restantes = (data_expiracao - timezone.now()).days
+    
+    context = get_base_context('Detalhes do Visitante Arquivado')
+    context.update({
+        'visitante_arquivado': visitante_arquivado,
+        'visitas_arquivadas': visitas_arquivadas,
+        'data_expiracao': data_expiracao,
+        'dias_restantes': dias_restantes,
+    })
+    
+    return render(request, 'recepcao/detalhes_visitante_arquivado.html', context)
+
+
+@login_required(login_url='autenticacao:login_sistema')
+@admin_or_recepcionista_only
 def gerar_etiqueta(request, visita_id):
     visita = get_object_or_404(Visita, pk=visita_id)
     context = get_base_context('Etiqueta da Visita')
@@ -1041,6 +1263,7 @@ def visitas_tabela_gabinete(request, gabinete_id):
 
 
 @login_required(login_url='autenticacao:login_sistema')
+@admin_or_recepcionista_only
 def status_visita_ajax(request):
     """
     Retorna apenas a tabela de visitas filtrada via AJAX.
@@ -1111,6 +1334,7 @@ def status_visita_ajax(request):
     })
 
 @login_required(login_url='autenticacao:login_sistema')
+@admin_or_recepcionista_only
 def historico_visitas_ajax(request):
     """
     Retorna apenas a tabela do histórico de visitas filtrada via AJAX.
@@ -1119,6 +1343,8 @@ def historico_visitas_ajax(request):
     status = request.GET.get('status')
     periodo = request.GET.get('periodo')
     busca = request.GET.get('busca')
+    data_inicio = request.GET.get('data_inicio')
+    data_fim = request.GET.get('data_fim')
     
     # Query base
     visitas = Visita.objects.all()
@@ -1130,7 +1356,19 @@ def historico_visitas_ajax(request):
         elif status == 'finalizada':
             visitas = visitas.filter(data_saida__isnull=False)
     
-    if periodo:
+    # Filtro de data específica (tem prioridade sobre período rápido)
+    if data_inicio or data_fim:
+        try:
+            if data_inicio:
+                data_inicio_obj = datetime.strptime(data_inicio, '%Y-%m-%d').date()
+                visitas = visitas.filter(data_entrada__date__gte=data_inicio_obj)
+            if data_fim:
+                data_fim_obj = datetime.strptime(data_fim, '%Y-%m-%d').date()
+                data_fim_completa = datetime.combine(data_fim_obj, time.max)
+                visitas = visitas.filter(data_entrada__lte=data_fim_completa)
+        except ValueError:
+            pass
+    elif periodo:
         hoje = timezone.localtime().date()
         if periodo == 'hoje':
             visitas = visitas.filter(data_entrada__date=hoje)
@@ -1168,6 +1406,8 @@ def historico_visitas_ajax(request):
             'status_filtro': status,
             'periodo_filtro': periodo,
             'busca': busca,
+            'data_inicio': data_inicio,
+            'data_fim': data_fim,
         },
         request=request
     )
@@ -1191,21 +1431,40 @@ def historico_visitas_ajax(request):
         'visitas_finalizadas': visitas_finalizadas,
     })
 
-# Carregando os vetores uma vez para evitar múltiplas leituras do DB
+# Carregamento em memória com TTL para evitar leituras repetidas do DB
 known_face_encodings = []
 known_face_ids = []
+_known_loaded_at = None
+_FACE_VECTORS_TTL_SECONDS = 600  # 10 minutos
 
 def carregar_vetores_faciais():
-    global known_face_encodings, known_face_ids
+    """Carrega vetores do banco e atualiza o cache em memória."""
+    import time
+    global known_face_encodings, known_face_ids, _known_loaded_at
     visitantes_com_vetor = Visitante.objects.filter(biometric_vector__isnull=False)
     known_face_encodings = [np.array(v.biometric_vector) for v in visitantes_com_vetor]
     known_face_ids = [v.id for v in visitantes_com_vetor]
-    print(f"Carregados {len(known_face_encodings)} vetores faciais.")
+    _known_loaded_at = time.time()
+    if logger.isEnabledFor(logging.DEBUG):
+        logger.debug("Carregados %s vetores faciais.", len(known_face_encodings))
+
+
+def ensure_vetores_carregados():
+    """Garante que o cache está válido; recarrega se vazio ou expirado."""
+    import time
+    global _known_loaded_at
+    if not known_face_encodings or _known_loaded_at is None:
+        carregar_vetores_faciais()
+        return
+    if (time.time() - _known_loaded_at) > _FACE_VECTORS_TTL_SECONDS:
+        carregar_vetores_faciais()
+        return
 
 @csrf_exempt
 @require_POST
 def api_reconhecer_rosto(request):
-    carregar_vetores_faciais()  # Sempre recarrega os vetores antes de comparar
+    # Usa cache com TTL para evitar recargas a cada POST
+    ensure_vetores_carregados()
     try:
         # 1. Lê o corpo da requisição JSON
         data = json.loads(request.body)
@@ -1231,23 +1490,38 @@ def api_reconhecer_rosto(request):
             return JsonResponse({'success': False, 'error': 'Nenhum rosto detectado na imagem.'})
         
         if not known_face_encodings:
-            return JsonResponse({'success': False, 'error': 'Nenhum visitante com dados faciais cadastrado.'})
+            return JsonResponse({'success': False, 'error': 'Nenhum visitante com dados faciais cadastrados.'})
 
-        # Compara com os rostos conhecidos
-        matches = face_recognition.compare_faces(known_face_encodings, np.array(unknown_embedding), tolerance=0.5)
-        
-        if True in matches:
-            first_match_index = matches.index(True)
-            visitante_id = known_face_ids[first_match_index]
-            visitante = Visitante.objects.get(id=visitante_id)
-            
-            return JsonResponse({
-                'success': True,
-                'visitante_id': visitante.id, # Envia o ID para o redirect
-                'nome_visitante': visitante.nome_completo
-            })
-        else:
+        # 4. Calcula distâncias para todos os rostos conhecidos
+        face_distances = face_recognition.face_distance(known_face_encodings, np.array(unknown_embedding))
+        if len(face_distances) == 0:
+            return JsonResponse({'success': False, 'error': 'Nenhum visitante com dados faciais cadastrados.'})
+
+        # Melhor candidato (menor distância)
+        best_index = int(np.argmin(face_distances))
+        best_distance = float(face_distances[best_index])
+
+        # Critério 1: distância máxima aceitável (mais rígido para reduzir falsos positivos)
+        MAX_DISTANCE = 0.52
+        if best_distance > MAX_DISTANCE:
             return JsonResponse({'success': False, 'error': 'Nenhum visitante correspondente encontrado.'})
+
+        # Critério 2: diferença mínima para o segundo melhor (evita empates/vizinhos muito próximos)
+        if len(face_distances) > 1:
+            sorted_distances = sorted(face_distances)
+            second_best_distance = float(sorted_distances[1])
+            MIN_GAP = 0.12
+            if (second_best_distance - best_distance) < MIN_GAP:
+                return JsonResponse({'success': False, 'error': 'Nenhum visitante correspondente encontrado.'})
+
+        visitante_id = known_face_ids[best_index]
+        visitante = Visitante.objects.get(id=visitante_id)
+
+        return JsonResponse({
+            'success': True,
+            'visitante_id': visitante.id, # Envia o ID para o redirect
+            'nome_visitante': visitante.nome_completo
+        })
 
     except json.JSONDecodeError:
         return JsonResponse({'success': False, 'error': 'Formato de requisição inválido (esperado JSON).'}, status=400)
@@ -1256,6 +1530,7 @@ def api_reconhecer_rosto(request):
     except Exception as e:
         return JsonResponse({'success': False, 'error': f'Erro interno do servidor: {str(e)}'}, status=500)
 
+@login_required(login_url='autenticacao:login_sistema')
 @block_assessor
 def totem_welcome(request):
     """
@@ -1263,11 +1538,47 @@ def totem_welcome(request):
     """
     return render(request, 'recepcao/totem_welcome.html')
 
+@require_GET
+def api_preload_face_vectors(request):
+    """Pré-carrega os vetores faciais em memória para acelerar o reconhecimento."""
+    try:
+        import time
+        ensure_vetores_carregados()
+        age = None
+        if _known_loaded_at:
+            age = int(time.time() - _known_loaded_at)
+        return JsonResponse({'success': True, 'count': len(known_face_encodings), 'age_seconds': age, 'ttl_seconds': _FACE_VECTORS_TTL_SECONDS})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
 def totem_finalize_search(request):
     """
     Renderiza a página de busca para finalizar uma visita.
     """
     return render(request, 'recepcao/totem_finalize_search.html')
+
+
+def totem_confirmacao_identidade(request):
+    """Tela intermediária para o visitante confirmar se é a pessoa reconhecida."""
+    visitante_id = request.GET.get('visitante_id')
+    if not visitante_id:
+        messages.error(request, "ID do visitante não fornecido.")
+        return redirect('recepcao:totem_identificacao')
+
+    try:
+        visitante = Visitante.objects.get(id=visitante_id)
+    except Visitante.DoesNotExist:
+        messages.error(request, "Visitante não encontrado.")
+        return redirect('recepcao:totem_identificacao')
+
+    foto_version = int(visitante.data_atualizacao.timestamp()) if visitante.data_atualizacao else int(timezone.now().timestamp())
+    context = {
+        'visitante': visitante,
+        'visitante_foto_url': visitante.get_foto_url(size='large'),
+        'visitante_foto_version': foto_version
+    }
+    return render(request, 'recepcao/totem_confirmacao_identidade.html', context)
+
 
 def totem_destino(request):
     """
@@ -1280,9 +1591,11 @@ def totem_destino(request):
 
     try:
         visitante = Visitante.objects.get(id=visitante_id)
+        foto_version = int(visitante.data_atualizacao.timestamp()) if visitante.data_atualizacao else int(timezone.now().timestamp())
         context = {
             'visitante': visitante,
-            'visitante_foto_url': visitante.get_foto_url(size='large')
+            'visitante_foto_url': visitante.get_foto_url(size='large'),
+            'visitante_foto_version': foto_version
         }
         return render(request, 'recepcao/totem_destino.html', context)
     except Visitante.DoesNotExist:
@@ -1306,6 +1619,10 @@ def totem_comprovante(request, visita_id):
         'nome_exibicao': visita.visitante.nome_social if visita.visitante.nome_social else visita.visitante.nome_completo
     }
     return render(request, 'recepcao/totem_comprovante.html', context)
+
+def totem_recadastro_facial(request):
+    """Tela de fallback do totem: CPF + recadastro facial."""
+    return render(request, 'recepcao/totem_recadastro_facial.html')
 
 @require_GET
 def api_get_setores(request):
@@ -1347,8 +1664,6 @@ def api_get_setores(request):
 
 @csrf_exempt
 def api_registrar_visita_totem(request):
-    import logging
-    logger = logging.getLogger(__name__)
 
     if request.method != 'POST':
         logger.warning("api_registrar_visita_totem chamada com método GET.")
@@ -1356,19 +1671,25 @@ def api_registrar_visita_totem(request):
 
     logger.info("Iniciando o registro de visita via totem.")
     try:
-        logger.info("Decodificando JSON do corpo da requisição...")
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug("Decodificando JSON do corpo da requisição...")
         data = json.loads(request.body)
         visitante_id = data.get('visitante_id')
         setor_id = data.get('setor_id')
-        logger.info(f"Dados recebidos: visitante_id={visitante_id}, setor_id={setor_id}")
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug("Dados recebidos: visitante_id=%s, setor_id=%s", visitante_id, setor_id)
 
-        logger.info(f"Buscando visitante com ID {visitante_id}...")
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug("Buscando visitante com ID %s...", visitante_id)
         visitante = Visitante.objects.get(id=visitante_id)
-        logger.info("Visitante encontrado.")
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug("Visitante encontrado.")
 
-        logger.info(f"Buscando setor com ID {setor_id}...")
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug("Buscando setor com ID %s...", setor_id)
         setor = Setor.objects.get(id=setor_id)
-        logger.info("Setor encontrado.")
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug("Setor encontrado.")
 
         visita_data_para_criar = {
             'visitante': visitante,
@@ -1376,13 +1697,16 @@ def api_registrar_visita_totem(request):
             'localizacao': setor.localizacao,
             'status': 'em_andamento'
         }
-        logger.info(f"Dados para criação da visita: {visita_data_para_criar}")
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug("Dados para criação da visita: %s", visita_data_para_criar)
 
-        logger.info("Criando registro da visita no banco de dados...")
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug("Criando registro da visita no banco de dados...")
         nova_visita = Visita.objects.create(**visita_data_para_criar)
-        logger.info(f"Visita ID {nova_visita.id} criada com sucesso.")
+        logger.info("Visita criada com sucesso: id=%s", nova_visita.id)
 
-        logger.info(f"Enviando ID da nova visita para o frontend: {nova_visita.id}")
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug("Enviando ID da nova visita para o frontend: %s", nova_visita.id)
         return JsonResponse({'success': True, 'visita_id': nova_visita.id})
 
     except (Visitante.DoesNotExist, Setor.DoesNotExist) as e:
@@ -1395,6 +1719,111 @@ def api_registrar_visita_totem(request):
         logger.exception("Erro inesperado e fatal em api_registrar_visita_totem:")
         return JsonResponse({'success': False, 'error': 'Ocorreu uma falha interna no servidor.'}, status=500)
 
+
+@csrf_exempt
+@require_POST
+def api_validar_cpf_totem(request):
+    """Valida CPF digitado no totem e retorna dados básicos do visitante."""
+    try:
+        data = json.loads(request.body)
+        cpf = data.get('cpf', '').strip()
+
+        if not cpf:
+            return JsonResponse({'success': False, 'error': 'CPF não informado.'}, status=400)
+
+        try:
+            visitante = Visitante.objects.get(CPF=cpf)
+        except Visitante.DoesNotExist:
+            return JsonResponse({'success': False, 'error': 'CPF_NOT_FOUND'}, status=404)
+
+        return JsonResponse({
+            'success': True,
+            'visitante_id': visitante.id,
+            'nome_visitante': visitante.nome_completo,
+        })
+    except json.JSONDecodeError:
+        return JsonResponse({'success': False, 'error': 'Requisição mal formatada.'}, status=400)
+    except Exception as e:
+        logger.exception("Erro em api_validar_cpf_totem:")
+        return JsonResponse({'success': False, 'error': 'Falha interna do servidor.'}, status=500)
+
+
+@csrf_exempt
+@require_POST
+def api_re_enroll_face(request):
+    """Atualiza o vetor biométrico de um visitante a partir de uma nova captura no totem."""
+    try:
+        data = json.loads(request.body)
+        visitante_id = data.get('visitante_id')
+        image_data = data.get('image')
+
+        if not visitante_id or not image_data:
+            return JsonResponse({'success': False, 'error': 'Dados insuficientes.'}, status=400)
+
+        try:
+            visitante = Visitante.objects.get(id=visitante_id)
+        except Visitante.DoesNotExist:
+            return JsonResponse({'success': False, 'error': 'Visitante não encontrado.'}, status=404)
+
+        # Decodificar imagem base64 (mesma lógica de api_reconhecer_rosto)
+        if 'base64,' in image_data:
+            format, imgstr = image_data.split(';base64,')
+            ext = format.split('/')[-1]
+            image_binary = base64.b64decode(imgstr)
+            image_file = ContentFile(image_binary, name=f'temp.{ext}')
+        else:
+            image_binary = base64.b64decode(image_data)
+            image_file = ContentFile(image_binary, name='temp.jpg')
+
+        # Verificar tamanho do rosto na imagem para evitar capturas muito distantes
+        try:
+            import io
+            image_array = face_recognition.load_image_file(io.BytesIO(image_binary))
+            face_locations = face_recognition.face_locations(image_array)
+            if not face_locations:
+                return JsonResponse({'success': False, 'error': 'Nenhum rosto detectado na imagem.'})
+
+            top, right, bottom, left = face_locations[0]
+            face_width = right - left
+            image_width = image_array.shape[1]
+            face_width_ratio = face_width / image_width if image_width else 0
+
+            MIN_FACE_WIDTH_RATIO = 0.20  # rosto deve ocupar pelo menos ~20% da largura
+            if face_width_ratio < MIN_FACE_WIDTH_RATIO:
+                return JsonResponse({'success': False, 'error': 'Rosto muito distante da câmera. Aproxime-se e tente novamente.'})
+        except Exception as e:
+            logger.warning(f"Falha ao calcular tamanho do rosto na recaptura: {e}")
+
+        # Gerar novo vetor biométrico para validar a imagem
+        embedding = get_face_embedding(image_file)
+        if embedding is None:
+            return JsonResponse({'success': False, 'error': 'Nenhum rosto detectado na imagem.'})
+
+        # Substituir a foto do visitante pela nova captura
+        # O save() do modelo Visitante já trata geração de thumbnails e
+        # recalcula o vetor biométrico a partir de self.foto.
+        visitante.foto = image_file
+        visitante.save()
+
+        # Limpa o cache das URLs da foto para exibir imediatamente a nova imagem
+        cache.delete(f'visitante_foto_{visitante.id}_thumbnail')
+        cache.delete(f'visitante_foto_{visitante.id}_medium')
+        cache.delete(f'visitante_foto_{visitante.id}_large')
+        cache.delete(f'visitante_foto_{visitante.id}_original')
+
+        return JsonResponse({
+            'success': True,
+            'visitante_id': visitante.id,
+            'nome_visitante': visitante.nome_completo,
+        })
+    except json.JSONDecodeError:
+        return JsonResponse({'success': False, 'error': 'Requisição mal formatada.'}, status=400)
+    except ValueError as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=400)
+    except Exception as e:
+        logger.exception("Erro em api_re_enroll_face:")
+        return JsonResponse({'success': False, 'error': 'Falha interna do servidor.'}, status=500)
+
 @csrf_exempt
 @require_POST
 def upload_foto_webcam(request):
@@ -1405,7 +1834,7 @@ def upload_foto_webcam(request):
     from django.core.files.base import ContentFile
     from .utils.image_utils import process_image
     
-    logger = logging.getLogger(__name__)
+    # usa logger do módulo
     
     try:
         # Receber dados da imagem em base64
@@ -1455,7 +1884,8 @@ def upload_foto_webcam(request):
             with open(file_path, 'wb') as f:
                 f.write(img_file.read())
             saved_paths[size] = f"fotos_visitantes/{img_file.name}"
-            logger.info(f"Arquivo salvo: {file_path}")
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug("Arquivo salvo: %s", file_path)
         
         # Também salvar o original
         original_path = os.path.join(media_root, filename)

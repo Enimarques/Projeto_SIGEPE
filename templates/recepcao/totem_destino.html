@@ -281,7 +281,7 @@
   <div class="modal-dialog modal-dialog-centered modal-lg">
     <div class="modal-content">
       <div class="modal-header">
-        <h3 class="modal-title" id="confirmacaoModalLabel" style="font-size: 1.8rem; font-weight: 600; color: #2c3e50;">Confirmar Visita</h3>
+        <h3 class="modal-title" id="confirmacaoModalLabel" style="font-size: 2rem; font-weight: 600; color: #2c3e50;">Confirmar Visita</h3>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" style="transform: scale(1.2);"></button>
       </div>
       <div class="modal-body" style="padding: 2rem;">
@@ -303,12 +303,20 @@
 const visitante = {
     id: '{{ visitante.id }}',
     nome: '{{ visitante.nome_completo|escapejs }}',
-    foto: '{{ visitante_foto_url|default_if_none:"" }}'
+    foto: '{{ visitante_foto_url|default_if_none:"" }}',
+    foto_version: '{{ visitante_foto_version|default_if_none:"" }}'
 };
+
+function buildVisitorDrawerUrl(rawUrl, version) {
+    if (!rawUrl) return '';
+    if (!version) return rawUrl;
+    const separator = rawUrl.includes('?') ? '&' : '?';
+    return `${rawUrl}${separator}v=${version}`;
+}
 
 function renderWelcomeHeader() {
     const header = document.getElementById('welcome-header');
-    const fotoSrc = visitante.foto || "{% static 'img/default-avatar.png' %}";
+    const fotoSrc = buildVisitorDrawerUrl(visitante.foto, visitante.foto_version) || "{% static 'img/default-avatar.png' %}";
     const fotoHtml = `<div class='visitor-photo-container' style='background-image: url("${fotoSrc}")'></div>`;
 
     header.innerHTML = `

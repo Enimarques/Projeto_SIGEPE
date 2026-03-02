@@ -144,7 +144,14 @@ class CustomUserAdmin(UserAdmin):
                 # Vincular o setor ao usuário atual
                 setor.usuario = obj
                 setor.save()
-    
+
+    def delete_model(self, request, obj):
+        import logging
+        logging.getLogger('audit').info(
+            f"user={request.user.username} action=DELETE_USER target_user_id={obj.id} target_username='{obj.username}' ip={request.META.get('REMOTE_ADDR')}"
+        )
+        super().delete_model(request, obj)
+
     def get_groups(self, obj):
         groups = obj.groups.all()
         return ', '.join([group.name for group in groups])

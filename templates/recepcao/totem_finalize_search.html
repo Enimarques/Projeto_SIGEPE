@@ -59,6 +59,26 @@
     text-align: center;
     border-radius: 10px;
 }
+.cpf-numpad {
+    display: none;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.75rem;
+    margin-top: 0.75rem;
+}
+.cpf-numpad button {
+    font-size: 1.6rem;
+    padding: 0.9rem 0;
+    border-radius: 0.75rem;
+    border: none;
+    background: #f1f3f9;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+}
+.cpf-numpad button:active {
+    transform: scale(0.97);
+}
+.cpf-numpad.visible {
+    display: grid;
+}
 .search-spinner {
     position: absolute;
     top: 50%;
@@ -80,9 +100,9 @@
 }
 .camera-viewfinder {
     position: relative;
-    width: 640px;
+    width: 800px;
     max-width: 100%;
-    height: 480px;
+    height: 800px;
     border-radius: 15px;
     overflow: hidden;
     background-color: #000;
@@ -144,6 +164,20 @@
         <div class="spinner-border text-primary search-spinner" id="searchSpinner" role="status">
             <span class="visually-hidden">Buscando...</span>
         </div>
+        <div class="cpf-numpad" id="cpfNumpad">
+            <button type="button" data-key="1">1</button>
+            <button type="button" data-key="2">2</button>
+            <button type="button" data-key="3">3</button>
+            <button type="button" data-key="4">4</button>
+            <button type="button" data-key="5">5</button>
+            <button type="button" data-key="6">6</button>
+            <button type="button" data-key="7">7</button>
+            <button type="button" data-key="8">8</button>
+            <button type="button" data-key="9">9</button>
+            <button type="button" data-key="back">←</button>
+            <button type="button" data-key="0">0</button>
+            <button type="button" data-key="ok">OK</button>
+        </div>
     </div>
     <div id="search-status"></div>
 
@@ -195,322 +229,14 @@
 {% endblock %}
 
 {% block extra_js %}
-<!-- Carrega o script como um módulo e importa os recursos necessários -->
-<script type="module">
-import { FaceDetector, FilesetResolver } from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision/vision_bundle.js";
-
-document.addEventListener('DOMContentLoaded', () => {
-    // 1. Elementos do DOM e Constantes
-    const video = document.getElementById('video');
-    const overlay = document.getElementById('overlay');
-    const cameraStatus = document.getElementById('camera-status');
-    const ctx = overlay.getContext('2d');
-    
-    // Elementos do sistema de busca por texto
-    const searchInput = document.getElementById('searchInput');
-    const searchSpinner = document.getElementById('searchSpinner');
-    const searchStatus = document.getElementById('search-status');
-    const finalizeModal = new bootstrap.Modal(document.getElementById('finalizeVisitModal'));
-    const visitorNameSpan = document.getElementById('visitorName');
-    const visitListUl = document.getElementById('visitList');
-    const noVisitsMessageDiv = document.getElementById('noVisitsMessage');
-    const confirmFinalizeBtn = document.getElementById('confirmFinalizeBtn');
-    let currentVisitorId = null;
-
-    const DESIRED_FACE_WIDTH_PERCENT = 0.25;
-    const RECOGNITION_PAUSE_MS = 2000;
-
-    let faceDetector;
-    let isRecognitionPaused = false;
-    let lastRecognitionTime = 0;
-
-    // 2. Função para desenhar o overlay (cantos)
-    function drawOverlay(box, color) {
-        ctx.clearRect(0, 0, overlay.width, overlay.height);
-        if (!box) return;
-
-        const { originX, originY, width, height } = box;
-        const cornerLength = width * 0.2;
-        const lineWidth = 6;
-
-        ctx.strokeStyle = color;
-        ctx.lineWidth = lineWidth;
-        ctx.lineCap = 'round';
-
-        // Top-left
-        ctx.beginPath();
-        ctx.moveTo(originX + cornerLength, originY);
-        ctx.lineTo(originX, originY);
-        ctx.lineTo(originX, originY + cornerLength);
-        ctx.stroke();
-
-        // Top-right
-        ctx.beginPath();
-        ctx.moveTo(originX + width - cornerLength, originY);
-        ctx.lineTo(originX + width, originY);
-        ctx.lineTo(originX + width, originY + cornerLength);
-        ctx.stroke();
-
-        // Bottom-left
-        ctx.beginPath();
-        ctx.moveTo(originX + cornerLength, originY + height);
-        ctx.lineTo(originX, originY + height);
-        ctx.lineTo(originX, originY + height - cornerLength);
-        ctx.stroke();
-
-        // Bottom-right
-        ctx.beginPath();
-        ctx.moveTo(originX + width - cornerLength, originY + height);
-        ctx.lineTo(originX + width, originY + height);
-        ctx.lineTo(originX + width, originY + height - cornerLength);
-        ctx.stroke();
-    }
-
-    // 3. Função para atualizar a mensagem de status
-    function updateCameraStatus(message, showSpinner = false) {
-        let spinnerHtml = showSpinner ? `<div class="spinner-border text-primary" role="status"><span class="visually-hidden">...</span></div>` : '';
-        cameraStatus.innerHTML = `${spinnerHtml} ${message}`;
-    }
-
-    // 4. Lógica principal de detecção facial
-    async function detectFacesLoop() {
-        if (isRecognitionPaused || video.paused || video.ended) {
-            return; 
-        }
-
-        const detections = faceDetector.detectForVideo(video, Date.now()).detections;
-
-        if (detections.length > 0) {
-            const face = detections[0].boundingBox;
-            const faceWidthPercent = face.width / video.videoWidth;
-
-            if (faceWidthPercent >= DESIRED_FACE_WIDTH_PERCENT) {
-                // Rosto está perto o suficiente
-                drawOverlay(face, '#28a745'); // Verde
-                updateCameraStatus('Ótimo! Analisando rosto para finalizar visita...', true);
-                isRecognitionPaused = true;
-                sendFrameForRecognition();
-            } else {
-                // Rosto detectado, mas muito longe
-                drawOverlay(face, '#ffc107'); // Amarelo
-                updateCameraStatus('Aproxime-se um pouco mais da câmera.');
-            }
-        } else {
-            // Nenhum rosto detectado
-            drawOverlay(null); 
-            updateCameraStatus('Posicione seu rosto na área da câmera para finalizar visita.');
-        }
-
-        window.requestAnimationFrame(detectFacesLoop);
-    }
-
-    // 5. Envio do frame para reconhecimento facial
-    async function sendFrameForRecognition() {
-        const canvas = document.createElement('canvas');
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
-        canvas.getContext('2d').drawImage(video, 0, 0);
-        const imageDataUrl = canvas.toDataURL('image/jpeg');
-
-        try {
-            const response = await fetch("{% url 'recepcao:api_reconhecer_rosto' %}", {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}' },
-                body: JSON.stringify({ image: imageDataUrl })
-            });
-            const data = await response.json();
-
-            if (data.success && data.visitante_id) {
-                updateCameraStatus(`Reconhecido: ${data.nome_visitante}! Finalizando visitas...`);
-                
-                // Buscar visitas ativas e finalizar automaticamente
-                await finalizeVisitsByFaceRecognition(data.visitante_id, data.nome_visitante);
-            } else {
-                updateCameraStatus('Rosto não reconhecido. Tente novamente ou use busca por nome.');
-                setTimeout(() => {
-                    isRecognitionPaused = false;
-                    window.requestAnimationFrame(detectFacesLoop);
-                }, RECOGNITION_PAUSE_MS);
-            }
-        } catch (error) {
-            updateCameraStatus('Erro de comunicação. Tentando novamente...');
-            setTimeout(() => {
-                isRecognitionPaused = false;
-                window.requestAnimationFrame(detectFacesLoop);
-            }, RECOGNITION_PAUSE_MS * 2);
-        }
-    }
-
-    // 6. Finalizar visitas através do reconhecimento facial
-    async function finalizeVisitsByFaceRecognition(visitanteId, nomeVisitante) {
-        try {
-            const response = await fetch(`{% url 'recepcao:api_finalizar_visitas' %}`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': '{{ csrf_token }}'
-                },
-                body: JSON.stringify({ visitante_id: visitanteId })
-            });
-            const data = await response.json();
-
-            if (data.success) {
-                updateCameraStatus(`✅ Visitas de ${nomeVisitante} finalizadas com sucesso!`);
-                
-                // Mostrar mensagem de sucesso na tela e redirecionar automaticamente
-                setTimeout(() => {
-                    updateCameraStatus(`✅ ${data.message}\n\nRedirecionando para o início...`);
-                    setTimeout(() => {
-                        window.location.href = "{% url 'recepcao:totem_welcome' %}";
-                    }, 3000); // Redireciona após 3 segundos
-                }, 2000);
-            } else {
-                updateCameraStatus(`Erro: ${data.error}`);
-                setTimeout(() => {
-                    isRecognitionPaused = false;
-                    window.requestAnimationFrame(detectFacesLoop);
-                }, RECOGNITION_PAUSE_MS);
-            }
-        } catch (error) {
-            console.error("Erro ao finalizar visitas:", error);
-            updateCameraStatus("Erro ao finalizar visitas. Tente novamente.");
-            setTimeout(() => {
-                isRecognitionPaused = false;
-                window.requestAnimationFrame(detectFacesLoop);
-            }, RECOGNITION_PAUSE_MS);
-        }
-    }
-
-    // 7. Inicialização do sistema de reconhecimento facial
-    async function initializeFaceRecognition() {
-        try {
-            updateCameraStatus('Carregando modelo de IA...', true);
-            const filesetResolver = await FilesetResolver.forVisionTasks("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm");
-            faceDetector = await FaceDetector.createFromOptions(filesetResolver, {
-                baseOptions: { modelAssetPath: `https://storage.googleapis.com/mediapipe-models/face_detector/blaze_face_short_range/float16/1/blaze_face_short_range.tflite` },
-                runningMode: 'VIDEO'
-            });
-
-            updateCameraStatus('Iniciando câmera...', true);
-            const stream = await navigator.mediaDevices.getUserMedia({
-                video: { width: { ideal: 1280, max: 1920 }, height: { ideal: 720, max: 1080 } }
-            });
-            video.srcObject = stream;
-            video.addEventListener('loadeddata', () => {
-                overlay.width = video.videoWidth;
-                overlay.height = video.videoHeight;
-                updateCameraStatus('Posicione seu rosto na câmera para finalizar visita.');
-                detectFacesLoop(); // Inicia o loop de detecção
-            });
-
-        } catch (err) {
-            console.error(err);
-            updateCameraStatus(`Erro ao inicializar câmera: ${err.message}`);
-        }
-    }
-
-    // 8. Sistema de busca por texto (mantido)
-    async function searchVisitor(query) {
-        if (query.length < 3) {
-            searchStatus.textContent = '';
-            return;
-        }
-
-        searchSpinner.style.display = 'block';
-        searchStatus.textContent = '';
-
-        try {
-            const response = await fetch(`{% url 'recepcao:api_buscar_visitante_ativo' %}?query=${encodeURIComponent(query)}`);
-            const data = await response.json();
-            
-            if (response.ok && data.success && data.visitantes.length > 0) {
-                const visitor = data.visitantes[0];
-                currentVisitorId = visitor.id;
-                visitorNameSpan.textContent = visitor.nome;
-                visitListUl.innerHTML = '';
-
-                if (visitor.visitas.length > 0) {
-                    visitor.visitas.forEach(visita => {
-                        const li = document.createElement('li');
-                        li.className = 'list-group-item';
-                        li.textContent = `Visita ao ${visita.setor} - Entrada: ${visita.data_entrada}`;
-                        visitListUl.appendChild(li);
-                    });
-                    visitListUl.style.display = 'block';
-                    noVisitsMessageDiv.style.display = 'none';
-                    confirmFinalizeBtn.style.display = 'block';
-                } else {
-                    visitListUl.style.display = 'none';
-                    noVisitsMessageDiv.innerHTML = `<strong>${visitor.nome}</strong> foi encontrado, mas não possui visitas em andamento.`;
-                    noVisitsMessageDiv.style.display = 'block';
-                    confirmFinalizeBtn.style.display = 'none';
-                }
-                finalizeModal.show();
-            } else {
-                 searchStatus.textContent = data.error || 'Nenhum visitante com visitas em andamento encontrado.';
-            }
-        } catch (error) {
-            searchStatus.textContent = 'Erro de comunicação com o servidor.';
-            console.error("Erro ao buscar visitante:", error);
-        } finally {
-            searchSpinner.style.display = 'none';
-        }
-    }
-
-    async function finalizeVisits() {
-        if (!currentVisitorId) return;
-
-        try {
-            const response = await fetch(`{% url 'recepcao:api_finalizar_visitas' %}`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': '{{ csrf_token }}'
-                },
-                body: JSON.stringify({ visitante_id: currentVisitorId })
-            });
-            const data = await response.json();
-
-            finalizeModal.hide();
-            if (data.success) {
-                // Mostrar mensagem de sucesso na tela
-                searchStatus.textContent = `✅ ${data.message}`;
-                searchStatus.style.color = '#28a745';
-                searchStatus.style.fontWeight = '600';
-                
-                // Limpar campos e redirecionar após 3 segundos
-                searchInput.value = '';
-                setTimeout(() => {
-                    window.location.href = "{% url 'recepcao:totem_welcome' %}";
-                }, 3000);
-            } else {
-                // Mostrar erro na tela
-                searchStatus.textContent = `❌ Erro: ${data.error}`;
-                searchStatus.style.color = '#dc3545';
-                searchStatus.style.fontWeight = '600';
-            }
-        } catch (error) {
-            console.error("Erro ao finalizar visitas:", error);
-            // Mostrar erro na tela
-            searchStatus.textContent = '❌ Erro de comunicação ao tentar finalizar as visitas.';
-            searchStatus.style.color = '#dc3545';
-            searchStatus.style.fontWeight = '600';
-        }
-    }
-    
-    // 9. Event listeners para busca por texto
-    let searchTimeout;
-    searchInput.addEventListener('input', () => {
-        clearTimeout(searchTimeout);
-        searchTimeout = setTimeout(() => {
-            searchVisitor(searchInput.value);
-        }, 500);
-    });
-
-    confirmFinalizeBtn.addEventListener('click', finalizeVisits);
-
-    // 10. Inicializar tudo
-    initializeFaceRecognition();
-});
+<script>
+window.TOTEM_FINALIZE_CONFIG = {
+    recognizeUrl: "{% url 'recepcao:api_reconhecer_rosto' %}",
+    finalizeUrl: "{% url 'recepcao:api_finalizar_visitas' %}",
+    searchVisitorUrl: "{% url 'recepcao:api_buscar_visitante_ativo' %}",
+    welcomeUrl: "{% url 'recepcao:totem_welcome' %}",
+    csrfToken: '{{ csrf_token }}'
+};
 </script>
-{% endblock %} 
+<script type="module" src="{% static 'js/totem_finalize_search.js' %}?v=1.1"></script>
+{% endblock %}

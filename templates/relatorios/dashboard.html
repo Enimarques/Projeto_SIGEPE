@@ -183,27 +183,72 @@
         <div class="card-body">
             <!-- Filtros -->
             <div class="row mb-3">
-                <div class="col-md-3">
-                    <label for="filtro-data" class="form-label">Data</label>
-                    <input type="date" class="form-control" id="filtro-data">
+                <div class="col-md-2">
+                    <label for="filtro-data-inicio" class="form-label">Data Inicial</label>
+                    <input type="date" class="form-control" id="filtro-data-inicio">
                 </div>
-                <div class="col-md-3">
-                    <label for="filtro-tipo" class="form-label">Tipo</label>
-                    <select class="form-select" id="filtro-tipo">
+                <div class="col-md-2">
+                    <label for="filtro-data-fim" class="form-label">Data Final</label>
+                    <input type="date" class="form-control" id="filtro-data-fim">
+                </div>
+                {% if not is_assessor %}
+                <div class="col-md-2">
+                    <label for="filtro-setor" class="form-label">Setor</label>
+                    <select class="form-select" id="filtro-setor">
                         <option value="">Todos</option>
+                        {% for setor in setores %}
+                            <option value="{{ setor.id }}">{{ setor }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                {% endif %}
+                <div class="col-md-2">
+                    <label for="filtro-status" class="form-label">Status</label>
+                    <select class="form-select" id="filtro-status">
+                        <option value="">Todos</option>
+                        <option value="agendada">Agendada</option>
                         <option value="em_andamento">Em Andamento</option>
                         <option value="finalizada">Finalizada</option>
                         <option value="cancelada">Cancelada</option>
                     </select>
                 </div>
-                <div class="col-md-3">
-                    <label for="filtro-usuario" class="form-label">Usuário</label>
-                    <input type="text" class="form-control" id="filtro-usuario" placeholder="Nome do visitante">
+                <div class="col-md-2">
+                    <label for="filtro-localizacao" class="form-label">Localização</label>
+                    <select class="form-select" id="filtro-localizacao">
+                        <option value="">Todas</option>
+                        <option value="terreo">Térreo</option>
+                        <option value="plenario">Plenário</option>
+                        <option value="primeiro_piso">1° Piso</option>
+                        <option value="segundo_piso">2° Piso</option>
+                    </select>
                 </div>
-                <div class="col-md-3">
+                <div class="col-md-2">
+                    <label for="filtro-objetivo" class="form-label">Objetivo</label>
+                    <select class="form-select" id="filtro-objetivo">
+                        <option value="">Todos</option>
+                        <option value="reuniao">Reunião</option>
+                        <option value="manutencao">Manutenção</option>
+                        <option value="evento">Evento</option>
+                        <option value="entrega_documentos">Entrega de Documentos</option>
+                        <option value="outros">Outros</option>
+                    </select>
+                </div>
+            </div>
+            <div class="row mb-3">
+                <div class="col-md-4">
+                    <label for="filtro-usuario" class="form-label">Visitante (Nome ou CPF)</label>
+                    <input type="text" class="form-control" id="filtro-usuario" placeholder="Digite o nome ou CPF">
+                </div>
+                <div class="col-md-2">
                     <label class="form-label">&nbsp;</label>
                     <button class="btn btn-primary w-100" onclick="atualizarTabela()">
                         <i class="fas fa-search me-1"></i>Filtrar
+                    </button>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">&nbsp;</label>
+                    <button class="btn btn-outline-secondary w-100" onclick="limparFiltros()">
+                        <i class="fas fa-times me-1"></i>Limpar
                     </button>
                 </div>
             </div>
@@ -211,10 +256,12 @@
                 <table class="table table-hover align-middle">
                     <thead>
                         <tr>
-                            <th>Data</th>
-                            <th>Tipo</th>
-                            <th>Usuário</th>
-                            <th>Descrição</th>
+                            <th>Data/Hora</th>
+                            <th>Status</th>
+                            <th>Visitante</th>
+                            <th>Setor</th>
+                            <th>Localização</th>
+                            <th>Objetivo</th>
                         </tr>
                     </thead>
                     <tbody id="tabela-relatorios">
@@ -232,12 +279,38 @@
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     function getFiltrosURL() {
-        const data = document.getElementById('filtro-data').value;
-        const tipo = document.getElementById('filtro-tipo').value;
+        const params = new URLSearchParams();
+        
+        const dataInicio = document.getElementById('filtro-data-inicio').value;
+        const dataFim = document.getElementById('filtro-data-fim').value;
+        const setor = document.getElementById('filtro-setor').value;
+        const status = document.getElementById('filtro-status').value;
+        const localizacao = document.getElementById('filtro-localizacao').value;
+        const objetivo = document.getElementById('filtro-objetivo').value;
         const usuario = document.getElementById('filtro-usuario').value;
-        const params = new URLSearchParams({ data, tipo, usuario });
+        
+        if (dataInicio) params.append('data_inicio', dataInicio);
+        if (dataFim) params.append('data_fim', dataFim);
+        if (setor) params.append('setor', setor);
+        if (status) params.append('status', status);
+        if (localizacao) params.append('localizacao', localizacao);
+        if (objetivo) params.append('objetivo', objetivo);
+        if (usuario) params.append('usuario', usuario);
+        
         return params.toString();
     }
+    
+    window.limparFiltros = function() {
+        document.getElementById('filtro-data-inicio').value = '';
+        document.getElementById('filtro-data-fim').value = '';
+        document.getElementById('filtro-setor').value = '';
+        document.getElementById('filtro-status').value = '';
+        document.getElementById('filtro-localizacao').value = '';
+        document.getElementById('filtro-objetivo').value = '';
+        document.getElementById('filtro-usuario').value = '';
+        atualizarTabela();
+    };
+    
     document.getElementById('btn-exportar-pdf').onclick = function() {
         window.open('/relatorios/exportar/pdf/?' + getFiltrosURL(), '_blank');
     };

@@ -1,0 +1,2 @@
+# Adicionar esta linha ao crontab para executar todo domingo às 2h da manhã
+0 2 * * 0 /bin/bash /opt/ProjetoSigepe/backup_db.sh

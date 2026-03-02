@@ -108,6 +108,7 @@ const Validators = {
     // Valida telefone
     telefone: (telefone) => {
         const numeros = telefone.replace(/\D/g, '');
+        if (!numeros) return true;
         return numeros.length >= 10 && numeros.length <= 11;
     },
 

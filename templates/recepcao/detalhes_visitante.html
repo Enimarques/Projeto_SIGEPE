@@ -17,9 +17,6 @@
             <a href="{% url 'recepcao:lista_visitantes' %}" class="btn btn-secondary">
                 <i class="fas fa-arrow-left me-2"></i>Voltar
             </a>
-            <a href="{% url 'recepcao:editar_visitante' visitante.pk %}" class="btn btn-warning">
-                <i class="fas fa-edit me-2"></i>Editar
-            </a>
             <a href="{% url 'recepcao:registro_visitas' %}?visitante={{ visitante.id }}" class="btn btn-success">
                 <i class="fas fa-plus me-2"></i>Nova Visita
             </a>
@@ -57,9 +54,11 @@
                         <a href="{% url 'recepcao:editar_visitante' visitante.id %}" class="btn btn-primary me-2">
                             <i class="fas fa-edit me-2"></i>Editar Visitante
                         </a>
-                        <a href="{% url 'recepcao:excluir_visitante' visitante.id %}" class="btn btn-danger">
-                            <i class="fas fa-trash-alt me-2"></i>Excluir Visitante
-                        </a>
+                        {% if request.user.is_superuser %}
+                            <a href="{% url 'recepcao:excluir_visitante' visitante.id %}" class="btn btn-danger">
+                                <i class="fas fa-trash-alt me-2"></i>Excluir Visitante
+                            </a>
+                        {% endif %}
                     </div>
                 </div>
                 <div class="card-body">
@@ -124,12 +123,14 @@
                                     <i class="fas fa-check me-1"></i>Finalizar
                                 </a>
                                 {% endif %}
-                                <a href="{% url 'recepcao:gerar_etiqueta' visita.id %}" class="btn btn-sm btn-info me-2">
+                                <a href="{% url 'recepcao:gerar_etiqueta' visita.id %}" target="_blank" rel="noopener" class="btn btn-sm btn-info me-2">
                                     <i class="fas fa-tag me-1"></i>Etiqueta
                                 </a>
-                                <a href="{% url 'recepcao:excluir_visita' visita.id %}" class="btn btn-sm btn-danger">
-                                    <i class="fas fa-trash-alt me-1"></i>Excluir
-                                </a>
+                                {% if request.user.is_superuser %}
+                                    <a href="{% url 'recepcao:excluir_visita' visita.id %}" class="btn btn-sm btn-danger">
+                                        <i class="fas fa-trash-alt me-1"></i>Excluir
+                                    </a>
+                                {% endif %}
                             </td>
                         </tr>
                         {% endfor %}

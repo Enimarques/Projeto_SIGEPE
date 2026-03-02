@@ -39,11 +39,11 @@ class VisitanteForm(forms.ModelForm):
     telefone = forms.CharField(
         max_length=15,
         validators=[telefone_validator],
+        required=False,
         widget=forms.TextInput(attrs={
             'class': 'form-control',
             'placeholder': '(00) 00000-0000',
             'data-mask': 'telefone',
-            'required': True
         })
     )
 
@@ -183,8 +183,8 @@ class VisitanteForm(forms.ModelForm):
     def clean_telefone(self):
         telefone = self.cleaned_data.get('telefone')
         if not telefone:
-            raise forms.ValidationError('O telefone é obrigatório.')
-        
+            return telefone
+
         # Remover caracteres não numéricos
         telefone_numerico = ''.join(filter(str.isdigit, telefone))
         
@@ -222,6 +222,7 @@ class VisitanteForm(forms.ModelForm):
             '92', '97',  # Amazonas
             '95',  # Roraima
             '96',  # Amapá
+            '98', '99',  # Tocantins
         ]
         
         if ddd not in ddds_validos:

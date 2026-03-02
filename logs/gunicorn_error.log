@@ -1,0 +1,460 @@
+[2025-10-02 16:24:27 +0000] [501929] [INFO] Starting gunicorn 21.2.0
+[2025-10-02 16:24:27 +0000] [501929] [INFO] Listening at: https://192.168.1.11:8000 (501929)
+[2025-10-02 16:24:27 +0000] [501929] [INFO] Using worker: sync
+[2025-10-02 16:24:27 +0000] [501931] [INFO] Booting worker with pid: 501931
+[2025-10-02 16:24:27 +0000] [501932] [INFO] Booting worker with pid: 501932
+[2025-10-02 16:24:27 +0000] [501933] [INFO] Booting worker with pid: 501933
+[2025-10-02 16:26:35 +0000] [501929] [INFO] Handling signal: term
+[2025-10-02 16:26:36 +0000] [501929] [INFO] Shutting down: Master
+[2025-10-02 16:27:47 +0000] [502845] [INFO] Starting gunicorn 21.2.0
+[2025-10-02 16:27:47 +0000] [502845] [INFO] Listening at: https://192.168.1.11:8000 (502845)
+[2025-10-02 16:27:47 +0000] [502845] [INFO] Using worker: sync
+[2025-10-02 16:27:47 +0000] [502847] [INFO] Booting worker with pid: 502847
+[2025-10-02 16:27:47 +0000] [502848] [INFO] Booting worker with pid: 502848
+[2025-10-02 16:27:47 +0000] [502849] [INFO] Booting worker with pid: 502849
+[2025-10-02 16:30:05 +0000] [502845] [INFO] Handling signal: term
+[2025-10-02 16:30:05 +0000] [502845] [ERROR] Worker (pid:502849) was sent SIGTERM!
+[2025-10-02 16:30:05 +0000] [502845] [ERROR] Worker (pid:502848) was sent SIGTERM!
+[2025-10-02 16:30:05 +0000] [502845] [INFO] Shutting down: Master
+[2025-10-02 18:59:14 +0000] [536890] [INFO] Starting gunicorn 21.2.0
+[2025-10-02 18:59:14 +0000] [536890] [INFO] Listening at: https://192.168.1.11:8000 (536890)
+[2025-10-02 18:59:14 +0000] [536890] [INFO] Using worker: sync
+[2025-10-02 18:59:14 +0000] [536893] [INFO] Booting worker with pid: 536893
+[2025-10-02 18:59:14 +0000] [536894] [INFO] Booting worker with pid: 536894
+[2025-10-02 18:59:14 +0000] [536895] [INFO] Booting worker with pid: 536895
+[2025-10-02 18:59:35 +0000] [536890] [INFO] Handling signal: term
+[2025-10-02 18:59:36 +0000] [536890] [INFO] Shutting down: Master
+[2025-10-02 19:00:53 +0000] [537438] [INFO] Starting gunicorn 21.2.0
+[2025-10-02 19:00:53 +0000] [537438] [INFO] Listening at: https://192.168.1.11:8000 (537438)
+[2025-10-02 19:00:53 +0000] [537438] [INFO] Using worker: sync
+[2025-10-02 19:00:53 +0000] [537441] [INFO] Booting worker with pid: 537441
+[2025-10-02 19:00:53 +0000] [537442] [INFO] Booting worker with pid: 537442
+[2025-10-02 19:00:53 +0000] [537443] [INFO] Booting worker with pid: 537443
+[2025-10-02 19:01:01 +0000] [537438] [INFO] Handling signal: term
+[2025-10-02 19:01:02 +0000] [537438] [INFO] Shutting down: Master
+[2025-10-03 06:00:06 +0000] [542609] [INFO] Starting gunicorn 21.2.0
+[2025-10-03 06:00:06 +0000] [542609] [INFO] Listening at: https://192.168.1.11:8000 (542609)
+[2025-10-03 06:00:06 +0000] [542609] [INFO] Using worker: sync
+[2025-10-03 06:00:06 +0000] [542612] [INFO] Booting worker with pid: 542612
+[2025-10-03 06:00:06 +0000] [542613] [INFO] Booting worker with pid: 542613
+[2025-10-03 06:00:06 +0000] [542614] [INFO] Booting worker with pid: 542614
+[2025-10-04 06:00:01 +0000] [542609] [INFO] Handling signal: term
+[2025-10-04 06:00:01 +0000] [542609] [ERROR] Worker (pid:542612) was sent SIGTERM!
+[2025-10-04 06:00:01 +0000] [542609] [ERROR] Worker (pid:542614) was sent SIGTERM!
+[2025-10-04 06:00:01 +0000] [542609] [ERROR] Worker (pid:542613) was sent SIGTERM!
+[2025-10-04 06:00:01 +0000] [542609] [INFO] Shutting down: Master
+[2025-10-04 06:00:06 +0000] [563231] [INFO] Starting gunicorn 21.2.0
+[2025-10-04 06:00:06 +0000] [563231] [INFO] Listening at: https://192.168.1.11:8000 (563231)
+[2025-10-04 06:00:06 +0000] [563231] [INFO] Using worker: sync
+[2025-10-04 06:00:06 +0000] [563234] [INFO] Booting worker with pid: 563234
+[2025-10-04 06:00:06 +0000] [563235] [INFO] Booting worker with pid: 563235
+[2025-10-04 06:00:06 +0000] [563236] [INFO] Booting worker with pid: 563236
+[2025-10-05 06:00:01 +0000] [563231] [INFO] Handling signal: term
+[2025-10-05 06:00:03 +0000] [563231] [INFO] Shutting down: Master
+[2025-10-05 06:00:06 +0000] [564320] [INFO] Starting gunicorn 21.2.0
+[2025-10-05 06:00:06 +0000] [564320] [INFO] Listening at: https://192.168.1.11:8000 (564320)
+[2025-10-05 06:00:06 +0000] [564320] [INFO] Using worker: sync
+[2025-10-05 06:00:06 +0000] [564323] [INFO] Booting worker with pid: 564323
+[2025-10-05 06:00:07 +0000] [564324] [INFO] Booting worker with pid: 564324
+[2025-10-05 06:00:07 +0000] [564325] [INFO] Booting worker with pid: 564325
+[2025-10-06 06:00:01 +0000] [564320] [INFO] Handling signal: term
+[2025-10-06 06:00:03 +0000] [564320] [INFO] Shutting down: Master
+[2025-10-06 06:00:06 +0000] [565746] [INFO] Starting gunicorn 21.2.0
+[2025-10-06 06:00:06 +0000] [565746] [INFO] Listening at: https://192.168.1.11:8000 (565746)
+[2025-10-06 06:00:06 +0000] [565746] [INFO] Using worker: sync
+[2025-10-06 06:00:06 +0000] [565749] [INFO] Booting worker with pid: 565749
+[2025-10-06 06:00:06 +0000] [565751] [INFO] Booting worker with pid: 565751
+[2025-10-06 06:00:06 +0000] [565752] [INFO] Booting worker with pid: 565752
+[2025-10-06 15:46:36 +0000] [565746] [INFO] Handling signal: term
+[2025-10-06 15:46:36 +0000] [565746] [ERROR] Worker (pid:565749) was sent SIGTERM!
+[2025-10-06 15:46:36 +0000] [565746] [ERROR] Worker (pid:565752) was sent SIGTERM!
+[2025-10-06 15:46:37 +0000] [565746] [INFO] Shutting down: Master
+[2025-10-07 06:00:07 +0000] [580565] [INFO] Starting gunicorn 21.2.0
+[2025-10-07 06:00:07 +0000] [580565] [INFO] Listening at: https://192.168.1.11:8000 (580565)
+[2025-10-07 06:00:07 +0000] [580565] [INFO] Using worker: sync
+[2025-10-07 06:00:07 +0000] [580568] [INFO] Booting worker with pid: 580568
+[2025-10-07 06:00:07 +0000] [580569] [INFO] Booting worker with pid: 580569
+[2025-10-07 06:00:07 +0000] [580570] [INFO] Booting worker with pid: 580570
+[2025-10-08 06:00:01 +0000] [580565] [INFO] Handling signal: term
+[2025-10-08 06:00:04 +0000] [580565] [INFO] Shutting down: Master
+[2025-10-08 06:00:06 +0000] [581668] [INFO] Starting gunicorn 21.2.0
+[2025-10-08 06:00:06 +0000] [581668] [INFO] Listening at: https://192.168.1.11:8000 (581668)
+[2025-10-08 06:00:06 +0000] [581668] [INFO] Using worker: sync
+[2025-10-08 06:00:06 +0000] [581673] [INFO] Booting worker with pid: 581673
+[2025-10-08 06:00:06 +0000] [581674] [INFO] Booting worker with pid: 581674
+[2025-10-08 06:00:06 +0000] [581675] [INFO] Booting worker with pid: 581675
+[2025-10-09 06:00:01 +0000] [581668] [INFO] Handling signal: term
+[2025-10-09 06:00:02 +0000] [581668] [INFO] Shutting down: Master
+[2025-10-09 06:00:06 +0000] [582468] [INFO] Starting gunicorn 21.2.0
+[2025-10-09 06:00:06 +0000] [582468] [INFO] Listening at: https://192.168.1.11:8000 (582468)
+[2025-10-09 06:00:06 +0000] [582468] [INFO] Using worker: sync
+[2025-10-09 06:00:06 +0000] [582472] [INFO] Booting worker with pid: 582472
+[2025-10-09 06:00:06 +0000] [582473] [INFO] Booting worker with pid: 582473
+[2025-10-09 06:00:06 +0000] [582474] [INFO] Booting worker with pid: 582474
+[2025-10-10 06:00:01 +0000] [582468] [INFO] Handling signal: term
+[2025-10-10 06:00:03 +0000] [582468] [INFO] Shutting down: Master
+[2025-10-10 06:00:06 +0000] [583943] [INFO] Starting gunicorn 21.2.0
+[2025-10-10 06:00:06 +0000] [583943] [INFO] Listening at: https://192.168.1.11:8000 (583943)
+[2025-10-10 06:00:06 +0000] [583943] [INFO] Using worker: sync
+[2025-10-10 06:00:06 +0000] [583947] [INFO] Booting worker with pid: 583947
+[2025-10-10 06:00:06 +0000] [583948] [INFO] Booting worker with pid: 583948
+[2025-10-10 06:00:06 +0000] [583949] [INFO] Booting worker with pid: 583949
+[2025-10-11 06:00:01 +0000] [583943] [INFO] Handling signal: term
+[2025-10-11 06:00:01 +0000] [583943] [ERROR] Worker (pid:583947) was sent SIGTERM!
+[2025-10-11 06:00:01 +0000] [583943] [ERROR] Worker (pid:583949) was sent SIGTERM!
+[2025-10-11 06:00:01 +0000] [583943] [ERROR] Worker (pid:583948) was sent SIGTERM!
+[2025-10-11 06:00:01 +0000] [583943] [INFO] Shutting down: Master
+[2025-10-11 06:00:06 +0000] [585034] [INFO] Starting gunicorn 21.2.0
+[2025-10-11 06:00:06 +0000] [585034] [INFO] Listening at: https://192.168.1.11:8000 (585034)
+[2025-10-11 06:00:06 +0000] [585034] [INFO] Using worker: sync
+[2025-10-11 06:00:06 +0000] [585039] [INFO] Booting worker with pid: 585039
+[2025-10-11 06:00:06 +0000] [585040] [INFO] Booting worker with pid: 585040
+[2025-10-11 06:00:07 +0000] [585041] [INFO] Booting worker with pid: 585041
+[2025-10-12 06:00:01 +0000] [585034] [INFO] Handling signal: term
+[2025-10-12 06:00:03 +0000] [585034] [INFO] Shutting down: Master
+[2025-10-12 06:00:07 +0000] [586193] [INFO] Starting gunicorn 21.2.0
+[2025-10-12 06:00:07 +0000] [586193] [INFO] Listening at: https://192.168.1.11:8000 (586193)
+[2025-10-12 06:00:07 +0000] [586193] [INFO] Using worker: sync
+[2025-10-12 06:00:07 +0000] [586196] [INFO] Booting worker with pid: 586196
+[2025-10-12 06:00:07 +0000] [586197] [INFO] Booting worker with pid: 586197
+[2025-10-12 06:00:07 +0000] [586198] [INFO] Booting worker with pid: 586198
+[2025-10-13 06:00:01 +0000] [586193] [INFO] Handling signal: term
+[2025-10-13 06:00:02 +0000] [586193] [INFO] Shutting down: Master
+[2025-10-13 06:00:06 +0000] [587274] [INFO] Starting gunicorn 21.2.0
+[2025-10-13 06:00:06 +0000] [587274] [INFO] Listening at: https://192.168.1.11:8000 (587274)
+[2025-10-13 06:00:06 +0000] [587274] [INFO] Using worker: sync
+[2025-10-13 06:00:06 +0000] [587277] [INFO] Booting worker with pid: 587277
+[2025-10-13 06:00:06 +0000] [587278] [INFO] Booting worker with pid: 587278
+[2025-10-13 06:00:06 +0000] [587279] [INFO] Booting worker with pid: 587279
+[2025-10-14 06:00:01 +0000] [587274] [INFO] Handling signal: term
+[2025-10-14 06:00:02 +0000] [587274] [INFO] Shutting down: Master
+[2025-10-14 06:00:06 +0000] [588395] [INFO] Starting gunicorn 21.2.0
+[2025-10-14 06:00:06 +0000] [588395] [INFO] Listening at: https://192.168.1.11:8000 (588395)
+[2025-10-14 06:00:06 +0000] [588395] [INFO] Using worker: sync
+[2025-10-14 06:00:06 +0000] [588398] [INFO] Booting worker with pid: 588398
+[2025-10-14 06:00:06 +0000] [588399] [INFO] Booting worker with pid: 588399
+[2025-10-14 06:00:06 +0000] [588400] [INFO] Booting worker with pid: 588400
+[2025-10-15 06:00:01 +0000] [588395] [INFO] Handling signal: term
+[2025-10-15 06:00:01 +0000] [588395] [ERROR] Worker (pid:588398) was sent SIGTERM!
+[2025-10-15 06:00:02 +0000] [588395] [INFO] Shutting down: Master
+[2025-10-15 06:00:06 +0000] [589120] [INFO] Starting gunicorn 21.2.0
+[2025-10-15 06:00:06 +0000] [589120] [INFO] Listening at: https://192.168.1.11:8000 (589120)
+[2025-10-15 06:00:06 +0000] [589120] [INFO] Using worker: sync
+[2025-10-15 06:00:06 +0000] [589122] [INFO] Booting worker with pid: 589122
+[2025-10-15 06:00:06 +0000] [589123] [INFO] Booting worker with pid: 589123
+[2025-10-15 06:00:06 +0000] [589125] [INFO] Booting worker with pid: 589125
+[2025-10-16 06:00:01 +0000] [589120] [INFO] Handling signal: term
+[2025-10-16 06:00:03 +0000] [589120] [INFO] Shutting down: Master
+[2025-10-16 06:00:07 +0000] [590663] [INFO] Starting gunicorn 21.2.0
+[2025-10-16 06:00:07 +0000] [590663] [INFO] Listening at: https://192.168.1.11:8000 (590663)
+[2025-10-16 06:00:07 +0000] [590663] [INFO] Using worker: sync
+[2025-10-16 06:00:07 +0000] [590666] [INFO] Booting worker with pid: 590666
+[2025-10-16 06:00:07 +0000] [590667] [INFO] Booting worker with pid: 590667
+[2025-10-16 06:00:07 +0000] [590668] [INFO] Booting worker with pid: 590668
+[2025-10-17 06:00:01 +0000] [590663] [INFO] Handling signal: term
+[2025-10-17 06:00:03 +0000] [590663] [INFO] Shutting down: Master
+[2025-10-17 06:00:06 +0000] [591723] [INFO] Starting gunicorn 21.2.0
+[2025-10-17 06:00:06 +0000] [591723] [INFO] Listening at: https://192.168.1.11:8000 (591723)
+[2025-10-17 06:00:06 +0000] [591723] [INFO] Using worker: sync
+[2025-10-17 06:00:06 +0000] [591726] [INFO] Booting worker with pid: 591726
+[2025-10-17 06:00:06 +0000] [591727] [INFO] Booting worker with pid: 591727
+[2025-10-17 06:00:06 +0000] [591728] [INFO] Booting worker with pid: 591728
+[2025-10-17 16:06:58 +0000] [591723] [INFO] Handling signal: term
+[2025-10-17 16:07:00 +0000] [591723] [INFO] Shutting down: Master
+[2025-10-17 16:15:08 +0000] [597965] [INFO] Starting gunicorn 21.2.0
+[2025-10-17 16:15:08 +0000] [597965] [INFO] Listening at: https://192.168.1.11:8000 (597965)
+[2025-10-17 16:15:08 +0000] [597965] [INFO] Using worker: sync
+[2025-10-17 16:15:08 +0000] [597975] [INFO] Booting worker with pid: 597975
+[2025-10-17 16:15:08 +0000] [597981] [INFO] Booting worker with pid: 597981
+[2025-10-17 16:15:08 +0000] [597982] [INFO] Booting worker with pid: 597982
+[2025-10-17 16:16:40 +0000] [598363] [INFO] Starting gunicorn 21.2.0
+[2025-10-17 16:16:40 +0000] [598363] [ERROR] Connection in use: ('192.168.1.11', 8000)
+[2025-10-17 16:16:40 +0000] [598363] [ERROR] Retrying in 1 second.
+[2025-10-17 16:16:41 +0000] [598363] [ERROR] Connection in use: ('192.168.1.11', 8000)
+[2025-10-17 16:16:41 +0000] [598363] [ERROR] Retrying in 1 second.
+[2025-10-17 16:16:42 +0000] [598363] [ERROR] Connection in use: ('192.168.1.11', 8000)
+[2025-10-17 16:16:42 +0000] [598363] [ERROR] Retrying in 1 second.
+[2025-10-17 16:16:43 +0000] [598363] [ERROR] Connection in use: ('192.168.1.11', 8000)
+[2025-10-17 16:16:43 +0000] [598363] [ERROR] Retrying in 1 second.
+[2025-10-17 16:16:44 +0000] [598363] [ERROR] Connection in use: ('192.168.1.11', 8000)
+[2025-10-17 16:16:44 +0000] [598363] [ERROR] Retrying in 1 second.
+[2025-10-17 16:16:45 +0000] [598363] [ERROR] Can't connect to ('192.168.1.11', 8000)
+[2025-10-17 16:19:48 +0000] [597965] [INFO] Handling signal: term
+[2025-10-17 16:19:50 +0000] [597965] [INFO] Shutting down: Master
+[2025-10-17 16:19:54 +0000] [599003] [INFO] Starting gunicorn 21.2.0
+[2025-10-17 16:19:54 +0000] [599003] [INFO] Listening at: https://192.168.1.11:8000 (599003)
+[2025-10-17 16:19:54 +0000] [599003] [INFO] Using worker: sync
+[2025-10-17 16:19:54 +0000] [599014] [INFO] Booting worker with pid: 599014
+[2025-10-17 16:19:54 +0000] [599039] [INFO] Booting worker with pid: 599039
+[2025-10-17 16:19:55 +0000] [599040] [INFO] Booting worker with pid: 599040
+[2025-10-17 16:24:30 +0000] [599003] [INFO] Handling signal: term
+[2025-10-17 16:24:32 +0000] [599003] [INFO] Shutting down: Master
+[2025-10-17 16:24:38 +0000] [600024] [INFO] Starting gunicorn 21.2.0
+[2025-10-17 16:24:38 +0000] [600024] [INFO] Listening at: https://192.168.1.11:8000 (600024)
+[2025-10-17 16:24:38 +0000] [600024] [INFO] Using worker: sync
+[2025-10-17 16:24:38 +0000] [600034] [INFO] Booting worker with pid: 600034
+[2025-10-17 16:24:38 +0000] [600040] [INFO] Booting worker with pid: 600040
+[2025-10-17 16:24:38 +0000] [600041] [INFO] Booting worker with pid: 600041
+[2025-10-18 06:00:01 +0000] [600024] [INFO] Handling signal: term
+[2025-10-18 06:00:03 +0000] [600024] [INFO] Shutting down: Master
+[2025-10-18 06:00:06 +0000] [604508] [INFO] Starting gunicorn 21.2.0
+[2025-10-18 06:00:06 +0000] [604508] [INFO] Listening at: https://192.168.1.11:8000 (604508)
+[2025-10-18 06:00:06 +0000] [604508] [INFO] Using worker: sync
+[2025-10-18 06:00:06 +0000] [604511] [INFO] Booting worker with pid: 604511
+[2025-10-18 06:00:06 +0000] [604512] [INFO] Booting worker with pid: 604512
+[2025-10-18 06:00:06 +0000] [604513] [INFO] Booting worker with pid: 604513
+[2025-10-19 06:00:01 +0000] [604508] [INFO] Handling signal: term
+[2025-10-19 06:00:02 +0000] [604508] [INFO] Shutting down: Master
+[2025-10-19 06:00:06 +0000] [605616] [INFO] Starting gunicorn 21.2.0
+[2025-10-19 06:00:06 +0000] [605616] [INFO] Listening at: https://192.168.1.11:8000 (605616)
+[2025-10-19 06:00:06 +0000] [605616] [INFO] Using worker: sync
+[2025-10-19 06:00:06 +0000] [605620] [INFO] Booting worker with pid: 605620
+[2025-10-19 06:00:06 +0000] [605621] [INFO] Booting worker with pid: 605621
+[2025-10-19 06:00:06 +0000] [605622] [INFO] Booting worker with pid: 605622
+[2025-10-20 06:00:01 +0000] [605616] [INFO] Handling signal: term
+[2025-10-20 06:00:02 +0000] [605616] [INFO] Shutting down: Master
+[2025-10-20 06:00:06 +0000] [607135] [INFO] Starting gunicorn 21.2.0
+[2025-10-20 06:00:06 +0000] [607135] [INFO] Listening at: https://192.168.1.11:8000 (607135)
+[2025-10-20 06:00:06 +0000] [607135] [INFO] Using worker: sync
+[2025-10-20 06:00:06 +0000] [607138] [INFO] Booting worker with pid: 607138
+[2025-10-20 06:00:06 +0000] [607139] [INFO] Booting worker with pid: 607139
+[2025-10-20 06:00:06 +0000] [607140] [INFO] Booting worker with pid: 607140
+[2025-10-21 06:00:01 +0000] [607135] [INFO] Handling signal: term
+[2025-10-21 06:00:03 +0000] [607135] [INFO] Shutting down: Master
+[2025-10-21 06:00:06 +0000] [607876] [INFO] Starting gunicorn 21.2.0
+[2025-10-21 06:00:06 +0000] [607876] [INFO] Listening at: https://192.168.1.11:8000 (607876)
+[2025-10-21 06:00:06 +0000] [607876] [INFO] Using worker: sync
+[2025-10-21 06:00:06 +0000] [607880] [INFO] Booting worker with pid: 607880
+[2025-10-21 06:00:06 +0000] [607881] [INFO] Booting worker with pid: 607881
+[2025-10-21 06:00:07 +0000] [607882] [INFO] Booting worker with pid: 607882
+[2025-10-22 06:00:01 +0000] [607876] [INFO] Handling signal: term
+[2025-10-22 06:00:02 +0000] [607876] [ERROR] Worker (pid:607882) was sent SIGTERM!
+[2025-10-22 06:00:02 +0000] [607876] [INFO] Shutting down: Master
+[2025-10-22 06:00:07 +0000] [609436] [INFO] Starting gunicorn 21.2.0
+[2025-10-22 06:00:07 +0000] [609436] [INFO] Listening at: https://192.168.1.11:8000 (609436)
+[2025-10-22 06:00:07 +0000] [609436] [INFO] Using worker: sync
+[2025-10-22 06:00:07 +0000] [609439] [INFO] Booting worker with pid: 609439
+[2025-10-22 06:00:07 +0000] [609440] [INFO] Booting worker with pid: 609440
+[2025-10-22 06:00:07 +0000] [609441] [INFO] Booting worker with pid: 609441
+[2025-10-23 06:00:01 +0000] [609436] [INFO] Handling signal: term
+[2025-10-23 06:00:01 +0000] [609436] [ERROR] Worker (pid:609440) was sent SIGTERM!
+[2025-10-23 06:00:01 +0000] [609436] [ERROR] Worker (pid:609441) was sent SIGTERM!
+[2025-10-23 06:00:01 +0000] [609436] [ERROR] Worker (pid:609439) was sent SIGTERM!
+[2025-10-23 06:00:01 +0000] [609436] [INFO] Shutting down: Master
+[2025-10-23 06:00:06 +0000] [623488] [INFO] Starting gunicorn 21.2.0
+[2025-10-23 06:00:06 +0000] [623488] [INFO] Listening at: https://192.168.1.11:8000 (623488)
+[2025-10-23 06:00:06 +0000] [623488] [INFO] Using worker: sync
+[2025-10-23 06:00:06 +0000] [623492] [INFO] Booting worker with pid: 623492
+[2025-10-23 06:00:07 +0000] [623493] [INFO] Booting worker with pid: 623493
+[2025-10-23 06:00:07 +0000] [623494] [INFO] Booting worker with pid: 623494
+[2025-10-23 18:44:05 +0000] [623488] [INFO] Handling signal: term
+[2025-10-23 18:44:05 +0000] [623488] [ERROR] Worker (pid:623494) was sent SIGTERM!
+[2025-10-23 18:44:05 +0000] [623488] [ERROR] Worker (pid:623493) was sent SIGTERM!
+[2025-10-23 18:44:05 +0000] [623488] [ERROR] Worker (pid:623492) was sent SIGTERM!
+[2025-10-23 18:44:05 +0000] [623488] [INFO] Shutting down: Master
+[2025-10-23 18:44:10 +0000] [628903] [INFO] Starting gunicorn 21.2.0
+[2025-10-23 18:44:10 +0000] [628903] [INFO] Listening at: https://192.168.1.11:8000 (628903)
+[2025-10-23 18:44:10 +0000] [628903] [INFO] Using worker: sync
+[2025-10-23 18:44:10 +0000] [628904] [INFO] Booting worker with pid: 628904
+[2025-10-23 18:44:10 +0000] [628905] [INFO] Booting worker with pid: 628905
+[2025-10-23 18:44:10 +0000] [628906] [INFO] Booting worker with pid: 628906
+[2025-10-23 18:47:36 +0000] [628903] [INFO] Handling signal: term
+[2025-10-23 18:47:37 +0000] [629580] [INFO] Starting gunicorn 21.2.0
+[2025-10-23 18:47:37 +0000] [629580] [INFO] Listening at: https://192.168.1.11:8000 (629580)
+[2025-10-23 18:47:37 +0000] [629580] [INFO] Using worker: sync
+[2025-10-23 18:47:37 +0000] [629582] [INFO] Booting worker with pid: 629582
+[2025-10-23 18:47:37 +0000] [629583] [INFO] Booting worker with pid: 629583
+[2025-10-23 18:47:37 +0000] [629584] [INFO] Booting worker with pid: 629584
+[2025-10-23 18:47:38 +0000] [628903] [INFO] Shutting down: Master
+[2025-10-23 18:48:56 +0000] [629580] [INFO] Handling signal: term
+[2025-10-23 18:48:57 +0000] [629918] [INFO] Starting gunicorn 21.2.0
+[2025-10-23 18:48:57 +0000] [629918] [INFO] Listening at: https://192.168.1.11:8000 (629918)
+[2025-10-23 18:48:57 +0000] [629918] [INFO] Using worker: sync
+[2025-10-23 18:48:57 +0000] [629919] [INFO] Booting worker with pid: 629919
+[2025-10-23 18:48:57 +0000] [629920] [INFO] Booting worker with pid: 629920
+[2025-10-23 18:48:57 +0000] [629921] [INFO] Booting worker with pid: 629921
+[2025-10-23 18:48:58 +0000] [629580] [INFO] Shutting down: Master
+[2025-10-23 18:59:29 +0000] [629918] [INFO] Handling signal: term
+[2025-10-23 18:59:30 +0000] [631749] [INFO] Starting gunicorn 21.2.0
+[2025-10-23 18:59:30 +0000] [631749] [INFO] Listening at: https://192.168.1.11:8000 (631749)
+[2025-10-23 18:59:30 +0000] [631749] [INFO] Using worker: sync
+[2025-10-23 18:59:30 +0000] [631753] [INFO] Booting worker with pid: 631753
+[2025-10-23 18:59:30 +0000] [631754] [INFO] Booting worker with pid: 631754
+[2025-10-23 18:59:30 +0000] [631755] [INFO] Booting worker with pid: 631755
+[2025-10-23 18:59:31 +0000] [629918] [INFO] Shutting down: Master
+[2025-10-24 06:00:01 +0000] [631749] [INFO] Handling signal: term
+[2025-10-24 06:00:03 +0000] [631749] [INFO] Shutting down: Master
+[2025-10-24 06:00:06 +0000] [660851] [INFO] Starting gunicorn 21.2.0
+[2025-10-24 06:00:06 +0000] [660851] [INFO] Listening at: https://192.168.1.11:8000 (660851)
+[2025-10-24 06:00:06 +0000] [660851] [INFO] Using worker: sync
+[2025-10-24 06:00:06 +0000] [660854] [INFO] Booting worker with pid: 660854
+[2025-10-24 06:00:06 +0000] [660855] [INFO] Booting worker with pid: 660855
+[2025-10-24 06:00:06 +0000] [660856] [INFO] Booting worker with pid: 660856
+[2025-10-25 06:00:01 +0000] [660851] [INFO] Handling signal: term
+[2025-10-25 06:00:03 +0000] [660851] [INFO] Shutting down: Master
+[2025-10-25 06:00:07 +0000] [662186] [INFO] Starting gunicorn 21.2.0
+[2025-10-25 06:00:07 +0000] [662186] [INFO] Listening at: https://192.168.1.11:8000 (662186)
+[2025-10-25 06:00:07 +0000] [662186] [INFO] Using worker: sync
+[2025-10-25 06:00:07 +0000] [662189] [INFO] Booting worker with pid: 662189
+[2025-10-25 06:00:07 +0000] [662190] [INFO] Booting worker with pid: 662190
+[2025-10-25 06:00:07 +0000] [662191] [INFO] Booting worker with pid: 662191
+[2025-10-26 06:00:01 +0000] [662186] [INFO] Handling signal: term
+[2025-10-26 06:00:03 +0000] [662186] [INFO] Shutting down: Master
+[2025-10-26 06:00:06 +0000] [663661] [INFO] Starting gunicorn 21.2.0
+[2025-10-26 06:00:06 +0000] [663661] [INFO] Listening at: https://192.168.1.11:8000 (663661)
+[2025-10-26 06:00:06 +0000] [663661] [INFO] Using worker: sync
+[2025-10-26 06:00:06 +0000] [663664] [INFO] Booting worker with pid: 663664
+[2025-10-26 06:00:07 +0000] [663665] [INFO] Booting worker with pid: 663665
+[2025-10-26 06:00:07 +0000] [663666] [INFO] Booting worker with pid: 663666
+[2025-10-27 06:00:01 +0000] [663661] [INFO] Handling signal: term
+[2025-10-27 06:00:01 +0000] [663661] [ERROR] Worker (pid:663664) was sent SIGTERM!
+[2025-10-27 06:00:02 +0000] [663661] [INFO] Shutting down: Master
+[2025-10-27 06:00:06 +0000] [664739] [INFO] Starting gunicorn 21.2.0
+[2025-10-27 06:00:06 +0000] [664739] [INFO] Listening at: https://192.168.1.11:8000 (664739)
+[2025-10-27 06:00:06 +0000] [664739] [INFO] Using worker: sync
+[2025-10-27 06:00:06 +0000] [664742] [INFO] Booting worker with pid: 664742
+[2025-10-27 06:00:06 +0000] [664743] [INFO] Booting worker with pid: 664743
+[2025-10-27 06:00:06 +0000] [664744] [INFO] Booting worker with pid: 664744
+[2025-10-28 06:00:01 +0000] [664739] [INFO] Handling signal: term
+[2025-10-28 06:00:03 +0000] [664739] [INFO] Shutting down: Master
+[2025-10-28 06:00:06 +0000] [665505] [INFO] Starting gunicorn 21.2.0
+[2025-10-28 06:00:06 +0000] [665505] [INFO] Listening at: https://192.168.1.11:8000 (665505)
+[2025-10-28 06:00:06 +0000] [665505] [INFO] Using worker: sync
+[2025-10-28 06:00:06 +0000] [665508] [INFO] Booting worker with pid: 665508
+[2025-10-28 06:00:06 +0000] [665509] [INFO] Booting worker with pid: 665509
+[2025-10-28 06:00:06 +0000] [665510] [INFO] Booting worker with pid: 665510
+[2025-10-29 06:00:01 +0000] [665505] [INFO] Handling signal: term
+[2025-10-29 06:00:01 +0000] [665505] [ERROR] Worker (pid:665508) was sent SIGTERM!
+[2025-10-29 06:00:01 +0000] [665505] [ERROR] Worker (pid:665510) was sent SIGTERM!
+[2025-10-29 06:00:01 +0000] [665505] [ERROR] Worker (pid:665509) was sent SIGTERM!
+[2025-10-29 06:00:01 +0000] [665505] [INFO] Shutting down: Master
+[2025-10-29 06:00:06 +0000] [666598] [INFO] Starting gunicorn 21.2.0
+[2025-10-29 06:00:06 +0000] [666598] [INFO] Listening at: https://192.168.1.11:8000 (666598)
+[2025-10-29 06:00:06 +0000] [666598] [INFO] Using worker: sync
+[2025-10-29 06:00:06 +0000] [666601] [INFO] Booting worker with pid: 666601
+[2025-10-29 06:00:06 +0000] [666603] [INFO] Booting worker with pid: 666603
+[2025-10-29 06:00:06 +0000] [666604] [INFO] Booting worker with pid: 666604
+[2025-10-30 06:00:01 +0000] [666598] [INFO] Handling signal: term
+[2025-10-30 06:00:04 +0000] [666598] [INFO] Shutting down: Master
+[2025-10-30 06:00:06 +0000] [689450] [INFO] Starting gunicorn 21.2.0
+[2025-10-30 06:00:06 +0000] [689450] [INFO] Listening at: https://192.168.1.11:8000 (689450)
+[2025-10-30 06:00:06 +0000] [689450] [INFO] Using worker: sync
+[2025-10-30 06:00:06 +0000] [689453] [INFO] Booting worker with pid: 689453
+[2025-10-30 06:00:06 +0000] [689454] [INFO] Booting worker with pid: 689454
+[2025-10-30 06:00:06 +0000] [689455] [INFO] Booting worker with pid: 689455
+[2025-10-31 06:00:01 +0000] [689450] [INFO] Handling signal: term
+[2025-10-31 06:00:03 +0000] [689450] [INFO] Shutting down: Master
+[2025-10-31 06:00:06 +0000] [690615] [INFO] Starting gunicorn 21.2.0
+[2025-10-31 06:00:06 +0000] [690615] [INFO] Listening at: https://192.168.1.11:8000 (690615)
+[2025-10-31 06:00:06 +0000] [690615] [INFO] Using worker: sync
+[2025-10-31 06:00:06 +0000] [690617] [INFO] Booting worker with pid: 690617
+[2025-10-31 06:00:06 +0000] [690618] [INFO] Booting worker with pid: 690618
+[2025-10-31 06:00:07 +0000] [690619] [INFO] Booting worker with pid: 690619
+[2025-11-01 06:00:01 +0000] [690615] [INFO] Handling signal: term
+[2025-11-01 06:00:03 +0000] [690615] [INFO] Shutting down: Master
+[2025-11-01 06:00:06 +0000] [692886] [INFO] Starting gunicorn 21.2.0
+[2025-11-01 06:00:06 +0000] [692886] [INFO] Listening at: https://192.168.1.11:8000 (692886)
+[2025-11-01 06:00:06 +0000] [692886] [INFO] Using worker: sync
+[2025-11-01 06:00:06 +0000] [692888] [INFO] Booting worker with pid: 692888
+[2025-11-01 06:00:06 +0000] [692889] [INFO] Booting worker with pid: 692889
+[2025-11-01 06:00:06 +0000] [692890] [INFO] Booting worker with pid: 692890
+[2025-11-02 06:00:01 +0000] [692886] [INFO] Handling signal: term
+[2025-11-02 06:00:02 +0000] [692886] [INFO] Shutting down: Master
+[2025-11-02 06:00:06 +0000] [693613] [INFO] Starting gunicorn 21.2.0
+[2025-11-02 06:00:06 +0000] [693613] [INFO] Listening at: https://192.168.1.11:8000 (693613)
+[2025-11-02 06:00:06 +0000] [693613] [INFO] Using worker: sync
+[2025-11-02 06:00:06 +0000] [693616] [INFO] Booting worker with pid: 693616
+[2025-11-02 06:00:06 +0000] [693617] [INFO] Booting worker with pid: 693617
+[2025-11-02 06:00:06 +0000] [693618] [INFO] Booting worker with pid: 693618
+[2025-11-03 06:00:01 +0000] [693613] [INFO] Handling signal: term
+[2025-11-03 06:00:02 +0000] [693613] [INFO] Shutting down: Master
+[2025-11-03 06:00:06 +0000] [694754] [INFO] Starting gunicorn 21.2.0
+[2025-11-03 06:00:06 +0000] [694754] [INFO] Listening at: https://192.168.1.11:8000 (694754)
+[2025-11-03 06:00:06 +0000] [694754] [INFO] Using worker: sync
+[2025-11-03 06:00:06 +0000] [694757] [INFO] Booting worker with pid: 694757
+[2025-11-03 06:00:06 +0000] [694758] [INFO] Booting worker with pid: 694758
+[2025-11-03 06:00:06 +0000] [694759] [INFO] Booting worker with pid: 694759
+[2025-11-04 06:00:01 +0000] [694754] [INFO] Handling signal: term
+[2025-11-04 06:00:02 +0000] [694754] [INFO] Shutting down: Master
+[2025-11-04 06:00:06 +0000] [695852] [INFO] Starting gunicorn 21.2.0
+[2025-11-04 06:00:06 +0000] [695852] [INFO] Listening at: https://192.168.1.11:8000 (695852)
+[2025-11-04 06:00:06 +0000] [695852] [INFO] Using worker: sync
+[2025-11-04 06:00:06 +0000] [695855] [INFO] Booting worker with pid: 695855
+[2025-11-04 06:00:06 +0000] [695857] [INFO] Booting worker with pid: 695857
+[2025-11-04 06:00:06 +0000] [695858] [INFO] Booting worker with pid: 695858
+[2025-11-05 06:00:01 +0000] [695852] [INFO] Handling signal: term
+[2025-11-05 06:00:03 +0000] [695852] [INFO] Shutting down: Master
+[2025-11-05 06:00:06 +0000] [697361] [INFO] Starting gunicorn 21.2.0
+[2025-11-05 06:00:06 +0000] [697361] [INFO] Listening at: https://192.168.1.11:8000 (697361)
+[2025-11-05 06:00:06 +0000] [697361] [INFO] Using worker: sync
+[2025-11-05 06:00:06 +0000] [697364] [INFO] Booting worker with pid: 697364
+[2025-11-05 06:00:06 +0000] [697365] [INFO] Booting worker with pid: 697365
+[2025-11-05 06:00:06 +0000] [697366] [INFO] Booting worker with pid: 697366
+[2025-11-07 16:22:49 +0000] [29109] [INFO] Starting gunicorn 21.2.0
+[2025-11-07 16:22:49 +0000] [29109] [INFO] Listening at: https://192.168.1.11:8000 (29109)
+[2025-11-07 16:22:49 +0000] [29109] [INFO] Using worker: sync
+[2025-11-07 16:22:49 +0000] [29110] [INFO] Booting worker with pid: 29110
+[2025-11-07 16:22:49 +0000] [29111] [INFO] Booting worker with pid: 29111
+[2025-11-07 16:22:49 +0000] [29112] [INFO] Booting worker with pid: 29112
+[2025-11-08 06:00:01 +0000] [29109] [INFO] Handling signal: term
+[2025-11-08 06:00:01 +0000] [29109] [ERROR] Worker (pid:29112) was sent SIGTERM!
+[2025-11-08 06:00:01 +0000] [29109] [ERROR] Worker (pid:29111) was sent SIGTERM!
+[2025-11-08 06:00:02 +0000] [29109] [INFO] Shutting down: Master
+[2025-11-08 06:00:06 +0000] [85488] [INFO] Starting gunicorn 21.2.0
+[2025-11-08 06:00:06 +0000] [85488] [INFO] Listening at: https://192.168.1.11:8000 (85488)
+[2025-11-08 06:00:06 +0000] [85488] [INFO] Using worker: sync
+[2025-11-08 06:00:06 +0000] [85494] [INFO] Booting worker with pid: 85494
+[2025-11-08 06:00:06 +0000] [85495] [INFO] Booting worker with pid: 85495
+[2025-11-08 06:00:06 +0000] [85496] [INFO] Booting worker with pid: 85496
+[2025-11-09 06:00:01 +0000] [85488] [INFO] Handling signal: term
+[2025-11-09 06:00:01 +0000] [85488] [INFO] Shutting down: Master
+[2025-11-09 06:00:06 +0000] [86411] [INFO] Starting gunicorn 21.2.0
+[2025-11-09 06:00:06 +0000] [86411] [INFO] Listening at: https://192.168.1.11:8000 (86411)
+[2025-11-09 06:00:06 +0000] [86411] [INFO] Using worker: sync
+[2025-11-09 06:00:06 +0000] [86415] [INFO] Booting worker with pid: 86415
+[2025-11-09 06:00:06 +0000] [86416] [INFO] Booting worker with pid: 86416
+[2025-11-09 06:00:06 +0000] [86417] [INFO] Booting worker with pid: 86417
+[2025-11-10 06:00:01 +0000] [86411] [INFO] Handling signal: term
+[2025-11-10 06:00:02 +0000] [86411] [INFO] Shutting down: Master
+[2025-11-10 06:00:06 +0000] [87809] [INFO] Starting gunicorn 21.2.0
+[2025-11-10 06:00:06 +0000] [87809] [INFO] Listening at: https://192.168.1.11:8000 (87809)
+[2025-11-10 06:00:06 +0000] [87809] [INFO] Using worker: sync
+[2025-11-10 06:00:06 +0000] [87812] [INFO] Booting worker with pid: 87812
+[2025-11-10 06:00:06 +0000] [87813] [INFO] Booting worker with pid: 87813
+[2025-11-10 06:00:06 +0000] [87814] [INFO] Booting worker with pid: 87814
+[2025-11-11 06:00:01 +0000] [87809] [INFO] Handling signal: term
+[2025-11-11 06:00:01 +0000] [87809] [INFO] Shutting down: Master
+[2025-11-11 06:00:06 +0000] [88536] [INFO] Starting gunicorn 21.2.0
+[2025-11-11 06:00:06 +0000] [88536] [INFO] Listening at: https://192.168.1.11:8000 (88536)
+[2025-11-11 06:00:06 +0000] [88536] [INFO] Using worker: sync
+[2025-11-11 06:00:06 +0000] [88539] [INFO] Booting worker with pid: 88539
+[2025-11-11 06:00:06 +0000] [88540] [INFO] Booting worker with pid: 88540
+[2025-11-11 06:00:06 +0000] [88541] [INFO] Booting worker with pid: 88541
+[2025-11-12 06:00:01 +0000] [88536] [INFO] Handling signal: term
+[2025-11-12 06:00:01 +0000] [88536] [ERROR] Worker (pid:88541) was sent SIGTERM!
+[2025-11-12 06:00:01 +0000] [88536] [ERROR] Worker (pid:88540) was sent SIGTERM!
+[2025-11-12 06:00:01 +0000] [88536] [INFO] Shutting down: Master
+[2025-11-12 06:00:06 +0000] [100959] [INFO] Starting gunicorn 21.2.0
+[2025-11-12 06:00:06 +0000] [100959] [INFO] Listening at: https://192.168.1.11:8000 (100959)
+[2025-11-12 06:00:06 +0000] [100959] [INFO] Using worker: sync
+[2025-11-12 06:00:06 +0000] [100962] [INFO] Booting worker with pid: 100962
+[2025-11-12 06:00:06 +0000] [100963] [INFO] Booting worker with pid: 100963
+[2025-11-12 06:00:06 +0000] [100964] [INFO] Booting worker with pid: 100964
+[2025-11-12 13:55:40 +0000] [100959] [INFO] Handling signal: term
+[2025-11-12 13:55:40 +0000] [100959] [ERROR] Worker (pid:100962) was sent SIGTERM!
+[2025-11-12 13:55:40 +0000] [100959] [ERROR] Worker (pid:100964) was sent SIGTERM!
+[2025-11-12 13:55:41 +0000] [100959] [INFO] Shutting down: Master
+[2025-11-13 06:00:07 +0000] [189494] [INFO] Starting gunicorn 21.2.0
+[2025-11-13 06:00:07 +0000] [189494] [INFO] Listening at: https://192.168.1.11:8000 (189494)
+[2025-11-13 06:00:07 +0000] [189494] [INFO] Using worker: sync
+[2025-11-13 06:00:07 +0000] [189497] [INFO] Booting worker with pid: 189497
+[2025-11-13 06:00:07 +0000] [189498] [INFO] Booting worker with pid: 189498
+[2025-11-13 06:00:07 +0000] [189499] [INFO] Booting worker with pid: 189499
+[2025-11-14 06:00:01 +0000] [189494] [INFO] Handling signal: term
+[2025-11-14 06:00:02 +0000] [189494] [INFO] Shutting down: Master
+[2025-11-14 06:00:06 +0000] [190938] [INFO] Starting gunicorn 21.2.0
+[2025-11-14 06:00:06 +0000] [190938] [INFO] Listening at: https://192.168.1.11:8000 (190938)
+[2025-11-14 06:00:06 +0000] [190938] [INFO] Using worker: sync
+[2025-11-14 06:00:06 +0000] [190942] [INFO] Booting worker with pid: 190942
+[2025-11-14 06:00:07 +0000] [190944] [INFO] Booting worker with pid: 190944
+[2025-11-14 06:00:07 +0000] [190945] [INFO] Booting worker with pid: 190945

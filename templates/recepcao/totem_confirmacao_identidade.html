@@ -1,0 +1,160 @@
+{% extends 'base_totem.html' %}
+{% load static %}
+
+{% block extra_css %}
+<style>
+.totem-container {
+    max-width: 700px;
+    margin: 0 auto;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    min-height: calc(100vh - 2rem);
+    padding: 3rem 2rem;
+}
+
+.confirm-header {
+    margin-top: 2rem;
+    margin-bottom: 4rem;
+    width: 100%;
+}
+
+.confirm-header .visitor-photo-container {
+    width: 220px;
+    height: 220px;
+    border-radius: 50%;
+    margin: 0 auto 2.5rem auto;
+    border: 6px solid #fff;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.18);
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
+.confirm-header .visitor-name {
+    font-size: 2.8rem;
+    font-weight: 600;
+    color: #2c3e50;
+    letter-spacing: -0.5px;
+    margin-bottom: 1rem;
+}
+
+.confirm-header .subtitle {
+    font-size: 1.4rem;
+    color: #6c757d;
+    margin-top: 1rem;
+    line-height: 1.5;
+}
+
+.confirm-actions {
+    margin-top: 4rem;
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+    width: 100%;
+    max-width: 500px;
+    align-items: center;
+}
+
+.confirm-actions .btn-primary {
+    background: linear-gradient(135deg, #5e72e4 0%, #825ee4 100%);
+    color: white;
+    border: none;
+    font-size: 1.8rem;
+    padding: 1.5rem 3rem;
+    border-radius: 999px;
+    font-weight: 600;
+    width: 100%;
+    transition: all 0.3s ease;
+    box-shadow: 0 8px 25px rgba(94, 114, 228, 0.4);
+    position: relative;
+    overflow: hidden;
+}
+
+.confirm-actions .btn-primary::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+    transition: left 0.5s ease;
+}
+
+.confirm-actions .btn-primary:hover::before {
+    left: 100%;
+}
+
+.confirm-actions .btn-primary:hover {
+    background: linear-gradient(135deg, #4c63d2 0%, #6f4fd8 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 12px 35px rgba(94, 114, 228, 0.6);
+}
+
+.confirm-actions .btn-outline-danger {
+    font-size: 1.4rem;
+    padding: 1rem 2.5rem;
+    border-radius: 999px;
+    font-weight: 600;
+    width: 100%;
+}
+
+.helper-text {
+    margin-top: 2.5rem;
+    font-size: 1.1rem;
+    color: #6c757d;
+    line-height: 1.6;
+    max-width: 600px;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="totem-container">
+    <a href="{% url 'recepcao:totem_welcome' %}" class="btn btn-danger btn-sm position-absolute" style="top: 24px; left: 24px; z-index: 10; border-radius: 20px; font-weight: 600; padding: 0.5rem 1.2rem; font-size: 1rem;">
+        <i class="fas fa-times me-1"></i> Cancelar
+    </a>
+
+    <div class="confirm-header">
+        {% if visitante_foto_url %}
+            <div class="visitor-photo-container" style="background-image: url('{{ visitante_foto_url }}{% if visitante_foto_version %}?v={{ visitante_foto_version }}{% endif %}');"></div>
+        {% else %}
+            <div class="visitor-photo-container" style="background-image: url('{% static 'img/default-avatar.png' %}');"></div>
+        {% endif %}
+        <h1 class="visitor-name">Olá, {{ visitante.nome_completo }}</h1>
+        <p class="subtitle">Confirme se você é esta pessoa antes de continuar.</p>
+    </div>
+
+    <div class="confirm-actions">
+        <button id="btn-continuar" class="btn btn-primary btn-lg">
+            <i class="fas fa-check me-2"></i> Sou eu, continuar
+        </button>
+        <button id="btn-nao-sou-eu" class="btn btn-outline-danger btn-lg">
+            <i class="fas fa-user-slash me-2"></i> Não sou eu
+        </button>
+    </div>
+
+    <p class="helper-text">
+        Caso o sistema tenha reconhecido outra pessoa por engano, escolha "Não sou eu" para atualizar sua biometria facial.
+    </p>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    const visitanteId = '{{ visitante.id }}';
+
+    document.getElementById('btn-continuar').addEventListener('click', function () {
+        const url = `{% url 'recepcao:totem_destino' %}?visitante_id=${visitanteId}`;
+        window.location.href = url;
+    });
+
+    document.getElementById('btn-nao-sou-eu').addEventListener('click', function () {
+        // Leva para o fluxo de recadastro facial já existente
+        window.location.href = "{% url 'recepcao:totem_recadastro_facial' %}";
+    });
+</script>
+{% endblock %}

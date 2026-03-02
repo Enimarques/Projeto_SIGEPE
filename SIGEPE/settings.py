@@ -24,7 +24,7 @@ sys.path.insert(0, str(BASE_DIR / 'apps'))
 SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'troque-esta-chave-em-producao')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 # Adicione aqui o(s) domínio(s) ou IP(s) do seu servidor
 ALLOWED_HOSTS = os.environ.get('DJANGO_ALLOWED_HOSTS', '127.0.0.1,localhost, 192.168.1.131,*').split(',')
@@ -50,12 +50,13 @@ INSTALLED_APPS = [
     'crispy_bootstrap5',
 ]
 
-# Configuração para o ManifestStaticFilesStorage para cache-busting
+# Configuração para arquivos estáticos: usar WhiteNoise em produção
 if not DEBUG:
-    STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.ManifestStaticFilesStorage'
+    STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -142,12 +143,14 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # Logging
+# Em desenvolvimento (DEBUG=True): mantém console + rotação de arquivo e nível mais verboso
+# Em produção (DEBUG=False): remove console, usa rotação com delay e níveis mais contidos
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
     'formatters': {
         'verbose': {
-            'format': '{levelname} {asctime} {module} {process:d} {thread:d} {message}',
+            'format': '{levelname} {asctime} {name} {message}',
             'style': '{',
         },
         'simple': {
@@ -160,22 +163,66 @@ LOGGING = {
             'class': 'logging.StreamHandler',
             'formatter': 'verbose',
         },
-        'file': {
-            'class': 'logging.FileHandler',
+        'rotating_info': {
+            'class': 'logging.handlers.RotatingFileHandler',
             'filename': os.path.join(BASE_DIR, 'logs', 'info.log'),
+            'maxBytes': 5 * 1024 * 1024,  # 5MB
+            'backupCount': 5,
+            'encoding': 'utf-8',
             'formatter': 'verbose',
+            'delay': True,
+        },
+        'service_file': {
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': os.path.join(BASE_DIR, 'logs', 'service.log'),
+            'maxBytes': 5 * 1024 * 1024,  # 5MB
+            'backupCount': 5,
+            'encoding': 'utf-8',
+            'formatter': 'verbose',
+            'delay': True,
+        },
+        'audit_file': {
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': os.path.join(BASE_DIR, 'logs', 'audit.log'),
+            'maxBytes': 5 * 1024 * 1024,
+            'backupCount': 10,
+            'encoding': 'utf-8',
+            'formatter': 'verbose',
+            'delay': True,
         },
     },
     'loggers': {
         'django': {
-            'handlers': ['console', 'file'],
+            'handlers': ['console', 'rotating_info'] if DEBUG else ['rotating_info'],
             'level': 'INFO',
-            'propagate': True,
+            'propagate': False,
         },
         'apps.recepcao': {
-            'handlers': ['console', 'file'],
-            'level': 'DEBUG',
-            'propagate': True,
+            'handlers': ['console', 'rotating_info'] if DEBUG else ['rotating_info'],
+            'level': 'DEBUG' if DEBUG else 'INFO',
+            'propagate': False,
+        },
+        # Logs do servidor (runserver/ASGI/WSGI)
+        'django.server': {
+            'handlers': ['console', 'service_file'] if DEBUG else ['service_file'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+        # Se estiver usando gunicorn em produção, capta erros e acessos
+        'gunicorn.error': {
+            'handlers': ['console', 'service_file'] if DEBUG else ['service_file'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+        'gunicorn.access': {
+            'handlers': ['console', 'service_file'] if DEBUG else ['service_file'],
+            'level': 'WARNING' if not DEBUG else 'INFO',
+            'propagate': False,
+        },
+        'audit': {
+            'handlers': ['audit_file'],
+            'level': 'INFO',
+            'propagate': False,
         },
     },
 }

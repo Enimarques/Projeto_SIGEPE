@@ -1,0 +1,236 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Visitantes Arquivados - URUTAU{% endblock %}
+
+{% block extra_css %}
+<style>
+    .dashboard-header {
+        background: linear-gradient(135deg, #667eea 0%, #238b8b 100%);
+        border-radius: 16px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        color: white;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    }
+    
+    .stat-card {
+        color: white;
+        border-radius: 15px;
+        padding: 25px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        height: 180px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .stat-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+    }
+
+    .stat-card h3 {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin: 0.5rem 0;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+    }
+
+    .stat-card p {
+        font-size: 0.9rem;
+        margin: 0;
+        opacity: 0.9;
+        font-weight: 500;
+    }
+
+    .stat-icon {
+        font-size: 2rem;
+        opacity: 0.8;
+        color: white;
+        margin-bottom: 0.5rem;
+    }
+
+    .stat-card-total {
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    }
+
+    .stat-card-expirando {
+        background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+    }
+    
+    .badge-expirando {
+        background-color: #ffc107;
+        color: #000;
+    }
+    
+    .badge-ok {
+        background-color: #28a745;
+        color: #fff;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-header mb-4">
+    <div class="d-flex align-items-center justify-content-between">
+        <div>
+            <h1 class="page-title mb-1" style="font-size:2.2rem; font-weight:700; color:#fff;">
+                <i class="fas fa-archive me-2"></i>Visitantes Arquivados
+            </h1>
+            <div style="color:#f8f9fa; font-size:1.08rem; font-weight:400;">
+                Acesso restrito a administradores. Dados mantidos por 6 meses antes da exclusão definitiva.
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container">
+    <div class="d-flex justify-content-end mb-3">
+        {% include 'includes/botao_voltar.html' %}
+    </div>
+    
+    <!-- Estatísticas -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="stat-card stat-card-total">
+                <i class="fas fa-archive stat-icon"></i>
+                <h3>{{ total_arquivados }}</h3>
+                <p>Total de Visitantes Arquivados</p>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="stat-card stat-card-expirando">
+                <i class="fas fa-exclamation-triangle stat-icon"></i>
+                <h3>{{ proximos_a_expirar }}</h3>
+                <p>Próximos a Expirar (6 meses)</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Card: Filtros + Tabela -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <!-- Filtros -->
+            <div class="mb-3">
+                <h5 class="card-title">
+                    <i class="fas fa-filter me-2"></i>Filtros
+                </h5>
+                <form method="get" class="row g-3">
+                    <div class="col-md-8">
+                        <label for="busca" class="form-label">Buscar Visitante</label>
+                        <div class="input-group">
+                            <input type="text" name="busca" id="busca" class="form-control" 
+                                   value="{{ busca|default:'' }}" 
+                                   placeholder="Nome, CPF ou E-mail">
+                            <span class="input-group-text">
+                                <i class="fas fa-search text-muted"></i>
+                            </span>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">&nbsp;</label>
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-search me-1"></i>Buscar
+                            </button>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">&nbsp;</label>
+                        <div class="d-grid">
+                            <a href="{% url 'recepcao:lista_visitantes_arquivados' %}" class="btn btn-secondary">
+                                <i class="fas fa-times me-1"></i>Limpar
+                            </a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            
+            <!-- Tabela -->
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Nome</th>
+                            <th>CPF</th>
+                            <th>Data de Arquivamento</th>
+                            <th>Usuário que Arquivou</th>
+                            <th>Visitas</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for visitante in page_obj %}
+                        <tr>
+                            <td>
+                                <strong>{{ visitante.nome_completo }}</strong>
+                                {% if visitante.nome_social %}
+                                <br><small class="text-muted">{{ visitante.nome_social }}</small>
+                                {% endif %}
+                            </td>
+                            <td>{{ visitante.CPF|default:"-" }}</td>
+                            <td>{{ visitante.data_arquivamento|date:"d/m/Y H:i" }}</td>
+                            <td>{{ visitante.usuario_arquivou }}</td>
+                            <td>
+                                <span class="badge bg-info">
+                                    {{ visitante.visitas_arquivadas.count }} visita(s)
+                                </span>
+                            </td>
+                            <td>
+                                <a href="{% url 'recepcao:detalhes_visitante_arquivado' visitante.pk %}" 
+                                   class="btn btn-sm btn-primary">
+                                    <i class="fas fa-eye me-1"></i>Ver Detalhes
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center text-muted py-4">
+                                <i class="fas fa-inbox fa-2x mb-2"></i>
+                                <p>Nenhum visitante arquivado encontrado.</p>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Paginação -->
+            {% if page_obj.has_other_pages %}
+            <nav aria-label="Paginação">
+                <ul class="pagination justify-content-center">
+                    {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page=1{% if busca %}&busca={{ busca }}{% endif %}">Primeira</a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if busca %}&busca={{ busca }}{% endif %}">Anterior</a>
+                    </li>
+                    {% endif %}
+                    
+                    <li class="page-item active">
+                        <span class="page-link">
+                            Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}
+                        </span>
+                    </li>
+                    
+                    {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if busca %}&busca={{ busca }}{% endif %}">Próxima</a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if busca %}&busca={{ busca }}{% endif %}">Última</a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+

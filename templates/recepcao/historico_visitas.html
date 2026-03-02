@@ -240,14 +240,26 @@
                         </div>
                         <div class="col-lg-2 col-md-3 col-6">
                             <label for="periodo" class="form-label">
-                                <i class="fas fa-calendar me-1"></i>Período
+                                <i class="fas fa-calendar me-1"></i>Período Rápido
                             </label>
                             <select name="periodo" id="periodo" class="form-select">
-                                <option value="">Todos</option>
+                                <option value="">Personalizado</option>
                                 <option value="hoje" {% if periodo_filtro == 'hoje' %}selected{% endif %}>Hoje</option>
                                 <option value="semana" {% if periodo_filtro == 'semana' %}selected{% endif %}>Esta Semana</option>
                                 <option value="mes" {% if periodo_filtro == 'mes' %}selected{% endif %}>Este Mês</option>
                             </select>
+                        </div>
+                        <div class="col-lg-2 col-md-3 col-6">
+                            <label for="data_inicio" class="form-label">
+                                <i class="fas fa-calendar-alt me-1"></i>Data Inicial
+                            </label>
+                            <input type="date" name="data_inicio" id="data_inicio" class="form-control" value="{{ data_inicio|default:'' }}">
+                        </div>
+                        <div class="col-lg-2 col-md-3 col-6">
+                            <label for="data_fim" class="form-label">
+                                <i class="fas fa-calendar-check me-1"></i>Data Final
+                            </label>
+                            <input type="date" name="data_fim" id="data_fim" class="form-control" value="{{ data_fim|default:'' }}">
                         </div>
                         <div class="col-lg-4 col-md-6 col-12">
                             <label for="busca" class="form-label">
@@ -260,23 +272,15 @@
                                 </span>
                             </div>
                         </div>
-                        <div class="col-lg-2 col-md-6 col-6">
-                            <div class="d-grid">
-                                <button type="button" class="btn btn-primary" id="btnFiltrar">
-                                    <i class="fas fa-filter me-2"></i>
-                                    <span class="d-none d-md-inline">Filtrar</span>
-                                    <span class="d-md-none">Buscar</span>
-                                </button>
-                            </div>
-                        </div>
-                        <div class="col-lg-2 col-md-6 col-6">
-                            <div class="d-grid">
-                                <button type="button" class="btn btn-secondary" id="btnLimpar">
-                                    <i class="fas fa-times me-2"></i>
-                                    <span class="d-none d-md-inline">Limpar</span>
-                                    <span class="d-md-none">Limpar</span>
-                                </button>
-                            </div>
+                    </div>
+                    <div class="row g-3 mt-2">
+                        <div class="col-12 text-end">
+                            <button type="button" class="btn btn-secondary me-2" id="btnLimpar">
+                                <i class="fas fa-times me-2"></i>Limpar Filtros
+                            </button>
+                            <button type="button" class="btn btn-primary" id="btnFiltrar">
+                                <i class="fas fa-filter me-2"></i>Filtrar
+                            </button>
                         </div>
                     </div>
                 </form>
@@ -359,8 +363,34 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
     
-    // Filtrar ao mudar selects
-    const selects = form.querySelectorAll('select');
+    // Sincronizar período rápido com campos de data
+    const periodoSelect = document.getElementById('periodo');
+    const dataInicio = document.getElementById('data_inicio');
+    const dataFim = document.getElementById('data_fim');
+    
+    // Quando período rápido for selecionado, limpar campos de data
+    periodoSelect.addEventListener('change', function() {
+        if (this.value) {
+            dataInicio.value = '';
+            dataFim.value = '';
+        }
+    });
+    
+    // Quando uma data for selecionada, limpar período rápido
+    dataInicio.addEventListener('change', function() {
+        if (this.value) {
+            periodoSelect.value = '';
+        }
+    });
+    
+    dataFim.addEventListener('change', function() {
+        if (this.value) {
+            periodoSelect.value = '';
+        }
+    });
+    
+    // Filtrar ao mudar selects (exceto período que já tem tratamento)
+    const selects = form.querySelectorAll('select:not(#periodo)');
     selects.forEach(select => {
         select.addEventListener('change', function() {
             form.submit();

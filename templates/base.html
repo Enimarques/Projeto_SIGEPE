@@ -28,6 +28,8 @@
             font-weight: 600;
         }
     </style>
+    <link rel="icon" href="{% static 'img/logo-urutau.png' %}" type="image/png">  <!-- Use type="image/x-icon" se for .ico -->
+    <link rel="shortcut icon" href="{% static 'img/logo-urutau.png' %}">  <!-- Backup pra alguns browsers -->
     {% block extra_css %}{% endblock %}
 </head>
 <body>
@@ -105,44 +107,47 @@
 
     {% if not hide_header_footer %}
     <!-- Footer -->
+    <!-- Footer -->
     <footer class="bg-light text-dark py-4 mt-5 border-top">
-      <div class="container">
-        <div class="row align-items-center">
-          <!-- Informações Institucionais -->
-          <div class="col-md-5 mb-3">
-            <h5 class="fw-bold mb-2"><i class="fas fa-university me-2 text-primary"></i>Informações Institucionais</h5>
-            <hr class="my-2">
-            <p class="mb-1"><i class="fas fa-clock me-2 text-secondary"></i><strong>Horário de Atendimento:</strong> Das 8h às 14h</p>
-            <p class="mb-1"><i class="fas fa-map-marker-alt me-2 text-secondary"></i><strong>Endereço:</strong> Avenida Sônia Cortês, Quadra: 33, Lote Especial, Beira Rio II - Parauapebas/PA - CEP: 68515-000</p>
-            <p class="mb-1"><i class="fas fa-envelope me-2 text-secondary"></i><strong>Email:</strong> atendimento@parauapebas.pa.leg.br</p>
-            <p class="mb-1"><i class="fas fa-phone me-2 text-secondary"></i><strong>Telefone:</strong> 08h às 14h - 094 98407-6124 / Ouvidoria</p>
-            <p class="mb-0"><i class="fas fa-user-tie me-2 text-secondary"></i><strong>Ouvidor:</strong> Line Cássia Costa Godinho</p>
+        <div class="container">
+          <!-- Row dos textos: agora flex pra centralizar o bloco todo -->
+          <div class="row d-flex justify-content-center align-items-start">  <!-- Adicionei d-flex justify-content-center -->
+            <!-- Informações Institucionais (esquerda) -->
+            <div class="col-md-5 mb-3">
+              <h5 class="fw-bold mb-2"><i class="fas fa-university me-2 text-primary"></i>Informações Institucionais</h5>
+              <hr class="my-2">
+              <p class="mb-1"><i class="fas fa-clock me-2 text-secondary"></i><strong>Horário de Atendimento:</strong> Das 8h às 14h</p>
+              <p class="mb-1"><i class="fas fa-map-marker-alt me-2 text-secondary"></i><strong>Endereço:</strong> Avenida Sônia Cortês, Quadra: 33, Lote Especial, Beira Rio II - Parauapebas/PA - CEP: 68515-000</p>  
+            </div>
+      
+            <!-- Divisor vertical (opcional: sutil, sem col extra) -->
+            <div class="d-none d-md-block col-md-1 pe-3">  <!-- col-md-1 ok agora, flex centraliza -->
+              <div style="border-left: 2px solid #d1d5db; height: 100px; margin: 0 1rem;"></div>  <!-- Ajuste height conforme necessário -->
+            </div>
+      
+            <!-- Ouvidoria (direita) -->
+            <div class="col-md-5 mb-3 text-md-start text-start">  <!-- Mantive text-start pra alinhar à esquerda no bloco -->
+              <h5 class="fw-bold mb-2"><i class="fas fa-comments me-2 text-primary"></i>Ouvidoria</h5>
+              <hr class="my-2">
+              <p class="mb-1"><i class="fas fa-phone me-2 text-secondary"></i><strong>Telefone:</strong> (94) 98403-2421</p>
+              <p class="mb-1"><i class="fas fa-envelope me-2 text-secondary"></i><strong>Email:</strong> ouvidoria@parauapebas.pa.leg.br</p>
+              <p class="mb-0"><i class="fas fa-user-tie me-2 text-secondary"></i><strong>Ouvidor:</strong> Line Cássia Costa Godinho</p>
+            </div>
           </div>
-
-          <!-- Divisória vertical -->
-          <div class="d-none d-md-flex col-md-1 justify-content-center">
-            <div style="border-left:2px solid #d1d5db; height:100%;"></div>
-          </div>
-
-          <!-- Contato e Imagens -->
-          <div class="col-md-6 mb-3 text-md-start text-start">
-            <h5 class="fw-bold mb-2"><i class="fas fa-comments me-2 text-primary"></i>Ouvidoria</h5>
-            <hr class="my-2">
-            <p class="mb-1"><i class="fas fa-phone me-2 text-secondary"></i><strong>Telefone:</strong> 94 9 8403 2421</p>
-            <p class="mb-1"><i class="fas fa-envelope me-2 text-secondary"></i><strong>Email:</strong> ouvidoria@parauapebas.pa.leg.br</p>
-            <p class="mb-0"><i class="fas fa-user-tie me-2 text-secondary"></i><strong>Ouvidor:</strong> Line Cássia Costa Godinho</p>
-            <div class="d-flex justify-content-center gap-3 mt-3 flex-wrap">
-              <div class="d-grid" style="grid-auto-flow: column; gap: 1.5rem; align-items: center;">
-                <img src="{% static 'img/LOGO_PMP.png' %}" alt="Logo Câmara Parauapebas" style="height: 120px; max-width: 120px; background: #fff; border-radius: 0.5rem; box-shadow: 0 2px 8px rgba(0,0,0,0.06); object-fit: contain;" onerror="this.style.display='none'">
-                <img src="{% static 'img/LOGO_CMP.png' %}" alt="Logo Câmara Parauapebas" style="height: 120px; max-width: 120px; background: #fff; border-radius: 0.5rem; box-shadow: 0 2px 8px rgba(0,0,0,0.06); object-fit: contain;" onerror="this.style.display='none'">
-                <img src="{% static 'img/logo_dti.png' %}" alt="Logo Câmara Parauapebas" style="height: 120px; max-width: 120px; background: #fff; border-radius: 0.5rem; box-shadow: 0 2px 8px rgba(0,0,0,0.06); object-fit: contain;" onerror="this.style.display='none'">
-                <img src="{% static 'img/logo-escura.png' %}" alt="Logo Câmara Parauapebas" style="height: 120px; max-width: 120px; background: #fff; border-radius: 0.5rem; box-shadow: 0 2px 8px rgba(0,0,0,0.06); object-fit: contain;" onerror="this.style.display='none'">
-                <!-- <img src="{% static 'img/logo_dti.png' %}" alt="Logo Urutau" style="height: 100px; max-width: 100px; object-fit: contain;" class="me-2 align-middle"> -->
+      
+          <!-- Row separada pras imagens: full-width e centralizada (já OK) -->
+          <div class="row">
+            <div class="col-12 mb-3">  <!-- Full-width em todas as telas -->
+              <div class="d-flex justify-content-center gap-3 flex-wrap">  <!-- Centraliza horizontal; gap entre imgs; wrap pra mobile -->
+                <!-- Removi o d-grid redundante; só flex é suficiente -->
+                <img src="{% static 'img/LOGO_PMP.png' %}" alt="Logo PMP" style="height: 120px; max-width: 120px; background: #fff; border-radius: 0.5rem; box-shadow: 0 2px 8px rgba(0,0,0,0.06); object-fit: contain;" onerror="this.style.display='none'">
+                <img src="{% static 'img/logo_CMP.png' %}" alt="Logo CMP" style="height: 120px; max-width: 120px; background: #fff; border-radius: 0.5rem; box-shadow: 0 2px 8px rgba(0,0,0,0.06); object-fit: contain;" onerror="this.style.display='none'">
+                <img src="{% static 'img/logo_dti.png' %}" alt="Logo DTI" style="height: 120px; max-width: 120px; background: #fff; border-radius: 0.5rem; box-shadow: 0 2px 8px rgba(0,0,0,0.06); object-fit: contain;" onerror="this.style.display='none'">
+                <img src="{% static 'img/logo-escura.png' %}" alt="Logo Escura" style="height: 120px; max-width: 120px; background: #fff; border-radius: 0.5rem; box-shadow: 0 2px 8px rgba(0,0,0,0.06); object-fit: contain;" onerror="this.style.display='none'">
               </div>
             </div>
           </div>
         </div>
-      </div>
     </footer>
     {% endif %}
 

@@ -26,6 +26,9 @@ urlpatterns = [
     
     path('visitantes/<int:pk>/excluir/', views.excluir_visitante, name='excluir_visitante'),
     
+    # Visitantes Arquivados (apenas administradores)
+    path('visitantes-arquivados/', views.lista_visitantes_arquivados, name='lista_visitantes_arquivados'),
+    path('visitantes-arquivados/<int:pk>/', views.detalhes_visitante_arquivado, name='detalhes_visitante_arquivado'),
 
     path('gabinetes/', views.home_gabinetes, name='home_gabinetes'),
     path('gabinetes/<int:gabinete_id>/', views.detalhes_gabinete, name='detalhes_gabinete'),
@@ -39,14 +42,19 @@ urlpatterns = [
     path('totem/welcome/', views.totem_welcome, name='totem_welcome'),
     path('totem/finalize_search/', views.totem_finalize_search, name='totem_finalize_search'),
     path('totem/', views.totem_identificacao, name='totem_identificacao'),
+    path('totem/confirmacao-identidade/', views.totem_confirmacao_identidade, name='totem_confirmacao_identidade'),
     path('totem/destino/', views.totem_destino, name='totem_destino'),
+    path('totem/recadastro-facial/', views.totem_recadastro_facial, name='totem_recadastro_facial'),
 
     # API Endpoints para o Totem
     path('api/reconhecer-rosto/', views.api_reconhecer_rosto, name='api_reconhecer_rosto'),
     path('api/registrar-visita/', views.api_registrar_visita_totem, name='api_registrar_visita_totem'),
     path('api/get-setores/', views.api_get_setores, name='api_get_setores'),
+    path('api/preload-face-vectors/', views.api_preload_face_vectors, name='api_preload_face_vectors'),
     path('api/buscar-visitante-ativo/', views.api_buscar_visitante_ativo, name='api_buscar_visitante_ativo'),
     path('api/finalizar-visitas/', views.api_finalizar_visitas, name='api_finalizar_visitas'),
+    path('api/validar-cpf-totem/', views.api_validar_cpf_totem, name='api_validar_cpf_totem'),
+    path('api/re-enroll-face/', views.api_re_enroll_face, name='api_re_enroll_face'),
 
     # Rota para a tela do comprovante (ticket)
     path('totem/comprovante/<int:visita_id>/', views.totem_comprovante, name='totem_comprovante'),
